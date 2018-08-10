@@ -1,0 +1,174 @@
+#!/usr/bin/env ruby
+
+if ENV['RUBYLIB']
+  puts "Running in debug, injecting $LOAD_PATH"
+  libdir = File.expand_path("#{File.dirname(__FILE__)}/../lib")
+  $LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
+end
+
+require 'optparse'
+require 'pod_builder/core'
+require 'pod_builder/version'
+require 'pod_builder/command'
+
+OPTIONS = {}  
+
+def parse_commandline()  
+  subcommands = {  
+    "none" => {
+      :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder COMMAND 
+
+      Prebuild CocoaPods pods
+        
+Command:
+    + init                           Initialize prebuild folders
+    + deintegrate                    Deintegrate prebuild folders
+    + build                          Build a specific pod declared in your Frameworks/Podfile
+    + build_all                      Build all pods declared in your Frameworks/Podfile
+    + restore_all                    Rebuild all pods declared in the Frameworks/Podfile.restore    
+    + install_sources                Install sources of pods to debug into prebuild frameworks
+    + clean                          Remove prebuild frameworks, dSYMs and source files added by install_sources no longer in Frameworks/Podfile
+
+Options:
+"
+        opts.on("-v", "--version", "Show the version of the tool") do |o|
+          OPTIONS[:version] = o
+        end
+      end,
+      :call => [
+        PodBuilder::Command::None
+      ]  
+    },
+
+    "build" => {
+      :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder build <PODNAME...>
+
+      Prebuild the specified CocoaPods pods
+        
+Options:
+"        
+        opts.on("-u", "--update", "Update CocoaPods repos") do |o|
+          OPTIONS[:update_repos] = o
+        end
+        opts.on("-d", "--debug", "Don't clean build folder") do |o|
+          OPTIONS[:debug] = o
+        end
+      end,
+      :call => [
+        PodBuilder::Command::Build
+      ]
+    },
+
+    "build_all" => {
+      :opts => OptionParser.new do |opts|
+        opts.on("-u", "--update", "Update CocoaPods repos") do |o|
+          OPTIONS[:update_repos] = o
+        end
+        opts.on("-d", "--debug", "Don't clean build folder") do |o|
+          OPTIONS[:debug] = o
+        end
+      end,
+      :call => [
+        PodBuilder::Command::BuildAll
+      ]
+    },
+
+    "restore_all" => {
+      :opts => OptionParser.new do |opts|
+        opts.on("-u", "--update", "Update CocoaPods repos") do |o|
+          OPTIONS[:update_repos] = o
+        end
+        opts.on("-d", "--debug", "Don't clean build folder") do |o|
+          OPTIONS[:debug] = o
+        end
+      end,
+      :call => [
+        PodBuilder::Command::RestoreAll
+      ]
+    },
+
+    "init" => {
+      :opts => OptionParser.new do |opts|
+        default_destination = PodBuilder::xcodepath(PodBuilder::Configuration.base_path)
+
+        opts.on("-d", "--destination path", "Prebuilt destination path (defaul: #{default_destination})") do |o|
+          OPTIONS[:prebuild_path] = o
+        end
+      end,
+      :call => [        
+        PodBuilder::Command::Init
+      ]
+    },
+
+    "generate_podspec" => {
+      :opts => OptionParser.new do |opts|
+      end,
+      :call => [        
+        PodBuilder::Command::GeneratePodspec
+      ]
+    },
+
+    "deintegrate" => {
+      :opts => OptionParser.new do |opts|
+      end,
+      :call => [        
+        PodBuilder::Command::Deintegrate
+      ]
+    },
+
+    "clean" => {
+      :opts => OptionParser.new do |opts|
+      end,
+      :call => [        
+        PodBuilder::Command::Clean
+      ]
+    },
+
+    "install_sources" => {
+      :opts => OptionParser.new do |opts|
+      end,
+      :call => [        
+        PodBuilder::Command::InstallSources
+      ]
+    }    
+  }
+   
+  subcommands["none"][:opts].order!
+   
+  subcommand = subcommands[ARGV.shift]
+   
+  if subcommand  
+    subcommand[:opts].order!
+    subcommand[:call].each do |k|
+      if !k.call(OPTIONS)
+        puts subcommand[:opts].help
+      end
+    end
+  else  
+    if !subcommands["none"][:call].first&.call(OPTIONS)
+      puts subcommands["none"][:opts].help
+    end
+  end
+end
+
+begin
+  unless ENV['USER'] != "root"
+    raise "\n\nFor safety do not run this as root\n".red
+  end
+
+  PodBuilder::Configuration.load
+  parse_commandline
+ensure
+  PodBuilder::clean_basepath
+  if !OPTIONS.has_key?(:debug)
+    PodBuilder::safe_rm_rf(PodBuilder::Configuration.build_path)
+  end
+end

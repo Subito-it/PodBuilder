@@ -1,0 +1,19 @@
+Pod::Spec.new do |s|
+  s.name             = "PodBuilder"
+  s.version          = "0.0.1"
+  s.summary          = "Prebuilt frameworks"
+  
+  s.description      = <<-DESC
+  A set of prebuilt frameworks to make compilation faster
+  DESC
+  
+  s.homepage         = "https://www.subito.it"
+  s.license          = 'Apache License, Version 2.0'
+  s.author           = { "Tomas Camin" => "tomas.camin@schibsted.com" }
+  s.source           = { :git => "https://www.subito.it", :tag => s.version.to_s }
+  
+  s.platform     = :ios, '9.0'
+  s.requires_arc = true
+  
+%%%podspecs%%%
+end

@@ -1,0 +1,78 @@
+require 'CFPropertyList'
+
+%%%sources%%%
+
+use_frameworks!
+
+plugin 'cocoapods-rome', {  dsym: false, configuration: '%%%build_configuration%%%', pre_compile: Proc.new { |installer|
+
+  def set_build_settings(target_name, build_configurations, installer)
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        if target.name == target_name
+          build_configurations.each do |k, v|
+            config.build_settings[k] = v
+          end
+        end
+      end
+    end
+  end
+
+  %%%build_settings%%%
+  pods = [%%%pods%%%]
+  dependencies = [%%%dependencies%%%]
+
+  removed_dependencies = []
+  installer.pods_project.targets.each do |target|
+    target.frameworks_build_phase.files.each do |f|
+      dependencies.each do |dependency|
+        if f.display_name().include?(dependency + ".a") then
+          removed_dependencies.push(dependency)
+          target.frameworks_build_phase.remove_build_file(f)
+        end
+      end
+    end        
+  end
+  
+  # Add -l<dependency> to other linker flags
+  installer.pods_project.targets.each do |target|
+    if pods.any? { |w| target.display_name().include?(w) }
+      removed_dependencies.each do |dependency|
+        target.build_configurations.each do |config|      
+          if config.build_settings['OTHER_LDFLAGS'].nil?
+            config.build_settings['OTHER_LDFLAGS'] = '-framework '
+          else
+            config.build_settings['OTHER_LDFLAGS'] << '-framework '
+          end
+          
+          config.build_settings['OTHER_LDFLAGS'] << "\"#{dependency}\" "
+        end
+      end
+    end
+  end
+
+  system("mkdir -p Pods/Pods.xcodeproj/project.xcworkspace/xcshareddata")
+
+  data = { 'BuildSystemType' => 'Legacy' } # Latest is new build system, Legacy is Legacy one
+  plist = CFPropertyList::List.new
+  plist.value = CFPropertyList.guess(data)
+  plist.save("Pods/Pods.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings", CFPropertyList::List::FORMAT_BINARY)
+
+  installer.pods_project.save
+}}
+
+platform :ios, '9.0'
+
+# Targets
+
+target 'DummyTarget' do
+  %%%targets%%%
+end
+
+pre_install do |installer|
+  raise "\n🚨  Do not launch 'pod install' manually, use `pod_builder` instead!\n" if !File.exist?('pod_builder.lock')
+
+  # workaround for https://github.com/CocoaPods/CocoaPods/issues/3289
+  Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_static_framework_transitive_dependencies) {}
+  Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}
+end

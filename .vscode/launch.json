@@ -1,0 +1,103 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Init",
+            "type": "Ruby",
+            "request": "launch",
+            "cwd": "~/Desktop",
+            "useBundler": true,
+            "program": "${workspaceRoot}/exe/pod_builder",
+            "showDebuggerOutput": true,
+            "pathToRDebugIDE": "/usr/bin/rdebug-ide",
+            "args": [
+                "init",
+            ]
+        },
+        {
+            "name": "Deintegrate",
+            "type": "Ruby",
+            "request": "launch",
+            "cwd": "~/Desktop",
+            "useBundler": true,
+            "program": "${workspaceRoot}/exe/pod_builder",
+            "showDebuggerOutput": true,
+            "pathToRDebugIDE": "/usr/bin/rdebug-ide",
+            "args": [
+                "deintegrate"
+            ]
+        },
+        {
+            "name": "Build",
+            "type": "Ruby",
+            "request": "launch",
+            "cwd": "~/Desktop",
+            "useBundler": true,
+            "program": "${workspaceRoot}/exe/pod_builder",
+            "showDebuggerOutput": true,
+            "pathToRDebugIDE": "/usr/bin/rdebug-ide",
+            "args": [
+                "build",
+                "-d",
+                "SBTGalleryView",
+            ]
+        },
+        {
+            "name": "Build All",
+            "type": "Ruby",
+            "request": "launch",
+            "cwd": "~/Desktop",
+            "useBundler": true,
+            "program": "${workspaceRoot}/exe/pod_builder",
+            "showDebuggerOutput": true,
+            "pathToRDebugIDE": "/usr/bin/rdebug-ide",
+            "args": [
+                "build_all",
+                "-d"
+            ]
+        },
+        {
+            "name": "Restore All",
+            "type": "Ruby",
+            "request": "launch",
+            "cwd": "~/Desktop",
+            "useBundler": true,
+            "program": "${workspaceRoot}/exe/pod_builder",
+            "showDebuggerOutput": true,
+            "pathToRDebugIDE": "/usr/bin/rdebug-ide",
+            "args": [
+                "restore_all",
+                "-d"
+            ]
+        },
+        {
+            "name": "Clean",
+            "type": "Ruby",
+            "request": "launch",
+            "cwd": "~/Desktop",
+            "useBundler": true,
+            "program": "${workspaceRoot}/exe/pod_builder",
+            "showDebuggerOutput": true,
+            "pathToRDebugIDE": "/usr/bin/rdebug-ide",
+            "args": [
+                "clean"
+            ]
+        },
+        {
+            "name": "Install sources",
+            "type": "Ruby",
+            "request": "launch",
+            "cwd": "~/Desktop",
+            "useBundler": true,
+            "program": "${workspaceRoot}/exe/pod_builder",
+            "showDebuggerOutput": true,
+            "pathToRDebugIDE": "/usr/bin/rdebug-ide",
+            "args": [
+                "install_sources"
+            ]
+        }
+    ]
+}
