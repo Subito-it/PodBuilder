@@ -139,6 +139,10 @@ PodBuilder leverages CocoaPods code and [cocoapods-rome plugin](https://github.c
 
 Relaunch the build command passing `-d`, this won't delete the temporary _/tmp/pod_builder_ folder on failure. Open _/tmp/pod_builder/Pods/Pods.xcproject_, make the Pods-DummyTarget target visible by clicking on _Show_ under _Product->Scheme->Manage shemes..._ and build from within Xcode. This will help you understand what went wrong.
 
+### **Do I need to commit compiled frameworks?**
+
+If the size of compiled frameworks in your repo is a concern you can choose add the _Rome_ and _dSYM_ folder to .gitignore and re-run `pod_builder build_all` locally on every machine.
+
 
 # Contributing
 
