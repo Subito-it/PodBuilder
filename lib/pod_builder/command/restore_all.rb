@@ -13,6 +13,7 @@ module PodBuilder
           File.rename(PodBuilder::basepath("Podfile.restore"), PodBuilder::basepath("Podfile"))
 
           ARGV << "*"
+          options[:skip_prebuild_update] = true
           ret = Command::Build::call(options)
         rescue Exception => e
           raise e
