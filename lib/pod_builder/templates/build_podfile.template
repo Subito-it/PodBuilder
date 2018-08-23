@@ -53,7 +53,7 @@ plugin 'cocoapods-rome', {  dsym: false, configuration: '%%%build_configuration%
 
   system("mkdir -p Pods/Pods.xcodeproj/project.xcworkspace/xcshareddata")
 
-  data = { 'BuildSystemType' => 'Legacy' } # Latest is new build system, Legacy is Legacy one
+  data = { 'BuildSystemType' => '%%%build_system%%%' } # Latest is new build system, Legacy is Legacy one
   plist = CFPropertyList::List.new
   plist.value = CFPropertyList.guess(data)
   plist.save("Pods/Pods.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings", CFPropertyList::List::FORMAT_BINARY)

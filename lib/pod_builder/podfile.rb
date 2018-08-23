@@ -32,6 +32,8 @@ module PodBuilder
 
       podfile.sub!("%%%build_settings%%%", podfile_build_settings)
 
+      podfile.sub!("%%%build_system%%%", Configuration.build_system)
+
       podfile.sub!("%%%pods%%%", "\"#{items.map(&:name).join('", "')}\"")
       
       podfile.sub!("%%%dependencies%%%", "\"#{items.map(&:dependency_names).flatten.uniq.join("\",\"")}\"")
