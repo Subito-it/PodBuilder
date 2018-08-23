@@ -24,7 +24,7 @@ module PodBuilder
                         "SWIFT_OPTIMIZATION_LEVEL" => "-Osize",
                         "SWIFT_COMPILATION_MODE" => "Incremental",
                       }  
-    @build_system = "Latest" # either Latest (New build system) or Legacy (Standard build system)
+    @build_system = "Legacy" # either Latest (New build system) or Legacy (Standard build system)
     @license_file_name = "Pods-acknowledgements"               
 
     def self.check_inited
