@@ -128,8 +128,11 @@ module PodBuilder
         license_footer = licenses.pop
         raise "Unexpected license found in footer" if license_footer.has_key?("License")
 
+        lincenses_titles = licenses.map { |x| x["Title"] }
+        current_licenses.select! { |x| !lincenses_titles.include?(x["Title"]) }
+
         licenses += current_licenses # merge with existing license
-        licenses.uniq!
+        licenses.uniq! { |x| x["Title"] }
         licenses.sort_by! { |x| x["Title"] }
         licenses.select! { |x| !Configuration.skip_licenses.include?(x["Title"]) }
         licenses.select! { |x| all_buildable_items.map(&:root_name).include?(x["Title"]) } # Remove items that are no longer included
