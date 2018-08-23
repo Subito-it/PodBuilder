@@ -22,6 +22,7 @@ module PodBuilder
                         "CLANG_ENABLE_MODULE_DEBUGGING" => "NO",
                         "GCC_OPTIMIZATION_LEVEL" => "s",
                         "SWIFT_OPTIMIZATION_LEVEL" => "-Osize",
+                        "SWIFT_COMPILATION_MODE" => "Incremental",
                       }  
     @build_system = "Latest" # either Latest (New build system) or Legacy (Standard build system)
     @license_file_name = "Pods-acknowledgements"               
