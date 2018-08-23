@@ -58,7 +58,7 @@ module PodBuilder
     def self.cleanup_frameworks(podfile_items)
       Dir.glob("#{Configuration.build_path}/Rome/*.framework") do |framework_path|
         framework_rel_path = framework_rel_path(framework_path, podfile_items)
-        dsym_path = File.dirname(framework_rel_path)
+        dsym_path = framework_rel_path + ".dSYM"
 
         PodBuilder::safe_rm_rf(PodBuilder::basepath("Rome/#{framework_rel_path}"))
         PodBuilder::safe_rm_rf(PodBuilder::basepath("dSYM/iphoneos/#{dsym_path}"))
