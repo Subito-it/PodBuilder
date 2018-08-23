@@ -4,7 +4,7 @@ module PodBuilder
   class Analyze
     # @return [Pod::Installer] The Pod::Installer instance created by processing the Podfile
     #
-    def self.installer_at(path)
+    def self.installer_at(path, repo_update = false)
       CLAide::Command::PluginManager.load_plugins("cocoapods")
 
       current_dir = Dir.pwd
@@ -12,7 +12,7 @@ module PodBuilder
 
       config = Pod::Config.new()
       installer = Pod::Installer.new(config.sandbox, config.podfile, config.lockfile)
-      installer.repo_update = false
+      installer.repo_update = repo_update
       installer.update = false 
 
       analyzer = installer.resolve_dependencies

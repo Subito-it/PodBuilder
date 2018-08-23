@@ -7,6 +7,7 @@ module PodBuilder
         Configuration.check_inited
         PodBuilder::prepare_basepath
 
+        update_repo = options[:update_repos] || false
         installer, analyzer = Analyze.installer_at(PodBuilder::basepath)
         all_buildable_items = Analyze.podfile_items(installer, analyzer)
 

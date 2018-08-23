@@ -14,7 +14,8 @@ module PodBuilder
           return false
         end
 
-        installer, analyzer = Analyze.installer_at(PodBuilder::basepath)
+        update_repo = options[:update_repos] || false
+        installer, analyzer = Analyze.installer_at(PodBuilder::basepath, update_repo)
 
         all_buildable_items = Analyze.podfile_items(installer, analyzer)
         prebuilt_items = all_buildable_items.select { |x| x.is_prebuilt }
