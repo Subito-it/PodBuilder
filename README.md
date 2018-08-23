@@ -119,15 +119,38 @@ As an example here we're setting `module_name` in Google's Advertising SDK:
 }
 ```
 
+#### `build_settings`
+
+Xcode build settings to use. You can override the default values which are:
+
+```json
+{
+    "ENABLE_BITCODE": "NO",
+    "CLANG_ENABLE_MODULE_DEBUGGING": "NO",
+    "GCC_OPTIMIZATION_LEVEL": "s",
+    "SWIFT_OPTIMIZATION_LEVEL": "-Osize",
+    "SWIFT_COMPILATION_MODE": "Incremental"
+} 
+```
+
+#### `build_system`
+
+Specify which build system to use to compile frameworks. Either `Legacy` (standard build system) or `Latest` (new build system). Default value: `Legacy`.
+
+#### `license_file_name`
+
+PodBuilder will create two license files a plist and a markdown file which contains the licenses of each pod specified in the PodBuilder-Podfile. Defailt value: `Pods-acknowledgements`(plist|md).
+
 #### `skip_licenses`
 
-PodBuilder writes a plist and markdown license files of pods specified in the PodBuilder-Podfile. You can specify pods that should not be included, for example for private pods.
+PodBuilder writes a plist and markdown license files of pods specified in the PodBuilder-Podfile. You can specify pods that should not be included, for example for private pods. 
 
 ```json
 {
     "skip_licenses": ["Podname1", "Podname2"]
 }
 ```
+
 
 # Under the hood
 
@@ -137,11 +160,11 @@ PodBuilder leverages CocoaPods code and [cocoapods-rome plugin](https://github.c
 
 ### **Build failed with longish output to the stdout, what should I do next?**
 
-Relaunch the build command passing `-d`, this won't delete the temporary _/tmp/pod_builder_ folder on failure. Open _/tmp/pod_builder/Pods/Pods.xcproject_, make the Pods-DummyTarget target visible by clicking on _Show_ under _Product->Scheme->Manage shemes..._ and build from within Xcode. This will help you understand what went wrong.
+Relaunch the build command passing `-d`, this won't delete the temporary _/tmp/pod_builder_ folder on failure. Open _/tmp/pod_builder/Pods/Pods.xcproject_, make the Pods-DummyTarget target visible by clicking on _Show_ under _Product->Scheme->Manage shemes..._ and build from within Xcode. This will help you understand what went wrong. Remeber to verify that you're building the _Release_ build configuration.
 
 ### **Do I need to commit compiled frameworks?**
 
-If the size of compiled frameworks in your repo is a concern you can choose add the _Rome_ and _dSYM_ folder to .gitignore and re-run `pod_builder build_all` locally on every machine.
+No. If the size of compiled frameworks in your repo is a concern you can choose add the _Rome_ and _dSYM_ folder to .gitignore and re-run `pod_builder build_all` locally on every machine.
 
 
 # Contributing

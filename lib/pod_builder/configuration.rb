@@ -3,28 +3,30 @@ require 'json'
 module PodBuilder  
   class Configuration
     class <<self
+      attr_accessor :build_settings
+      attr_accessor :build_system
       attr_accessor :config_file
       attr_accessor :base_path
       attr_accessor :build_path
-      attr_accessor :build_settings
-      attr_accessor :build_system
       attr_accessor :spec_overrides
       attr_accessor :skip_licenses
       attr_accessor :license_file_name
     end
 
+    # Remember to update README.md
+    @build_settings = { 
+      "ENABLE_BITCODE" => "NO",
+      "CLANG_ENABLE_MODULE_DEBUGGING" => "NO",
+      "GCC_OPTIMIZATION_LEVEL" => "s",
+      "SWIFT_OPTIMIZATION_LEVEL" => "-Osize",
+      "SWIFT_COMPILATION_MODE" => "Incremental",
+    }  
+    @build_system = "Legacy" # either Latest (New build system) or Legacy (Standard build system)
     @config_file = "PodBuilder.json"
     @base_path = "Frameworks"
     @build_path = "/tmp/pod_builder"
     @spec_overrides = {}
     @skip_licenses = []
-    @build_settings = { "ENABLE_BITCODE" => "NO",
-                        "CLANG_ENABLE_MODULE_DEBUGGING" => "NO",
-                        "GCC_OPTIMIZATION_LEVEL" => "s",
-                        "SWIFT_OPTIMIZATION_LEVEL" => "-Osize",
-                        "SWIFT_COMPILATION_MODE" => "Incremental",
-                      }  
-    @build_system = "Legacy" # either Latest (New build system) or Legacy (Standard build system)
     @license_file_name = "Pods-acknowledgements"               
 
     def self.check_inited
