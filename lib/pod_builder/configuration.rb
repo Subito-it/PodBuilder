@@ -46,8 +46,21 @@ module PodBuilder
 
       if exists
         config = JSON.parse(File.read(config_path))
-        Configuration.spec_overrides = config["spec_overrides"] || []
-        Configuration.skip_licenses = config["skip_licenses"] || []
+        if config.has_key?("spec_overrides")
+          Configuration.spec_overrides = config["spec_overrides"]
+        end
+        if config.has_key?("skip_licenses")
+          Configuration.skip_licenses = config["skip_licenses"]
+        end
+        if config.has_key?("build_settings")
+          Configuration.build_settings = config["build_settings"]
+        end
+        if config.has_key?("build_system")
+          Configuration.build_system = config["build_system"]
+        end
+        if config.has_key?("license_file_name")
+          Configuration.license_file_name = config["license_file_name"]
+        end
       end
     end
     
