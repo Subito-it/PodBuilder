@@ -62,13 +62,6 @@ module PodBuilder
     #
     attr_accessor :build_configuration
 
-    # @return [String] The pod's swift optimization level overriding 
-    # build_settings in PodBuilder::Configuration::build_configuration.
-    #
-    # This is a workaround to overcome segmentation faults that might trigger by certain optimization level
-    #
-    attr_accessor :swift_optimization_level
-
     # Initialize a new instance
     #
     # @param [Specification] spec
@@ -113,8 +106,6 @@ module PodBuilder
       @xcconfig = spec.root.attributes_hash["xcconfig"] || {}
       @build_configuration = spec.root.attributes_hash.dig("pod_target_xcconfig", "prebuild_configuration") || "release"
       @build_configuration.downcase!
-
-      @swift_optimization_level = spec.root.attributes_hash.dig("pod_target_xcconfig", "swift_optimization_level")        
     end
     
     def inspect
