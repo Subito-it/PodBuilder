@@ -4,11 +4,12 @@ module PodBuilder
   class Configuration
     class <<self
       attr_accessor :build_settings
+      attr_accessor :build_settings_overrides
       attr_accessor :build_system
       attr_accessor :config_file
       attr_accessor :base_path
       attr_accessor :build_path
-      attr_accessor :spec_overrides
+      attr_accessor :spec_overrides      
       attr_accessor :skip_licenses
       attr_accessor :license_file_name
     end
@@ -22,6 +23,7 @@ module PodBuilder
       "SWIFT_OPTIMIZATION_LEVEL" => "-Osize",
       "SWIFT_COMPILATION_MODE" => "Incremental",
     }  
+    @build_settings_overrides = {}
     @build_system = "Legacy" # either Latest (New build system) or Legacy (Standard build system)
     @config_file = "PodBuilder.json"
     @base_path = "Frameworks"
@@ -57,6 +59,9 @@ module PodBuilder
         end
         if config.has_key?("build_settings")
           Configuration.build_settings = config["build_settings"]
+        end
+        if config.has_key?("build_settings_overrides")
+          Configuration.build_settings_overrides = config["build_settings_overrides"]
         end
         if config.has_key?("build_system")
           Configuration.build_system = config["build_system"]

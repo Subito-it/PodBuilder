@@ -22,9 +22,11 @@ module PodBuilder
       build_settings = Configuration.build_settings
       podfile_build_settings = ""
       items.each do |item|
-        build_settings['SWIFT_VERSION'] = item.swift_version || project_swift_version(analyzer)
-        if swift_optimization_level = item.swift_optimization_level
-          build_settings['SWIFT_OPTIMIZATION_LEVEL'] = swift_optimization_level
+        item_build_settings = Configuration.build_settings_overrides[item.name] || {}
+        build_settings['SWIFT_VERSION'] = item_build_settings["SWIFT_VERSION"] || project_swift_version(analyzer)
+
+        item_build_settings.each do |k, v|
+          build_settings[k] = v
         end
 
         podfile_build_settings += "set_build_settings(\"#{item.root_name}\", #{build_settings.to_s}, installer)\n  "

@@ -133,6 +133,23 @@ Xcode build settings to use. You can override the default values which are:
 } 
 ```
 
+#### `build_settings_overrides`
+
+Like `build_settings` but per pod. Pod name can also refer to subspec.
+
+```json
+{
+    "build_settings_overrides": {
+        "PodA": {
+            "SWIFT_OPTIMIZATION_LEVEL": "-O"
+        },
+        "PodB/Subspec": {
+            "APPLICATION_EXTENSION_API_ONLY": "NO"
+        }
+    }
+}
+```
+
 #### `build_system`
 
 Specify which build system to use to compile frameworks. Either `Legacy` (standard build system) or `Latest` (new build system). Default value: `Legacy`.
