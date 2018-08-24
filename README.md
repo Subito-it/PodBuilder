@@ -173,7 +173,7 @@ Under _Example_ there's a sample project with a Podfile adding [Alamofire](https
     $ pod_builder init
     $ pod_builder build_all
 
-This will initialize the project to use PodBuilder and prebuild Alamofire.
+This will initialize the project to use PodBuilder and prebuild Alamofire, open the project in Xcode and compile.
 
 # Contributing
 
