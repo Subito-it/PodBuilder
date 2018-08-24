@@ -166,6 +166,14 @@ Relaunch the build command passing `-d`, this won't delete the temporary _/tmp/p
 
 No. If the size of compiled frameworks in your repo is a concern you can choose add the _Rome_ and _dSYM_ folder to .gitignore and re-run `pod_builder build_all` locally on every machine.
 
+# Try it out!
+
+Under _Example_ there's a sample project with a Podfile adding [Alamofire](https://github.com/Alamofire/Alamofire) you can use to try PodBuilder out.
+
+    $ pod_builder init
+    $ pod_builder build_all
+
+This will initialize the project to use PodBuilder and prebuild Alamofire.
 
 # Contributing
 

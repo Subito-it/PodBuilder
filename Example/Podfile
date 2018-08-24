@@ -1,0 +1,8 @@
+platform :ios, '9.0'
+
+target 'PodBuilderExample' do
+  use_frameworks!
+
+  # Pods for PodBuilderExample
+  pod 'Alamofire'
+end
