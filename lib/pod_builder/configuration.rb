@@ -14,7 +14,8 @@ module PodBuilder
     end
 
     # Remember to update README.md
-    @build_settings = { 
+    @build_settings = {
+      "ONLY_ACTIVE_ARCH" => "NO", 
       "ENABLE_BITCODE" => "NO",
       "CLANG_ENABLE_MODULE_DEBUGGING" => "NO",
       "GCC_OPTIMIZATION_LEVEL" => "s",
