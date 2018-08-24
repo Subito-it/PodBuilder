@@ -152,21 +152,30 @@ Options:
         puts subcommand[:opts].help
       end
     end
+
+    return true
   else  
     if !subcommands["none"][:call].first&.call(OPTIONS)
       puts subcommands["none"][:opts].help
     end
+
+    return false
   end
 end
 
+command_executed = false
 begin
   unless ENV['USER'] != "root"
     raise "\n\nFor safety do not run this as root\n".red
   end
 
   PodBuilder::Configuration.load
-  parse_commandline
+  command_executed = parse_commandline
 ensure
+  unless command_executed
+    exit(0)
+  end
+
   PodBuilder::clean_basepath
   if !OPTIONS.has_key?(:debug)
     PodBuilder::safe_rm_rf(PodBuilder::Configuration.build_path)
