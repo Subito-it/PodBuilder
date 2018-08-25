@@ -4,7 +4,9 @@ module Pod
       def pods_and_deps_in_target(target_name, podfile_items)
         target_name = "Pods-#{target_name}"
 
-        specs = result.specs_by_target.select { |key, value| key.label == target_name }.values.first
+        unless specs = result.specs_by_target.select { |key, value| key.label == target_name }.values.first
+          return [], []
+        end
         specs.select! { |x| podfile_items.map(&:name).include?(x.name) }
         
         target_pods = []
