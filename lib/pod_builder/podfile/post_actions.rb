@@ -129,7 +129,7 @@ module PodBuilder
     end
 
     def self.find_xcodeproj_targets
-      xcodeprojects = Dir.glob("#{PodBuilder::home}/**/*.xcodeproj").select { |x| !x.include?("Pods.xcodeproj") && !x.include?(PodBuilder::basepath) }
+      xcodeprojects = Dir.glob("#{PodBuilder::home}/**/*.xcodeproj").select { |x| !x.include?("/Pods/") && !x.include?(PodBuilder::basepath) }
       raise "xcdeoproj not found!".red if xcodeprojects.count == 0
       raise "Found multiple xcdeoprojs:\n#{xcodeprojects.join("\n")}".red if xcodeprojects.count > 1
       

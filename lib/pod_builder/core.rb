@@ -48,11 +48,11 @@ module PodBuilder
   end
 
   def self.find_xcodeproject
-    return Dir.glob("#{home}/**/*.xcodeproj").detect { |x| !x.include?("Pods.xcodeproj") && !x.include?(basepath) }
+    return Dir.glob("#{home}/**/*.xcodeproj").detect { |x| !x.include?("/Pods/") && !x.include?(basepath) }
   end
 
   def self.find_xcodeworkspace
-    return Dir.glob("#{home}/**/*.xcworkspace").detect { |x| !x.include?("Pods.xcworkspace") && !x.include?(basepath) }
+    return Dir.glob("#{home}/**/*.xcworkspace").detect { |x| !x.include?("/Pods/") && !x.include?(basepath) }
   end
 
   def self.prepare_basepath
