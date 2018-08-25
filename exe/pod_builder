@@ -175,7 +175,8 @@ rescue Exception => e
   error = e.to_s
 
   if error.length < 1000
-    puts e.backtrace.red
+    puts "#{error.red}\n"
+    puts e.backtrace.join("\n\t").red
     puts "\n\nCommand failed!".red
   else
     error_log = "/tmp/pod_builder.err"
