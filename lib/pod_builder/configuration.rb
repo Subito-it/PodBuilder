@@ -26,7 +26,7 @@ module PodBuilder
     @build_settings_overrides = {}
     @build_system = "Legacy" # either Latest (New build system) or Legacy (Standard build system)
     @config_file = "PodBuilder.json"
-    @base_path = "Frameworks"
+    @base_path = "Frameworks" # Not nice. This value is used only for initial initization. Once config is loaded it will be an absolute path. FIXME
     @build_path = "/tmp/pod_builder"
     @spec_overrides = {}
     @skip_licenses = []
