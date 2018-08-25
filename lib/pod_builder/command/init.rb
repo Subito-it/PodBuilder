@@ -28,12 +28,6 @@ module PodBuilder
         add_pre_install_actions(project_podfile_path)
         add_post_install_checks(project_podfile_path)
 
-        home_path = Pathname.new(PodBuilder::xcodepath)
-        prebuilt_path = Pathname.new(options[:prebuild_path])
-        relative_path = prebuilt_path.relative_path_from(home_path)
-
-        Configuration.base_path = relative_path
-
         Configuration.write
 
         puts "\n\n🎉 done!\n".green
