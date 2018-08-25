@@ -21,7 +21,7 @@ module PodBuilder
       "CLANG_ENABLE_MODULE_DEBUGGING" => "NO",
       "GCC_OPTIMIZATION_LEVEL" => "s",
       "SWIFT_OPTIMIZATION_LEVEL" => "-Osize",
-      "SWIFT_COMPILATION_MODE" => "Incremental",
+      "SWIFT_COMPILATION_MODE" => "singlefile",
     }  
     @build_settings_overrides = {}
     @build_system = "Legacy" # either Latest (New build system) or Legacy (Standard build system)
