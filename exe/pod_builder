@@ -171,6 +171,17 @@ begin
 
   PodBuilder::Configuration.load
   command_executed = parse_commandline
+rescue Exception => e
+  error = e.to_s
+
+  if error.length < 1000
+    puts e.backtrace.red
+    puts "\n\nCommand failed!".red
+  else
+    error_log = "/tmp/pod_builder.err"
+    puts "\n\nCommand failed, check #{error_log}!".red
+    File.write(error_log, error)
+  end
 ensure
   unless command_executed
     exit(0)
