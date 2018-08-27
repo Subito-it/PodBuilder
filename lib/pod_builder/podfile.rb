@@ -21,6 +21,9 @@ module PodBuilder
 
       build_settings = Configuration.build_settings
       podfile_build_settings = ""
+      
+      pod_dependencies = {}
+
       items.each do |item|
         item_build_settings = Configuration.build_settings_overrides[item.name] || {}
         build_settings['SWIFT_VERSION'] = item_build_settings["SWIFT_VERSION"] || project_swift_version(analyzer)
@@ -30,6 +33,19 @@ module PodBuilder
         end
 
         podfile_build_settings += "set_build_settings(\"#{item.root_name}\", #{build_settings.to_s}, installer)\n  "
+
+        dependency_names = item.dependency_names.map { |x|
+          if x.split("/").first == item.root_name
+            next nil # remove dependency to parent spec
+          end
+          if overridded_module_name = Configuration.spec_overrides[x]["module_name"]
+            next overridded_module_name
+          end
+        }.compact
+  
+        if dependency_names.count > 0
+          pod_dependencies[item.root_name] = dependency_names
+        end
       end
 
       podfile.sub!("%%%build_settings%%%", podfile_build_settings)
@@ -38,7 +54,7 @@ module PodBuilder
 
       podfile.sub!("%%%pods%%%", "\"#{items.map(&:name).join('", "')}\"")
       
-      podfile.sub!("%%%dependencies%%%", "\"#{items.map(&:dependency_names).flatten.uniq.join("\",\"")}\"")
+      podfile.sub!("%%%pods_dependencies%%%", pod_dependencies.to_s)
       
       podfile.sub!("%%%targets%%%", items.map(&:entry).join("\n  "))
 

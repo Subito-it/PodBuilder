@@ -19,28 +19,15 @@ plugin 'cocoapods-rome', {  dsym: false, configuration: '%%%build_configuration%
   end
 
   %%%build_settings%%%
-  pods = [%%%pods%%%]
-  dependencies = [%%%dependencies%%%]
+  pods_dependencies = %%%pods_dependencies%%%
 
-  removed_dependencies = []
-  installer.pods_project.targets.each do |target|
-    target.frameworks_build_phase.files.each do |f|
-      dependencies.each do |dependency|
-        if f.display_name().include?(dependency + ".a") then
-          removed_dependencies.push(dependency)
-          target.frameworks_build_phase.remove_build_file(f)
-        end
-      end
-    end        
-  end
-  
   # Add -l<dependency> to other linker flags
   installer.pods_project.targets.each do |target|
-    if pods.any? { |w| target.display_name().include?(w) }
-      removed_dependencies.each do |dependency|
-        target.build_configurations.each do |config|      
+    if dependencies = pods_dependencies[target.name]
+      target.build_configurations.each do |config|   
+        dependencies.each do |dependency|   
           if config.build_settings['OTHER_LDFLAGS'].nil?
-            config.build_settings['OTHER_LDFLAGS'] = '-framework '
+            config.build_settings['OTHER_LDFLAGS'] = '$(inherited) -framework '
           else
             config.build_settings['OTHER_LDFLAGS'] << '-framework '
           end
