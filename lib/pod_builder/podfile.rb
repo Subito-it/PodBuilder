@@ -148,7 +148,7 @@ module PodBuilder
 
     def self.pod_definition_in(line, include_commented)
       stripped_line = strip_line(line)
-      matches = stripped_line.match(/(pod')(.*?)(')/)
+      matches = stripped_line.match(/(^pod')(.*?)(')/)
       
       if matches&.size == 4 && (include_commented || !stripped_line.start_with?("#"))
         return matches[2]
@@ -159,7 +159,7 @@ module PodBuilder
 
     def self.target_definition_in(line, include_commented)
       stripped_line = strip_line(line)
-      matches = stripped_line.match(/(target')(.*?)(')/)
+      matches = stripped_line.match(/(^target')(.*?)(')/)
       
       if matches&.size == 4 && (include_commented || !stripped_line.start_with?("#"))
         return matches[2]
