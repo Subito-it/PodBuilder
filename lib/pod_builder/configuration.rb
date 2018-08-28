@@ -96,7 +96,7 @@ module PodBuilder
       config_path = Dir.glob("#{PodBuilder::home}/**/.pod_builder").first
       
       path = File.dirname(config_path || project_path)
-      return File.join(path, config_file)
+      return File.join(path, CONFIG_FILE)
     end
   end  
 end
