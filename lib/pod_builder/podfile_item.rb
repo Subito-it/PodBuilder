@@ -62,6 +62,10 @@ module PodBuilder
     #
     attr_accessor :build_configuration
 
+    # @return String The pod's vendored items (frameworks and libraries)
+    #
+    attr_accessor :vendored_items
+
     # Initialize a new instance
     #
     # @param [Specification] spec
@@ -94,7 +98,9 @@ module PodBuilder
         @commit = spec.root.source[:commit]
         @is_external = false
       end    
-      
+
+      @vendored_items = recursive_vendored_items(spec)
+
       @version = spec.root.version.version
       
       @swift_version = spec.root.swift_version&.to_s
@@ -119,7 +125,7 @@ module PodBuilder
     # @return [Bool] True if it's a pod that doesn't provide source code (is already shipped as a prebuilt pod)
     #    
     def is_prebuilt
-      @repo.nil? && @path.nil?
+      return vendored_items.select { |x| x.include?(root_name) }.count > 0
     end
 
     # @return [Bool] True if it's a subspec
@@ -202,6 +208,38 @@ module PodBuilder
       end
 
       return nil
+    end
+
+    private
+
+    def recursive_vendored_items(spec)
+      items = []
+
+      items += [spec.root.attributes_hash["vendored_frameworks"]]
+      items += [spec.root.attributes_hash["vendored_framework"]]
+      items += [spec.root.attributes_hash["vendored_libraries"]]
+      items += [spec.root.attributes_hash["vendored_library"]]
+
+      items += [spec.attributes_hash["vendored_frameworks"]]
+      items += [spec.attributes_hash["vendored_framework"]]
+      items += [spec.attributes_hash["vendored_libraries"]]
+      items += [spec.attributes_hash["vendored_library"]]
+
+      supported_platforms = spec.available_platforms.flatten.map(&:name).map(&:to_s)
+
+      items += supported_platforms.map { |x| spec.root.attributes_hash.fetch(x, {})["vendored_frameworks"] }
+      items += supported_platforms.map { |x| spec.root.attributes_hash.fetch(x, {})["vendored_framework"] }
+      items += supported_platforms.map { |x| spec.root.attributes_hash.fetch(x, {})["vendored_libraries"] }
+      items += supported_platforms.map { |x| spec.root.attributes_hash.fetch(x, {})["vendored_library"] }
+
+      items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_frameworks"] }
+      items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_framework"] }
+      items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_libraries"] }
+      items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_library"] }
+
+      items = items.flatten.compact
+
+      return items.flatten
     end
   end
 end
