@@ -1,4 +1,5 @@
 require 'pod_builder/core'
+require 'highline/import'
 
 module PodBuilder
   module Command
@@ -16,31 +17,34 @@ module PodBuilder
 
         base_path = PodBuilder::basepath("Rome")
         framework_files = Dir.glob("#{base_path}/**/*.framework")
+        puts "Looking for unused frameworks".yellow
         clean(framework_files, base_path, rel_paths)
 
         rel_paths.map! { |x| "#{x}.dSYM"}
 
         base_path = PodBuilder::basepath("dSYM/iphoneos")
         dSYM_files_iphone = Dir.glob("#{base_path}/**/*.dSYM")
+        puts "Looking for iPhoneOS unused dSYMs".yellow    
         clean(dSYM_files_iphone, base_path, rel_paths)
 
         base_path = PodBuilder::basepath("dSYM/iphonesimulator")
         dSYM_files_sim = Dir.glob("#{base_path}/**/*.dSYM")
+        puts "Looking for iPhone Simulator unused dSYMs".yellow
         clean(dSYM_files_sim, base_path, rel_paths)
 
+        puts "Looking for unused sources".yellow
         clean_sources(podspec_names)
 
         puts "\n\n🎉 done!\n".green
         return true
       end
 
-      def self.clean_sources(podspec_names)
-        puts "Cleaning sources".blue
-        
+      def self.clean_sources(podspec_names)        
         base_path = PodBuilder::basepath("Sources")
 
         repo_paths = Dir.glob("#{base_path}/*")
 
+        paths_to_delete = []
         repo_paths.each do |path|
           podspec_name = File.basename(path)
 
@@ -48,8 +52,14 @@ module PodBuilder
             next
           end
 
-          puts "Deleting sources #{path}".blue
-          FileUtils.rm_rf(path)
+          paths_to_delete.push(path)
+        end
+
+        paths_to_delete.flatten.each do |path|
+          confirm = ask("#{path} unused.\nDelete it? [Y/N] ") { |yn| yn.limit = 1, yn.validate = /[yn]/i }
+          if confirm.downcase == 'y'
+            PodBuilder::safe_rm_rf(path)
+          end
         end
       end
 
@@ -58,13 +68,20 @@ module PodBuilder
       def self.clean(files, base_path, rel_paths)
         files = files.map { |x| [Pathname.new(x).relative_path_from(Pathname.new(base_path)).to_s, x] }.to_h
 
+        paths_to_delete = []
         files.each do |rel_path, path|
           unless !rel_paths.include?(rel_path)
             next
           end
 
-          puts "Deleting #{path}".blue
-          FileUtils.rm_rf(path)
+          paths_to_delete.push(path)
+        end
+
+        paths_to_delete.each do |path|
+          confirm = ask("\n#{path} unused.\nDelete it? [Y/N] ") { |yn| yn.limit = 1, yn.validate = /[yn]/i }
+          if confirm.downcase == 'y'
+            PodBuilder::safe_rm_rf(path)
+          end
         end
 
         current_dir = Dir.pwd
