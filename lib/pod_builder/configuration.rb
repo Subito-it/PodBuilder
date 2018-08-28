@@ -16,6 +16,7 @@ module PodBuilder
       attr_accessor :spec_overrides      
       attr_accessor :skip_licenses
       attr_accessor :license_file_name
+      attr_accessor :subspecs_to_split
     end
 
     # Remember to update README.md
@@ -32,7 +33,8 @@ module PodBuilder
     @base_path = "Frameworks" # Not nice. This value is used only for initial initization. Once config is loaded it will be an absolute path. FIXME
     @spec_overrides = {}
     @skip_licenses = []
-    @license_file_name = "Pods-acknowledgements"    
+    @license_file_name = "Pods-acknowledgements"
+    @subspecs_to_split = []
     
     def self.check_inited
       count = Dir.glob("#{PodBuilder::home}/**/.pod_builder").count
@@ -74,6 +76,9 @@ module PodBuilder
         end
         if config.has_key?("license_file_name")
           Configuration.license_file_name = config["license_file_name"]
+        end
+        if config.has_key?("subspecs_to_split")
+          Configuration.subspecs_to_split = config["subspecs_to_split"]
         end
       end
     end

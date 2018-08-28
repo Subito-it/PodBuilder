@@ -55,7 +55,7 @@ module PodBuilder
         # 2. pods to build in release
         # 3. pods to build in debug
 
-        pods_to_build_subspecs = pods_to_build.select { |x| x.is_subspec }
+        pods_to_build_subspecs = pods_to_build.select { |x| x.is_subspec && Configuration.subspecs_to_split.include?(x.name) }
         pods_to_build -= pods_to_build_subspecs
         pods_to_build_debug = pods_to_build.select { |x| x.build_configuration == "debug" }
         pods_to_build_release = pods_to_build - pods_to_build_debug
