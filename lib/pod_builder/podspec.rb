@@ -1,8 +1,42 @@
 module PodBuilder
   class Podspec
-    def self.generate      
+    def self.generate     
       buildable_items = Podfile.podfile_items_at(PodBuilder::basepath("Podfile"))
-      
+
+      grouped_buildable_items = buildable_items.select { |x| x.is_subspec }.group_by { |x| x.root_name }
+
+      grouped_buildable_items.each do |root_name, subspecs|
+        unless !buildable_items.map(&:name).include?(root_name)
+          next
+        end
+
+        spec_raw = {}
+        all_specs = []
+        checkout_options = {}
+        
+        spec_raw["name"] = root_name
+        spec_raw["module_name"] = root_name
+
+        # spec_raw["source"] = ["git": "https://www.subito.it/pod/#{root_name}.git", "tag": "1.0"]
+        spec_raw["source"] = []
+
+        deps = subspecs.map { |x| x.dependencies(buildable_items) }.flatten.uniq
+        spec_raw["dependencies"] = deps.map { |x| [x.root_name, []] }.to_h
+        
+        spec_raw["static_framework"] = subspecs.map(&:is_static).reduce(true) { |result, item| result && item }
+
+        if subspecs.map(&:xcconfig).select { |x| !x.empty? }.count > 0 
+          raise "Unhandled subspec xcconfig. Please open issue https://github.com/Subito-it/PodBuilder/issues"
+        end
+        
+        spec = Pod::Specification.from_string(spec_raw.to_json, "podspec.json")        
+
+        pod = PodfileItem.new(spec, all_specs, checkout_options)
+        buildable_items.push(pod)
+      end
+
+      buildable_items.sort_by! { |x| x.name }
+
       podspecs = []
       buildable_items.each do |pod|
         spec_exists = File.exist?(PodBuilder::basepath(vendored_spec_framework_path(pod))) 
