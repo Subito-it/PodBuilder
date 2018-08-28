@@ -2,13 +2,17 @@ require 'json'
 
 module PodBuilder  
   class Configuration
-    class <<self
+    CONFIG_FILE = "PodBuilder.json".freeze
+    BUILD_PATH = "/tmp/pod_builder".freeze
+
+    private_constant :CONFIG_FILE
+    private_constant :BUILD_PATH
+
+    class <<self      
       attr_accessor :build_settings
       attr_accessor :build_settings_overrides
       attr_accessor :build_system
-      attr_accessor :config_file
       attr_accessor :base_path
-      attr_accessor :build_path
       attr_accessor :spec_overrides      
       attr_accessor :skip_licenses
       attr_accessor :license_file_name
@@ -24,18 +28,20 @@ module PodBuilder
       "SWIFT_COMPILATION_MODE" => "singlefile",
     }  
     @build_settings_overrides = {}
-    @build_system = "Legacy" # either Latest (New build system) or Legacy (Standard build system)
-    @config_file = "PodBuilder.json"
+    @build_system = "Legacy" # either Latest (New build system) or Legacy (Standard build system)    
     @base_path = "Frameworks" # Not nice. This value is used only for initial initization. Once config is loaded it will be an absolute path. FIXME
-    @build_path = "/tmp/pod_builder"
     @spec_overrides = {}
     @skip_licenses = []
-    @license_file_name = "Pods-acknowledgements"               
-
+    @license_file_name = "Pods-acknowledgements"    
+    
     def self.check_inited
       count = Dir.glob("#{PodBuilder::home}/**/.pod_builder").count
       raise "\n\nNot inited, run `pod_builder init`\n".red if count == 0
       raise "\n\nToo many .pod_builder found `#{count}`\n".red if count > 1
+    end
+
+    def self.build_path
+      return BUILD_PATH
     end
     
     def self.exists
