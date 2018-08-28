@@ -180,7 +180,11 @@ module PodBuilder
 
     def prebuilt_entry
       relative_path = Pathname.new(Configuration.base_path).relative_path_from(Pathname.new(PodBuilder::xcodepath)).to_s
-      return "pod 'PodBuilder/#{podspec_name}', :path => '#{relative_path}'"
+      if Configuration.subspecs_to_split.include?(name)
+        return "pod 'PodBuilder/#{podspec_name}', :path => '#{relative_path}'"
+      else
+        return "pod 'PodBuilder/#{root_name}', :path => '#{relative_path}'"
+      end
     end
 
     def has_subspec(named)
