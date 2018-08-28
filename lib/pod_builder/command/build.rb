@@ -14,6 +14,8 @@ module PodBuilder
           return false
         end
 
+        check_not_building_subspecs(argument_pods)
+
         update_repo = options[:update_repos] || false
         installer, analyzer = Analyze.installer_at(PodBuilder::basepath, update_repo)
 
@@ -203,6 +205,15 @@ module PodBuilder
           end
         end
       end
+
+      def self.check_not_building_subspecs(pods_to_build)
+        pods_to_build.each do |pod_to_build|
+          if pod_to_build.include?("/")
+            raise "\nCan't build subspec #{pod_to_build} refer to podspec name instead.\n\nUse `pod_builder build #{pods_to_build.map { |x| x.split("/").first }.uniq.join(" ")}` instead\n\n".red
+          end
+        end
+      end
+
 
       def self.check_pods_exists(pods, buildable_items)
         raise "Empty Podfile?" if buildable_items.nil?
