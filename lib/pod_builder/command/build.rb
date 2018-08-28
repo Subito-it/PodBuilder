@@ -24,10 +24,11 @@ module PodBuilder
         buildable_items = all_buildable_items - prebuilt_items
 
         if argument_pods.first == "*"
-          argument_pods = buildable_items.map(&:name)
+          argument_pods = buildable_items.map(&:root_name)
         end
 
-        argument_pods.select! { |x| buildable_items.map(&:name).include?(x) }
+        argument_pods.select! { |x| buildable_items.map(&:root_name).include?(x) }
+        argument_pods.uniq!
 
         unless argument_pods.count > 0 
           puts "\n\nNo pods to build found, `#{ARGV.join(" ")}` is/are prebuilt\n".yellow
@@ -38,7 +39,7 @@ module PodBuilder
 
         check_pods_exists(argument_pods, buildable_items)
 
-        pods_to_build = buildable_items.select { |x| argument_pods.include?(x.name) }
+        pods_to_build = buildable_items.select { |x| argument_pods.include?(x.root_name) }
         pods_to_build += other_subspecs(pods_to_build, buildable_items)
 
         buildable_items -= pods_to_build
@@ -218,7 +219,7 @@ module PodBuilder
       def self.check_pods_exists(pods, buildable_items)
         raise "Empty Podfile?" if buildable_items.nil?
 
-        buildable_items = buildable_items.map(&:name)
+        buildable_items = buildable_items.map(&:root_name)
         pods.each do |pod|
           raise "\nPod `#{pod}` wasn't found in Podfile.\n\nFound:\n#{buildable_items.join("\n")}\n\n".red if !buildable_items.include?(pod)
         end
