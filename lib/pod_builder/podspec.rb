@@ -2,7 +2,6 @@ module PodBuilder
   class Podspec
     def self.generate      
       buildable_items = Podfile.podfile_items_at(PodBuilder::basepath("Podfile"))
-      buildable_items.select! { |x| x.is_prebuilt == false }
       
       podspecs = []
       buildable_items.each do |pod|
