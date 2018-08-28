@@ -27,6 +27,10 @@ module PodBuilder
       items.each do |item|
         item_build_settings = Configuration.build_settings_overrides[item.name] || {}
         build_settings['SWIFT_VERSION'] = item_build_settings["SWIFT_VERSION"] || project_swift_version(analyzer)
+        if item.is_static
+          # https://forums.developer.apple.com/thread/17921
+          build_settings['CLANG_ENABLE_MODULE_DEBUGGING'] = "NO"
+        end
 
         item_build_settings.each do |k, v|
           build_settings[k] = v
