@@ -46,14 +46,14 @@ module PodBuilder
         end
 
         Dir.chdir(repo_dir)
-        puts "Checking out #{spec.podspec_name}".blue
+        puts "Checking out #{spec.podspec_name}".yellow
         raise "Failed cheking out #{spec.name}" if !system(spec.git_hard_checkout)
 
         Dir.chdir(current_dir)
       end
 
       def self.rewrite_lldinit
-        puts "Writing ~/.lldbinit-Xcode".blue
+        puts "Writing ~/.lldbinit-Xcode".yellow
 
         lldbinit_path = File.expand_path('~/.lldbinit-Xcode')
         FileUtils.touch(lldbinit_path)
