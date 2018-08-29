@@ -6,7 +6,8 @@ module PodBuilder
       grouped_buildable_items = buildable_items.select { |x| x.is_subspec }.group_by { |x| x.root_name }
 
       grouped_buildable_items.each do |root_name, subspecs|
-        unless !buildable_items.map(&:name).include?(root_name)
+        subspecs.select! { |x| !Configuration.subspecs_to_split.include?(x.name) }
+        unless !buildable_items.map(&:name).include?(root_name) && subspecs.count > 0
           next
         end
 
@@ -25,7 +26,7 @@ module PodBuilder
         
         spec_raw["static_framework"] = subspecs.map(&:is_static).reduce(true) { |result, item| result && item }
 
-        if subspecs.map(&:xcconfig).select { |x| !x.empty? }.count > 0 
+        if subspecs.map(&:xcconfig).select { |x| !x.empty? }.count > 0
           raise "Unhandled subspec xcconfig. Please open issue https://github.com/Subito-it/PodBuilder/issues"
         end
         
