@@ -94,6 +94,8 @@ module PodBuilder
 
         Podfile::deintegrate_install
 
+        sanity_checks(options)
+
         puts "\n\n🎉 done!\n".green
         return true
       end
@@ -246,6 +248,21 @@ module PodBuilder
         buildable_subspecs.select! { |x| pods_to_build_subspecs.include?(x.root_name) }
 
         return buildable_subspecs - pods_to_build
+      end
+
+      def self.sanity_checks(options)
+        lines = File.read(PodBuilder::xcodepath("Podfile")).split("\n")
+        stripped_lines = lines.map { |x| Podfile.strip_line(x) }.select { |x| !x.start_with?("#")}
+
+        expected_stripped = Podfile::POST_INSTALL_ACTIONS.map { |x| Podfile.strip_line(x) }
+
+        if !expected_stripped.all? { |x| stripped_lines.include?(x) }
+          if options[:allow_warnings]
+            puts "\n\n⚠️  PodBuilder's post install actions missing from application Podfile!\n".yellow
+          else
+            raise "\n\n🚨️  PodBuilder's post install actions missing from application Podfile!\n".red
+          end
+        end
       end
     end
   end

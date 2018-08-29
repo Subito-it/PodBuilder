@@ -58,6 +58,9 @@ Options:
         opts.on("-u", "--update", "Update CocoaPods repos") do |o|
           OPTIONS[:update_repos] = o
         end
+        opts.on("-w", "--allow_warnings", "Allow warnings") do |o|
+          OPTIONS[:allow_warnings] = o
+        end
         opts.on("-d", "--debug", "Don't clean build folder") do |o|
           OPTIONS[:debug] = o
         end
@@ -71,6 +74,9 @@ Options:
       :opts => OptionParser.new do |opts|
         opts.on("-u", "--update", "Update CocoaPods repos") do |o|
           OPTIONS[:update_repos] = o
+        end
+        opts.on("-w", "--allow_warnings", "Allow warnings") do |o|
+          OPTIONS[:allow_warnings] = o
         end
         opts.on("-d", "--debug", "Don't clean build folder") do |o|
           OPTIONS[:debug] = o
