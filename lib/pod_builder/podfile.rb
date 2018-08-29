@@ -2,7 +2,7 @@ require 'pod_builder/cocoapods/analyzer'
 
 module PodBuilder
   class Podfile
-    PRE_INSTALL_ACTIONS = ["raise \"\\n🚨  Do not launch 'pod install' manually, use `pod_builder` instead!\\n\" if !File.exist?('pod_builder.lock')"].freeze
+    POD_BUILDER_PRE_INSTALL_ACTIONS = ["raise \"\\n🚨  Do not launch 'pod install' manually, use `pod_builder` instead!\\n\" if !File.exist?('pod_builder.lock')"].freeze
 
     def self.from_podfile_items(items, analyzer)
       raise "no items" unless items.count > 0

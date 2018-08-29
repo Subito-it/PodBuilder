@@ -15,7 +15,7 @@ module PodBuilder
         podfile_lines = []
         pre_install_indx = -1
         podfile_content.each_line.with_index do |line, index|
-          if Podfile::PRE_INSTALL_ACTIONS.detect { |x| Podfile::strip_line(x) == Podfile::strip_line(line) }
+          if Podfile::PODBUILDER_LOCK_ACTION.detect { |x| Podfile::strip_line(x) == Podfile::strip_line(line) }
             if pre_install_indx == -1
               pre_install_indx = index
             end

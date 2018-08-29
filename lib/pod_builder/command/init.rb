@@ -37,7 +37,7 @@ module PodBuilder
       private
 
       def self.add_install_block(podfile_path)
-        add(Podfile::PRE_INSTALL_ACTIONS, "pre_install", podfile_path)
+        add(Podfile::PODBUILDER_LOCK_ACTION, "pre_install", podfile_path)
       end
 
       def self.add_pre_install_actions(podfile_path)
