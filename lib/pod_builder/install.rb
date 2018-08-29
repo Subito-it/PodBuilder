@@ -48,7 +48,7 @@ module PodBuilder
     def self.framework_rel_path(framework_path, podfile_items)
       framework_name = File.basename(framework_path)
       framework_name_no_ext = File.basename(framework_name, File.extname(framework_name))
-      if podfile_item = podfile_items.detect { |x| x.module_name == framework_name_no_ext && Configuration.subspecs_to_split.include?(x) }
+      if podfile_item = podfile_items.detect { |x| x.module_name == framework_name_no_ext && Configuration.subspecs_to_split.include?(x.name) }
         return "#{podfile_item.prebuilt_rel_path}"
       else
         return framework_name
