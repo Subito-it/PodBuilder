@@ -168,6 +168,18 @@ PodBuilder writes a plist and markdown license files of pods specified in the Po
 }
 ```
 
+#### `subspecs_to_split`
+
+Normally when multiple subspecs are specified in a target a single framework is produced. There are rare cases where you specify different subspecs in different targets: a typical case is subspec specifically designed for app extensions, where you want to use a subspec in the main app and another one in the app extension. 
+
+**Warning**: This will work properly only for static frameworks (_static_framework = true_ specified in the podspec). See [issue](https://github.com/CocoaPods/CocoaPods/issues/5708) and [issue](https://github.com/CocoaPods/CocoaPods/issues/5643)
+
+```json
+{
+    "subspecs_to_split": ["Podname1/Subspec1", "Podname1/Subspec2", "Podname2/Subspec1", "Podname2/Subspec1"]
+}
+```
+
 
 # Under the hood
 
