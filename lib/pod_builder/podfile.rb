@@ -77,7 +77,8 @@ module PodBuilder
         podfile_items.map! { |podfile_item|
           if updated_pod = updated_pods.detect { |x| x.name == podfile_item.name } then
             updated_pod
-          elsif restored_pod = restore_podfile_items.detect { |x| x.name == podfile_item.name }
+          elsif updated_pods.any? { |x| podfile_item.root_name == x.root_name } == false && # podfile_item shouldn't be among those being updated (including root specification)
+                restored_pod = restore_podfile_items.detect { |x| x.name == podfile_item.name }
             restored_pod
           else
             podfile_item
