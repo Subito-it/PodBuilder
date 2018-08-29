@@ -2,7 +2,9 @@ require 'pod_builder/cocoapods/analyzer'
 
 module PodBuilder
   class Podfile
-    POD_BUILDER_PRE_INSTALL_ACTIONS = ["raise \"\\n🚨  Do not launch 'pod install' manually, use `pod_builder` instead!\\n\" if !File.exist?('pod_builder.lock')"].freeze
+    PODBUILDER_LOCK_ACTION = ["raise \"\\n🚨  Do not launch 'pod install' manually, use `pod_builder` instead!\\n\" if !File.exist?('pod_builder.lock')"].freeze
+    PRE_INSTALL_ACTIONS = ["Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}"].freeze
+    POST_INSTALL_ACTIONS = ["require 'pod_builder/podfile/post_actions'", "PodBuilder::Podfile::remove_target_support_duplicate_entries", "PodBuilder::Podfile::check_target_support_resource_collisions"].freeze
 
     def self.from_podfile_items(items, analyzer)
       raise "no items" unless items.count > 0
