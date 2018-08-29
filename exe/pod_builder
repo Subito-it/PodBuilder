@@ -152,6 +152,8 @@ Options:
   subcommand = subcommands[ARGV.shift]
    
   if subcommand  
+    PodBuilder::Configuration.load
+    
     subcommand[:opts].order!
     subcommand[:call].each do |k|
       if !k.call(OPTIONS)
@@ -175,7 +177,6 @@ begin
     raise "\n\nFor safety do not run this as root\n".red
   end
 
-  PodBuilder::Configuration.load
   command_executed = parse_commandline
 rescue Exception => e
   error = e.to_s
