@@ -89,6 +89,11 @@ module PodBuilder
       podfile_content = analyzer.podfile.sources.map { |x| "source '#{x}'" }
       podfile_content += ["", "use_frameworks!", ""]
 
+      # multiple platforms not (yet) supported
+      # https://github.com/CocoaPods/Rome/issues/37
+      platform = analyzer.result.targets.first.platform
+      podfile_content += ["platform :#{platform.name}, '#{platform.deployment_target.version}'", ""]
+
       analyzer.result.specs_by_target.each do |target, specifications|
         unless result_targets.select { |x| x.end_with?(target.name) }.count > 0
           next
