@@ -26,10 +26,19 @@ module PodBuilder
         
         spec_raw["static_framework"] = subspecs.map(&:is_static).reduce(true) { |result, item| result && item }
 
-        if subspecs.map(&:xcconfig).select { |x| !x.empty? }.count > 0
-          raise "Unhandled subspec xcconfig. Please open issue https://github.com/Subito-it/PodBuilder/issues"
+        xcconfig = {}
+        subspecs.map(&:xcconfig).each do |xconfigs|
+          xconfigs.each do |key, value|
+            if xcconfig[key].nil?
+              xcconfig[key] = value
+            elsif !xcconfig[key].include?(value)
+              xcconfig[key] << " #{value}"
+            end
+          end
         end
-        
+
+        spec_raw["xcconfig"] = xcconfig
+
         spec = Pod::Specification.from_string(spec_raw.to_json, "podspec.json")        
 
         pod = PodfileItem.new(spec, all_specs, checkout_options)
