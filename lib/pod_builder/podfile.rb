@@ -2,8 +2,7 @@ require 'pod_builder/cocoapods/analyzer'
 
 module PodBuilder
   class Podfile
-
-    PRE_INSTALL_ACTIONS = ["raise \"\\n🚨  Do not launch 'pod install' manually, use `pod_builder` instead!\\n\" if !File.exist?('pod_builder.lock')"]
+    PRE_INSTALL_ACTIONS = ["raise \"\\n🚨  Do not launch 'pod install' manually, use `pod_builder` instead!\\n\" if !File.exist?('pod_builder.lock')"].freeze
 
     def self.from_podfile_items(items, analyzer)
       raise "no items" unless items.count > 0
@@ -71,8 +70,6 @@ module PodBuilder
       podfile_path = PodBuilder::basepath("Podfile")
 
       if File.exist?(podfile_restore_path)
-        podfile_content = File.read(podfile_restore_path)
-
         restore_podfile_items = podfile_items_at(podfile_restore_path)
 
         podfile_items.map! { |podfile_item|
@@ -84,39 +81,28 @@ module PodBuilder
             podfile_item
           end
         }
-      else
-        podfile_content = File.read(podfile_path)
       end
-      
-      current_target = nil
-      destination_lines = []
-      podfile_content.each_line do |line|
-        stripped_line = strip_line(line)
-        if current_target.nil?
-          destination_lines.push(line)
 
-          if current_target = target_definition_in(line, false)
-            target_pods, target_dependencies = analyzer.pods_and_deps_in_target(current_target, podfile_items)
+      result_targets = analyzer.result.targets.map(&:name) 
+      podfile_content = analyzer.podfile.sources.map { |x| "source '#{x}'" }
+      podfile_content += ["", "use_frameworks!", ""]
 
-            # dependecies should be listed first
-            current_target_pods = (target_dependencies + target_pods).uniq
-
-            # There should be at most one subspecs per target
-            # Taking just one subspec is enough to pin to the correct version
-            current_target_pods = current_target_pods.sort_by(&:name).uniq(&:root_name)
-
-            current_target_pods.each { |x| destination_lines.push("  #{x.entry}\n") }
-          end
-        else          
-          if stripped_line == "end"
-            destination_lines.push(line)
-            current_target = nil
-          end
+      analyzer.result.specs_by_target.each do |target, specifications|
+        unless result_targets.select { |x| x.end_with?(target.name) }.count > 0
+          next
         end
+
+        podfile_content.push("target '#{target.name}' do")
+
+        specifications.each do |spec|
+          item = podfile_items.detect { |x| x.name == spec.name }
+          podfile_content.push("\t#{item.entry}")
+        end
+
+        podfile_content.push("end\n")
       end
 
-      podfile_content = destination_lines.join
-      File.write(podfile_restore_path, podfile_content)
+      File.write(podfile_restore_path, podfile_content.join("\n"))
     end
 
     def self.update_prebuilt(updated_pods, podfile_items, analyzer)
@@ -169,17 +155,6 @@ module PodBuilder
     def self.pod_definition_in(line, include_commented)
       stripped_line = strip_line(line)
       matches = stripped_line.match(/(^pod')(.*?)(')/)
-      
-      if matches&.size == 4 && (include_commented || !stripped_line.start_with?("#"))
-        return matches[2]
-      else
-        return nil
-      end
-    end
-
-    def self.target_definition_in(line, include_commented)
-      stripped_line = strip_line(line)
-      matches = stripped_line.match(/(^target')(.*?)(')/)
       
       if matches&.size == 4 && (include_commented || !stripped_line.start_with?("#"))
         return matches[2]
