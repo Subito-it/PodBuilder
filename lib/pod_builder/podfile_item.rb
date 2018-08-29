@@ -85,12 +85,12 @@ module PodBuilder
       @name = spec.name
       @root_name = spec.name.split("/").first
 
-      if checkout_options.has_key?(name)
-        @repo = checkout_options[name][:git]
-        @tag = checkout_options[name][:tag]
-        @commit = checkout_options[name][:commit]
-        @path = checkout_options[name][:path]
-        @branch = checkout_options[name][:branch]
+      if checkout_options.has_key?(root_name)
+        @repo = checkout_options[root_name][:git]
+        @tag = checkout_options[root_name][:tag]
+        @commit = checkout_options[root_name][:commit]
+        @path = checkout_options[root_name][:path]
+        @branch = checkout_options[root_name][:branch]
         @is_external = true
       else
         @repo = spec.root.source[:git]
