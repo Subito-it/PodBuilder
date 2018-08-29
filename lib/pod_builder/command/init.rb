@@ -3,6 +3,9 @@ require 'pod_builder/core'
 module PodBuilder
   module Command
     class Init
+      PRE_INSTALL_ACTIONS = ["Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}"].freeze
+      POST_INSTALL_ACTIONS = ["require 'pod_builder/podfile/post_actions'", "PodBuilder::Podfile::remove_target_support_duplicate_entries", "PodBuilder::Podfile::check_target_support_resource_collisions"].freeze
+
       def self.call(options)
         raise "\n\nAlready initialized\n".red if Configuration.exists
         raise "\n\nXcode project missing\n".red if PodBuilder::xcodepath.nil?
@@ -41,13 +44,11 @@ module PodBuilder
       end
 
       def self.add_pre_install_actions(podfile_path)
-        pre_install_actions = ["Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}"]
-        add(pre_install_actions, "pre_install", podfile_path)
+        add(PRE_INSTALL_ACTIONS, "pre_install", podfile_path)
       end
 
       def self.add_post_install_checks(podfile_path)
-        post_install_actions = ["require 'pod_builder/podfile/post_actions'", "PodBuilder::Podfile::remove_target_support_duplicate_entries", "PodBuilder::Podfile::check_target_support_resource_collisions"]
-        add(post_install_actions, "post_install", podfile_path)
+        add(POST_INSTALL_ACTIONS, "post_install", podfile_path)
       end
 
       def self.add(entries, marker, podfile_path)
