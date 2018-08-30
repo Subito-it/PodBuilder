@@ -37,6 +37,7 @@ module PodBuilder
           return true
         end
 
+        check_splitted_subspecs_are_static(all_buildable_items, options)
         check_pods_exists(argument_pods, buildable_items)
 
         pods_to_build = buildable_items.select { |x| argument_pods.include?(x.root_name) }
@@ -52,7 +53,7 @@ module PodBuilder
         pods_to_build.select! { |x| !all_dependencies_name.include?(x.name) }
 
         # We need to split pods to build in 3 groups
-        # 1. subspecs: because the resulting .framework path is treated differently
+        # 1. subspecs: because the resulting .framework path is treated differently when added to Configuration.subspecs_to_split
         # 2. pods to build in release
         # 3. pods to build in debug
 
@@ -226,6 +227,17 @@ module PodBuilder
         end
       end
 
+      def self.check_splitted_subspecs_are_static(all_buildable_items, options)
+        non_static_subspecs = all_buildable_items.select { |x| x.is_subspec && x.is_static == false }
+        non_static_subspecs_names = non_static_subspecs.map(&:name)
+
+        invalid_subspecs = Configuration.subspecs_to_split & non_static_subspecs_names # intersect
+
+        warn_message = "The following pods `#{invalid_subspecs.join(" ")}` are non static frameworks which are being splitted over different targets. Beware that this is an unsafe setup as per https://github.com/CocoaPods/CocoaPods/issues/5708 and https://github.com/CocoaPods/CocoaPods/issues/5643\n"
+        if options[:allow_warnings]
+          puts "\n\n⚠️  #{warn_message}".yellow
+        else
+          raise "\n\n🚨️  #{warn_message}".yellow
         end
       end
 
