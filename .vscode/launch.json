@@ -111,6 +111,20 @@
             "args": [
                 "install_sources"
             ]
+        },
+        {
+            "name": "Switch pod",
+            "type": "Ruby",
+            "request": "launch",
+            "cwd": "~/Desktop",
+            "useBundler": true,
+            "program": "${workspaceRoot}/exe/pod_builder",
+            "showDebuggerOutput": true,
+            "pathToRDebugIDE": "/usr/bin/rdebug-ide",
+            "args": [
+                "switch",
+                "pod1/sub",
+            ]
         }
     ]
 }

@@ -31,6 +31,7 @@ Command:
     + build_all                      Build all pods declared in your Frameworks/Podfile
     + restore_all                    Rebuild all pods declared in the Frameworks/Podfile.restore    
     + install_sources                Install sources of pods to debug into prebuild frameworks
+    + switch                         Switch between prebuilt/prebuilt in the Application/Podfile
     + clean                          Remove prebuild frameworks, dSYMs and source files added by install_sources no longer in Frameworks/Podfile
 
 Options:
@@ -144,6 +145,35 @@ Options:
       :call => [        
         PodBuilder::Command::InstallSources
       ]
+    },
+
+    "switch" => {
+      :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder switch PODNAME [OPTIONS]
+
+      Switch the pod integration between prebuilt, development or pinned (tag, branch, commit)
+        
+Options:
+"        
+        opts.on("-p", "--prebuilt", "Use prebuilt") do |o|
+          OPTIONS[:switch_mode] = ["prebuilt", nil]
+        end
+        opts.on("-t", "--tag tag", "Pin to specified tag") do |o|
+          OPTIONS[:switch_mode] = ["tag", o]
+        end
+        opts.on("-c", "--commit sha", "Pin to specified commit") do |o|
+          OPTIONS[:switch_mode] = ["commit", o]
+        end
+        opts.on("-b", "--branch name", "Pin to specified branch") do |o|
+          OPTIONS[:switch_mode] = ["branch", o]
+        end
+      end,
+      :call => [        
+        PodBuilder::Command::Switch
+      ]
     }    
   }
    
@@ -153,7 +183,7 @@ Options:
    
   if subcommand  
     PodBuilder::Configuration.load
-    
+
     subcommand[:opts].order!
     subcommand[:call].each do |k|
       if !k.call(OPTIONS)
