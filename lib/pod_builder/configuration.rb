@@ -86,6 +86,8 @@ module PodBuilder
         if config.has_key?("development_pods_paths")
           Configuration.development_pods_paths = config["development_pods_paths"]
         end
+
+        Configuration.build_settings.freeze
       end
     end
     
