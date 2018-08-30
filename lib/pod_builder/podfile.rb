@@ -166,10 +166,19 @@ module PodBuilder
       add(PODBUILDER_LOCK_ACTION, "pre_install", podfile_path)
     end
 
-    private
-    
+    def self.pod_definition_in(line, include_commented)
+      stripped_line = strip_line(line)
+      matches = stripped_line.match(/(^pod')(.*?)(')/)
+      
+      if matches&.size == 4 && (include_commented || !stripped_line.start_with?("#"))
+        return matches[2]
+      else
+        return nil
+      end
     end
 
+    private
+    
     def self.indentation_from_file(path)
       content = File.read(path)
 
@@ -188,17 +197,6 @@ module PodBuilder
       end
 
       return "  "
-    end
-
-    def self.pod_definition_in(line, include_commented)
-      stripped_line = strip_line(line)
-      matches = stripped_line.match(/(^pod')(.*?)(')/)
-      
-      if matches&.size == 4 && (include_commented || !stripped_line.start_with?("#"))
-        return matches[2]
-      else
-        return nil
-      end
     end
 
     def self.project_swift_version(analyzer)
