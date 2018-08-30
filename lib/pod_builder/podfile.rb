@@ -132,7 +132,7 @@ module PodBuilder
         if pod_name = pod_definition_in(line, true)
           if podfile_item = all_buildable_items.detect { |x| x.name == pod_name }
             if File.exist?("#{frameworks_base_path}/#{podfile_item.prebuilt_rel_path}")
-              line = "#{indentation_from_line(line)}#{podfile_item.prebuilt_entry}\n"
+              line = "#{line.detect_indentation}#{podfile_item.prebuilt_entry}\n"
             end
           end
         end
@@ -168,8 +168,6 @@ module PodBuilder
 
     private
     
-    def self.indentation_from_line(line)
-      return line[/\A\s*/]
     end
 
     def self.indentation_from_file(path)

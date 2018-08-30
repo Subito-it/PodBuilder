@@ -9,6 +9,8 @@ require 'pod_builder/install'
 require 'pod_builder/configuration'
 require 'pod_builder/podspec'
 
+require 'core_ext/string'
+
 module PodBuilder  
   def self.safe_rm_rf(path)
     unless File.exist?(path)
