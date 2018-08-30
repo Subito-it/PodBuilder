@@ -27,8 +27,8 @@ module PodBuilder
       pod_dependencies = {}
 
       items.each do |item|
-        build_settings = Configuration.build_settings
-        
+        build_settings = Configuration.build_settings.dup
+
         item_build_settings = Configuration.build_settings_overrides[item.name] || {}
         build_settings['SWIFT_VERSION'] = item_build_settings["SWIFT_VERSION"] || project_swift_version(analyzer)
         if item.is_static
