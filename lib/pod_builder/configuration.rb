@@ -2,9 +2,10 @@ require 'json'
 
 module PodBuilder  
   class Configuration
+    DEV_PODS_CONFIG_FILE = "PodBuilderDevelopmentPods.json".freeze
     CONFIG_FILE = "PodBuilder.json".freeze
     BUILD_PATH = "/tmp/pod_builder".freeze
-
+    
     private_constant :CONFIG_FILE
     private_constant :BUILD_PATH
 
@@ -17,6 +18,7 @@ module PodBuilder
       attr_accessor :skip_licenses
       attr_accessor :license_file_name
       attr_accessor :subspecs_to_split
+      attr_accessor :development_pods_paths
     end
 
     # Remember to update README.md
@@ -35,6 +37,7 @@ module PodBuilder
     @skip_licenses = []
     @license_file_name = "Pods-acknowledgements"
     @subspecs_to_split = []
+    @development_pods_paths = []
     
     def self.check_inited
       count = Dir.glob("#{PodBuilder::home}/**/.pod_builder").count
@@ -79,6 +82,9 @@ module PodBuilder
         end
         if config.has_key?("subspecs_to_split")
           Configuration.subspecs_to_split = config["subspecs_to_split"]
+        end
+        if config.has_key?("development_pods_paths")
+          Configuration.development_pods_paths = config["development_pods_paths"]
         end
       end
     end

@@ -16,8 +16,11 @@ module PodBuilder
         FileUtils.mkdir_p(options[:prebuild_path])
         FileUtils.mkdir_p("#{options[:prebuild_path]}/.pod_builder")
         FileUtils.touch("#{options[:prebuild_path]}/.pod_builder/pod_builder")
+
+        source_path_rel_path = "Sources"
+        development_pods_config_rel_path = "TODO" # FIXME
         
-        File.write("#{options[:prebuild_path]}/.gitignore", "Pods/\n*.xcodeproj\nSources\n")
+        File.write("#{options[:prebuild_path]}/.gitignore", "Pods/\n*.xcodeproj\n#{source_path_rel_path}\n#{development_pods_config_rel_path}\n")
 
         project_podfile_path = PodBuilder::xcodepath("Podfile")
         prebuilt_podfile_path = File.join(options[:prebuild_path], "Podfile")
