@@ -23,55 +23,12 @@ module PodBuilder
         prebuilt_podfile_path = File.join(options[:prebuild_path], "Podfile")
         FileUtils.cp(project_podfile_path, prebuilt_podfile_path)
         
-        add_install_block(prebuilt_podfile_path)
-
-        add_pre_install_actions(project_podfile_path)
-        add_post_install_checks(project_podfile_path)
+        Podfile.add_install_block(prebuilt_podfile_path)
 
         Configuration.write
 
         puts "\n\n🎉 done!\n".green
         return true
-      end
-
-      private
-
-      def self.add_install_block(podfile_path)
-        add(Podfile::PODBUILDER_LOCK_ACTION, "pre_install", podfile_path)
-      end
-
-      def self.add_pre_install_actions(podfile_path)
-        add(Podfile::PRE_INSTALL_ACTIONS, "pre_install", podfile_path)
-      end
-
-      def self.add_post_install_checks(podfile_path)
-        add(Podfile::POST_INSTALL_ACTIONS, "post_install", podfile_path)
-      end
-
-      def self.add(entries, marker, podfile_path)
-        podfile_content = File.read(podfile_path)
-
-        entries.map! { |x| "   #{x}\n"}
-
-        marker_found = false
-        podfile_lines = []
-        podfile_content.each_line do |line|
-          stripped_line = Podfile::strip_line(line)
-  
-          podfile_lines.push(line)
-          if stripped_line.start_with?("#{marker}do|")
-            marker_found = true
-            podfile_lines.push(entries)
-          end
-        end
-
-        if !marker_found
-          podfile_lines.push("\n#{marker} do |installer|\n")
-          podfile_lines.push(entries)
-          podfile_lines.push("end\n")
-        end
-
-        File.write(podfile_path, podfile_lines.join)
       end
     end
   end
