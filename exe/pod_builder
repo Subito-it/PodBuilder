@@ -27,11 +27,11 @@ Usage:
 Command:
     + init                           Initialize prebuild folders
     + deintegrate                    Deintegrate prebuild folders
-    + build                          Build a specific pod declared in your Frameworks/Podfile
-    + build_all                      Build all pods declared in your Frameworks/Podfile
-    + restore_all                    Rebuild all pods declared in the Frameworks/Podfile.restore    
+    + build                          Build a specific pod declared in the PodBuilder-Podfile
+    + build_all                      Build all pods declared in the PodBuilder-Podfile
+    + restore_all                    Rebuild all pods declared in the Restore-Podfile
     + install_sources                Install sources of pods to debug into prebuild frameworks
-    + switch                         Switch between prebuilt/prebuilt in the Application/Podfile
+    + switch                         Switch between prebuilt/development/standard pod in the Application-Podfile
     + clean                          Remove prebuild frameworks, dSYMs and source files added by install_sources no longer in Frameworks/Podfile
 
 Options:
