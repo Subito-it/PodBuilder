@@ -104,9 +104,7 @@ Options:
 
     "init" => {
       :opts => OptionParser.new do |opts|
-        default_destination = PodBuilder::xcodepath(PodBuilder::Configuration.base_path)
-
-        opts.on("-d", "--destination path", "Prebuilt destination path (defaul: #{default_destination})") do |o|
+        opts.on("-d", "--destination path", "Prebuilt destination path (default: #{PodBuilder::Configuration.base_path})") do |o|
           OPTIONS[:prebuild_path] = o
         end
       end,
@@ -178,13 +176,17 @@ Options:
    
   subcommand = subcommands[ARGV.shift]
    
-  if subcommand  
-    PodBuilder::Configuration.load
+  if subcommand
+    if ARGV.include?("--help") || ARGV.include?("-h")
+      puts subcommand[:opts].help
+    else
+      PodBuilder::Configuration.load
 
-    subcommand[:opts].order!
-    subcommand[:call].each do |k|
-      if !k.call(OPTIONS)
-        puts subcommand[:opts].help
+      subcommand[:opts].order!
+      subcommand[:call].each do |k|
+        if !k.call(OPTIONS)
+          puts subcommand[:opts].help
+        end
       end
     end
 
