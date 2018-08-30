@@ -192,7 +192,7 @@ module PodBuilder
               end
 
               if buildable_pod.dependency_names.include?(dependency) && !buildable_pod.has_subspec(dependency) && !buildable_pod.has_common_spec(dependency)   then
-                raise "\nCan't build #{pod_to_build.name} because it has common dependencies (#{dependency}) with #{buildable_pod.name}.\n\nUse `pod_builder build #{pods_to_build.map(&:name).join(" ")} #{buildable_pod.name}` instead\n\n".red
+                raise "\n\nCan't build #{pod_to_build.name} because it has common dependencies (#{dependency}) with #{buildable_pod.name}.\n\nUse `pod_builder build #{pods_to_build.map(&:name).join(" ")} #{buildable_pod.name}` instead\n\n".red
               end
             end
           end
@@ -204,7 +204,7 @@ module PodBuilder
         pods_to_build.each do |pod_to_build|
           if buildable_items_dependencies.include?(pod_to_build.name)
             parent = buildable_items.detect { |x| x.dependency_names.include?(pod_to_build.name) }
-            raise "\nCan't build #{pod_to_build.name} because it is a dependency of #{parent.name}.\n\nUse `pod_builder build #{parent.name}` instead\n\n".red
+            raise "\n\nCan't build #{pod_to_build.name} because it is a dependency of #{parent.name}.\n\nUse `pod_builder build #{parent.name}` instead\n\n".red
           end
         end
       end
@@ -212,7 +212,7 @@ module PodBuilder
       def self.check_not_building_subspecs(pods_to_build)
         pods_to_build.each do |pod_to_build|
           if pod_to_build.include?("/")
-            raise "\nCan't build subspec #{pod_to_build} refer to podspec name.\n\nUse `pod_builder build #{pods_to_build.map { |x| x.split("/").first }.uniq.join(" ")}` instead\n\n".red
+            raise "\n\nCan't build subspec #{pod_to_build} refer to podspec name.\n\nUse `pod_builder build #{pods_to_build.map { |x| x.split("/").first }.uniq.join(" ")}` instead\n\n".red
           end
         end
       end
@@ -222,7 +222,10 @@ module PodBuilder
 
         buildable_items = buildable_items.map(&:root_name)
         pods.each do |pod|
-          raise "\nPod `#{pod}` wasn't found in Podfile.\n\nFound:\n#{buildable_items.join("\n")}\n\n".red if !buildable_items.include?(pod)
+          raise "\n\nPod `#{pod}` wasn't found in Podfile.\n\nFound:\n#{buildable_items.join("\n")}\n\n".red if !buildable_items.include?(pod)
+        end
+      end
+
         end
       end
 

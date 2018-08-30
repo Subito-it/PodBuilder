@@ -12,7 +12,7 @@ module PodBuilder
           return false
         end
         unless argument_pods.count == 1
-          raise "\nSpecify a single pod to switch\n\n".red 
+          raise "\n\nSpecify a single pod to switch\n\n".red 
           return false
         end
 
@@ -25,7 +25,7 @@ module PodBuilder
 
       def self.check_not_building_subspec(pod_to_switch)
         if pod_to_switch.include?("/")
-          raise "\nCan't switch subspec #{pod_to_switch} refer to podspec name.\n\nUse `pod_builder switch #{pod_to_switch.split("/").first}` instead\n\n".red
+          raise "\n\nCan't switch subspec #{pod_to_switch} refer to podspec name.\n\nUse `pod_builder switch #{pod_to_switch.split("/").first}` instead\n\n".red
         end
       end
     end
