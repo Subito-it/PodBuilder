@@ -271,10 +271,11 @@ module PodBuilder
         expected_stripped = Podfile::POST_INSTALL_ACTIONS.map { |x| Podfile.strip_line(x) }
 
         if !expected_stripped.all? { |x| stripped_lines.include?(x) }
+          warn_message = "PodBuilder's post install actions missing from application Podfile!\n"
           if options[:allow_warnings]
-            puts "\n\n⚠️  PodBuilder's post install actions missing from application Podfile!\n".yellow
+            puts "\n\n⚠️  #{warn_message}".yellow
           else
-            raise "\n\n🚨️  PodBuilder's post install actions missing from application Podfile!\n".red
+            raise "\n\n🚨️  #{warn_message}".red
           end
         end
       end
