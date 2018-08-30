@@ -154,21 +154,18 @@ Usage:
         
     $ pod_builder switch PODNAME [OPTIONS]
 
-      Switch the pod integration between prebuilt, development or pinned (tag, branch, commit)
+      Switch integration between prebuilt/development/default pod version
         
 Options:
 "        
         opts.on("-p", "--prebuilt", "Use prebuilt") do |o|
-          OPTIONS[:switch_mode] = ["prebuilt", nil]
+          OPTIONS[:switch_mode] = "prebuilt"
         end
-        opts.on("-t", "--tag tag", "Pin to specified tag") do |o|
-          OPTIONS[:switch_mode] = ["tag", o]
+        opts.on("-d", "--development", "Development pod") do |o|
+          OPTIONS[:switch_mode] = "development"
         end
-        opts.on("-c", "--commit sha", "Pin to specified commit") do |o|
-          OPTIONS[:switch_mode] = ["commit", o]
-        end
-        opts.on("-b", "--branch name", "Pin to specified branch") do |o|
-          OPTIONS[:switch_mode] = ["branch", o]
+        opts.on("-e", "--default", "Default version specified in PodBuilder-Podfile") do |o|
+          OPTIONS[:switch_mode] = "default"
         end
       end,
       :call => [        
