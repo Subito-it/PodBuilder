@@ -22,12 +22,13 @@ module PodBuilder
       raise "Found different build configurations in #{items}" if build_configurations.count != 1
       podfile.sub!("%%%build_configuration%%%", build_configurations.first.capitalize)
 
-      build_settings = Configuration.build_settings
       podfile_build_settings = ""
       
       pod_dependencies = {}
 
       items.each do |item|
+        build_settings = Configuration.build_settings
+        
         item_build_settings = Configuration.build_settings_overrides[item.name] || {}
         build_settings['SWIFT_VERSION'] = item_build_settings["SWIFT_VERSION"] || project_swift_version(analyzer)
         if item.is_static
