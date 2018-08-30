@@ -5,6 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "No Command",
+            "type": "Ruby",
+            "request": "launch",
+            "cwd": "~/Desktop",
+            "useBundler": true,
+            "program": "${workspaceRoot}/exe/pod_builder",
+            "showDebuggerOutput": true,
+            "pathToRDebugIDE": "/usr/bin/rdebug-ide",
+            "args": [
+                "-v"
+            ]
+        },
+        {
             "name": "Init",
             "type": "Ruby",
             "request": "launch",
