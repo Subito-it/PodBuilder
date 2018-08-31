@@ -5,6 +5,7 @@ module PodBuilder
       attr_accessor :module_name
       attr_accessor :vendored_frameworks
       attr_accessor :frameworks
+      attr_accessor :weak_frameworks
       attr_accessor :libraries
       attr_accessor :resources
       attr_accessor :exclude_files
@@ -14,6 +15,7 @@ module PodBuilder
         @module_name = ""
         @vendored_frameworks = []
         @frameworks = []
+        @weak_frameworks = []
         @libraries = []
         @resources = []
         @exclude_files = []
@@ -50,7 +52,8 @@ module PodBuilder
         
         podspec_item.vendored_frameworks += [pod] + pod.dependencies(buildable_items)
 
-        podspec_item.frameworks = podspec_item.vendored_frameworks.map { |x| x.frameworks }.flatten.uniq.sort     
+        podspec_item.frameworks = podspec_item.vendored_frameworks.map { |x| x.frameworks }.flatten.uniq.sort
+        podspec_item.weak_frameworks = podspec_item.vendored_frameworks.map { |x| x.weak_frameworks }.flatten.uniq.sort
         podspec_item.libraries = podspec_item.vendored_frameworks.map { |x| x.libraries }.flatten.uniq.sort
 
         static_vendored_frameworks = podspec_item.vendored_frameworks.select { |x| x.is_static }

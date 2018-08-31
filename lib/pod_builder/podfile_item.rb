@@ -70,6 +70,10 @@ module PodBuilder
     #
     attr_accessor :frameworks
 
+    # @return [String] Weak framweworks the pod needs to link to
+    #
+    attr_accessor :weak_frameworks
+
     # @return [String] Libraries the pod needs to link to
     #
     attr_accessor :libraries
@@ -114,6 +118,12 @@ module PodBuilder
       @frameworks += extract_array(spec, "frameworks")
       @frameworks += extract_array(spec.root, "framework")
       @frameworks += extract_array(spec.root, "frameworks")
+
+      @weak_frameworks = []
+      @weak_frameworks += extract_array(spec, "weak_frameworks")
+      @weak_frameworks += extract_array(spec, "weak_frameworks")
+      @weak_frameworks += extract_array(spec.root, "weak_frameworks")
+      @weak_frameworks += extract_array(spec.root, "weak_frameworks")
 
       @libraries = []
       @libraries += extract_array(spec, "library")
