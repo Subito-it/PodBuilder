@@ -224,7 +224,7 @@ module PodBuilder
         installer, analyzer = Analyze.installer_at(PodBuilder::basepath)
       
         podfile_items = Analyze.podfile_items(installer, analyzer)
-        buildable_items = podfile_items.select { |item| item.is_prebuilt == false }   
+        buildable_items = podfile_items.select { |item| !item.is_prebuilt }   
       rescue Exception => e
         raise e
       ensure
