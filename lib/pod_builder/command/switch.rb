@@ -35,7 +35,7 @@ module PodBuilder
           end
         end
 
-        podfile_path = PodBuilder::xcodepath("Podfile")
+        podfile_path = PodBuilder::project_path("Podfile")
         podfile_content = File.read(podfile_path)
 
         pod_lines = []
@@ -95,7 +95,7 @@ module PodBuilder
         
         File.write(podfile_path, pod_lines.join)
         
-        Dir.chdir(PodBuilder::xcodepath)
+        Dir.chdir(PodBuilder::project_path)
         system("pod install")
       end
       

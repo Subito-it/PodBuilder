@@ -5,12 +5,12 @@ module PodBuilder
     class Init
       def self.call(options)
         raise "\n\nAlready initialized\n".red if Configuration.exists
-        raise "\n\nXcode project missing\n".red if PodBuilder::xcodepath.nil?
+        raise "\n\nXcode workspace not found\n".red if PodBuilder::project_path.nil?
         
         options[:prebuild_path] ||= Configuration.base_path
 
         if File.expand_path(options[:prebuild_path]) != options[:prebuild_path] # if not absolute
-          options[:prebuild_path] = File.expand_path(PodBuilder::xcodepath(options[:prebuild_path]))
+          options[:prebuild_path] = File.expand_path(PodBuilder::project_path(options[:prebuild_path]))
         end
 
         FileUtils.mkdir_p(options[:prebuild_path])
@@ -22,7 +22,7 @@ module PodBuilder
         
         File.write("#{options[:prebuild_path]}/.gitignore", "Pods/\n*.xcodeproj\n#{source_path_rel_path}\n#{development_pods_config_rel_path}\n")
 
-        project_podfile_path = PodBuilder::xcodepath("Podfile")
+        project_podfile_path = PodBuilder::project_path("Podfile")
         prebuilt_podfile_path = File.join(options[:prebuild_path], "Podfile")
         FileUtils.cp(project_podfile_path, prebuilt_podfile_path)
         

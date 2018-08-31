@@ -7,7 +7,7 @@ module PodBuilder
         raise "\n\nPodBuilder not initialized!\n".red if !Configuration.exists
 
         prebuilt_podfile = File.join(Configuration.base_path, "Podfile")
-        restored_podfile = File.join(PodBuilder::xcodepath, "Podfile")
+        restored_podfile = File.join(PodBuilder::project_path, "Podfile")
 
         FileUtils.cp(prebuilt_podfile, restored_podfile)
 
@@ -36,10 +36,10 @@ module PodBuilder
 
         PodBuilder::safe_rm_rf(Configuration.base_path)
 
-        Dir.chdir(PodBuilder::xcodepath)
+        Dir.chdir(PodBuilder::project_path)
         system("pod deintegrate; pod install;")  
 
-        license_base = PodBuilder::xcodepath(Configuration.license_file_name)
+        license_base = PodBuilder::project_path(Configuration.license_file_name)
         FileUtils.rm_f("#{license_base}.plist")
         FileUtils.rm_f("#{license_base}.md")
 

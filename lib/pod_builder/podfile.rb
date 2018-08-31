@@ -116,9 +116,9 @@ module PodBuilder
       File.write(podfile_restore_path, podfile_content.join("\n"))
     end
 
-    def self.write_prebuilt(all_buildable_items, analyzer)
+    def self.write_prebuilt(all_buildable_items, analyzer)      
       podbuilder_podfile_path = PodBuilder::basepath("Podfile")
-      rel_path = Pathname.new(podbuilder_podfile_path).relative_path_from(Pathname.new(PodBuilder::xcodepath)).to_s
+      rel_path = Pathname.new(podbuilder_podfile_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
     
       frameworks_base_path = PodBuilder::basepath("Rome")
     
@@ -143,7 +143,7 @@ module PodBuilder
         end
       end
 
-      project_podfile_path = PodBuilder::xcodepath("Podfile")
+      project_podfile_path = PodBuilder::project_path("Podfile")
       File.write(project_podfile_path, prebuilt_lines.join)
 
       add_pre_install_actions(project_podfile_path)
@@ -153,7 +153,7 @@ module PodBuilder
     def self.deintegrate_install
       current_dir = Dir.pwd
 
-      Dir.chdir(PodBuilder::xcodepath)
+      Dir.chdir(PodBuilder::project_path)
       system("pod deintegrate; pod install;")
       Dir.chdir(current_dir)
     end

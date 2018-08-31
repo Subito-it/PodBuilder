@@ -40,7 +40,7 @@ module PodBuilder
     @development_pods_paths = []
     
     def self.check_inited
-      count = Dir.glob("#{PodBuilder::home}/**/.pod_builder").count
+      count = Dir.glob("#{File.dirname(config_path)}/**/.pod_builder").count
       raise "\n\nNot inited, run `pod_builder init`\n".red if count == 0
       raise "\n\nToo many .pod_builder found `#{count}`\n".red if count > 1
     end
@@ -101,14 +101,18 @@ module PodBuilder
     private 
 
     def self.config_path
-      unless PodBuilder::xcodepath
+      PodBuilder::find_xcodeproj
+
+      unless PodBuilder::project_path
         return
       end
 
-      project_path = "#{PodBuilder::xcodepath}/#{base_path}/.pod_builder"
-      config_path = Dir.glob("#{PodBuilder::home}/**/.pod_builder").first
-      
-      path = File.dirname(config_path || project_path)
+      if File.expand_path(base_path) == base_path # absolute
+        path = base_path
+      else
+        path = "#{PodBuilder::project_path}/#{base_path}"  
+      end
+
       return File.join(path, CONFIG_FILE)
     end
   end  

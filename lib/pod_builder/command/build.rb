@@ -118,7 +118,7 @@ module PodBuilder
       end
 
       def self.write_license_files(licenses, all_buildable_items)
-        license_file_path = PodBuilder::xcodepath(Configuration.license_file_name) + ".plist"
+        license_file_path = PodBuilder::project_path(Configuration.license_file_name) + ".plist"
 
         current_licenses = []
         if File.exist?(license_file_path)
@@ -266,7 +266,7 @@ module PodBuilder
       end
 
       def self.sanity_checks(options)
-        lines = File.read(PodBuilder::xcodepath("Podfile")).split("\n")
+        lines = File.read(PodBuilder::project_path("Podfile")).split("\n")
         stripped_lines = lines.map { |x| Podfile.strip_line(x) }.select { |x| !x.start_with?("#")}
 
         expected_stripped = Podfile::POST_INSTALL_ACTIONS.map { |x| Podfile.strip_line(x) }
