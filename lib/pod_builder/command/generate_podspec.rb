@@ -7,7 +7,9 @@ module PodBuilder
         Configuration.check_inited
         PodBuilder::prepare_basepath
 
-        Podspec::generate
+        installer, analyzer = Analyze.installer_at(PodBuilder::basepath, false)
+
+        Podspec::generate(analyzer)
 
         puts "\n\n🎉 done!\n".green
         return true

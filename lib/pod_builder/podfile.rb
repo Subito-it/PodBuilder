@@ -15,7 +15,11 @@ module PodBuilder
       
       cwd = File.dirname(File.expand_path(__FILE__))
       podfile = File.read("#{cwd}/templates/build_podfile.template")
-      
+
+      platform = analyzer.result.targets.first.platform
+      podfile.sub!("%%%platform_name%%%", platform.name)
+      podfile.sub!("%%%deployment_version%%%", platform.deployment_target.version)
+
       podfile.sub!("%%%sources%%%", sources.map { |x| "source '#{x.url}'" }.join("\n"))
 
       build_configurations = items.map(&:build_configuration).uniq

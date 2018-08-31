@@ -84,7 +84,7 @@ module PodBuilder
 
         write_license_files(licenses, all_buildable_items)
 
-        Podspec::generate
+        Podspec::generate(analyzer)
 
         builded_pods = podfiles_items.flatten
         builded_pods_and_deps = add_dependencies(builded_pods, all_buildable_items).select { |x| !x.is_prebuilt }

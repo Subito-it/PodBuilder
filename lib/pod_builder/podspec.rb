@@ -27,7 +27,7 @@ module PodBuilder
     end
     private_constant :PodspecItem
 
-    def self.generate     
+    def self.generate(analyzer)     
       buildable_items = Podfile.podfile_items_at(PodBuilder::basepath("Podfile")).sort_by { |x| x.name }
       all_specs = buildable_items.map { |x| x.pod_specification(buildable_items) }
 
@@ -88,6 +88,10 @@ module PodBuilder
       cwd = File.dirname(File.expand_path(__FILE__))
       podspec_file = File.read("#{cwd}/templates/build_podspec.template")
       podspec_file.gsub!("%%%podspecs%%%", podspecs.join("\n\n"))
+
+      platform = analyzer.result.targets.first.platform
+      podspec_file.sub!("%%%platform_name%%%", platform.name)
+      podspec_file.sub!("%%%deployment_version%%%", platform.deployment_target.version)
       
       File.write(PodBuilder::basepath("PodBuilder.podspec"), podspec_file)
     end
