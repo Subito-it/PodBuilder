@@ -201,7 +201,7 @@ module PodBuilder
     end
 
     def self.project_swift_version(analyzer)
-      swift_versions = analyzer.result.target_inspections.values.map { |x| x.target_definition.swift_version }.uniq
+      swift_versions = analyzer.result.target_inspections.values.map { |x| x.target_definition.swift_version }.compact.uniq
 
       raise "Found different Swift versions in targets. Expecting one, got `#{swift_versions}`" if swift_versions.count != 1
 
