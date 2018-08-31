@@ -234,6 +234,10 @@ module PodBuilder
 
         invalid_subspecs = Configuration.subspecs_to_split & non_static_subspecs_names # intersect
 
+        unless invalid_subspecs.count > 0
+          return
+        end
+
         warn_message = "The following pods `#{invalid_subspecs.join(" ")}` are non static frameworks which are being splitted over different targets. Beware that this is an unsafe setup as per https://github.com/CocoaPods/CocoaPods/issues/5708 and https://github.com/CocoaPods/CocoaPods/issues/5643\n"
         if options[:allow_warnings]
           puts "\n\n⚠️  #{warn_message}".yellow
