@@ -20,7 +20,7 @@ def parse_commandline()
         opts.banner = "
 Usage:
         
-    $ pod_builder COMMAND 
+    $ pod_builder COMMAND [OPTIONS]
 
       Prebuild CocoaPods pods
         
@@ -50,7 +50,7 @@ Options:
         opts.banner = "
 Usage:
         
-    $ pod_builder build <PODNAME...>
+    $ pod_builder build [OPTIONS] <PODNAME...>
 
       Prebuild the specified CocoaPods pods
         
@@ -71,8 +71,17 @@ Options:
       ]
     },
 
-    "build_all" => {
+    "build_all" => {            
       :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder build_all [OPTIONS]
+
+      Prebuild all pods specified in the PodBuilder-Podfile
+        
+Options:
+"        
         opts.on("-u", "--update", "Update CocoaPods repos") do |o|
           OPTIONS[:update_repos] = o
         end
@@ -88,8 +97,17 @@ Options:
       ]
     },
 
-    "restore_all" => {
+    "restore_all" => {         
       :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder restore_all [OPTIONS]
+
+      Rebuilds all pods to the version specified in the Restore-Podfile
+        
+Options:
+"          
         opts.on("-u", "--update", "Update CocoaPods repos") do |o|
           OPTIONS[:update_repos] = o
         end
@@ -102,8 +120,17 @@ Options:
       ]
     },
 
-    "init" => {
+    "init" => {            
       :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder init [OPTIONS]
+
+      Initializes PodBuilder
+        
+Options:
+"         
         opts.on("-d", "--destination path", "Prebuilt destination path (default: #{PodBuilder::Configuration.base_path})") do |o|
           OPTIONS[:prebuild_path] = o
         end
@@ -121,31 +148,58 @@ Options:
       ]
     },
 
-    "deintegrate" => {
+    "deintegrate" => {           
       :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder deintegrate
+
+      Remove PodBuilder
+        
+Options:
+"          
       end,
       :call => [        
         PodBuilder::Command::Deintegrate
       ]
     },
 
-    "clean" => {
+    "clean" => {      
       :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder clean
+
+      Remove unused framework, dSYM and source folders.
+        
+Options:
+"           
       end,
       :call => [        
         PodBuilder::Command::Clean
       ]
     },
 
-    "install_sources" => {
+    "install_sources" => {         
       :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder install_sources
+
+      Install source of prebuilt pods to be able to step into and debug framework's code
+        
+Options:
+"         
       end,
       :call => [        
         PodBuilder::Command::InstallSources
       ]
     },
 
-    "switch" => {
+    "switch" => {      
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
