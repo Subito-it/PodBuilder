@@ -62,9 +62,17 @@ module PodBuilder
     #
     attr_accessor :build_configuration
 
-    # @return String The pod's vendored items (frameworks and libraries)
+    # @return [String] The pod's vendored items (frameworks and libraries)
     #
     attr_accessor :vendored_items
+
+    # @return [String] Framweworks the pod needs to link to
+    #
+    attr_accessor :frameworks
+
+    # @return [String] Libraries the pod needs to link to
+    #
+    attr_accessor :libraries
 
     # Initialize a new instance
     #
@@ -101,6 +109,18 @@ module PodBuilder
 
       @vendored_items = recursive_vendored_items(spec)
 
+      @frameworks = []
+      @frameworks += extract_array(spec, "framework")
+      @frameworks += extract_array(spec, "frameworks")
+      @frameworks += extract_array(spec.root, "framework")
+      @frameworks += extract_array(spec.root, "frameworks")
+
+      @libraries = []
+      @libraries += extract_array(spec, "library")
+      @libraries += extract_array(spec, "libraries")
+      @libraries += extract_array(spec.root, "library")
+      @libraries += extract_array(spec.root, "libraries")
+
       @version = spec.root.version.version
       
       @swift_version = spec.root.swift_version&.to_s
@@ -113,9 +133,51 @@ module PodBuilder
       @build_configuration = spec.root.attributes_hash.dig("pod_target_xcconfig", "prebuild_configuration") || "release"
       @build_configuration.downcase!
     end
+
+    def pod_specification(all_poditems, parent_spec = nil)
+      spec_raw = {}
+
+      spec_raw["name"] = @name
+      spec_raw["module_name"] = @module_name
+
+      spec_raw["source"] = {}
+      if repo = @repo
+        spec_raw["source"]["git"] = repo
+      end
+      if tag = @tag
+        spec_raw["source"]["tag"] = tag
+      end
+      if commit = @commit
+        spec_raw["source"]["commit"] = commit
+      end
+
+      spec_raw["version"] = @version
+      if swift_version = @swift_version
+        spec_raw["swift_version"] = swift_version
+      end
+
+      spec_raw["static_framework"] = is_static
+
+      spec_raw["frameworks"] = @frameworks
+      spec_raw["libraries"] = @libraries
+
+      spec_raw["xcconfig"] = @xcconfig
+
+      spec_raw["dependencies"] = @dependency_names.map { |x| [x, []] }.to_h
+
+      spec = Pod::Specification.from_hash(spec_raw, parent_spec)   
+      all_subspec_items = all_poditems.select { |x| x.is_subspec && x.root_name == @name }
+      spec.subspecs = all_subspec_items.map { |x| x.pod_specification(all_poditems, spec) }
+
+      return spec
+    end
     
     def inspect
       return "#{@name} repo=#{@repo} pinned=#{@tag || @commit} is_static=#{@is_static} deps=#{@dependencies || "[]"}"
+    end
+
+    def to_s
+      return @name
     end
 
     def dependencies(available_pods)
@@ -244,6 +306,15 @@ module PodBuilder
       items = items.flatten.compact
 
       return items.flatten
+    end
+
+    def extract_array(spec, key)
+      element = spec.attributes_hash.fetch(key, [])
+      if element.instance_of? String
+        element = [element]
+      end
+
+      return element
     end
   end
 end
