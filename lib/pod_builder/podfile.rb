@@ -17,7 +17,7 @@ module PodBuilder
       podfile = File.read("#{cwd}/templates/build_podfile.template")
 
       platform = analyzer.result.targets.first.platform
-      podfile.sub!("%%%platform_name%%%", platform.name)
+      podfile.sub!("%%%platform_name%%%", platform.name.to_s)
       podfile.sub!("%%%deployment_version%%%", platform.deployment_target.version)
 
       podfile.sub!("%%%sources%%%", sources.map { |x| "source '#{x.url}'" }.join("\n"))

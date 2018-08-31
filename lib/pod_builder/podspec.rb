@@ -90,7 +90,7 @@ module PodBuilder
       podspec_file.gsub!("%%%podspecs%%%", podspecs.join("\n\n"))
 
       platform = analyzer.result.targets.first.platform
-      podspec_file.sub!("%%%platform_name%%%", platform.name)
+      podspec_file.sub!("%%%platform_name%%%", platform.name.to_s)
       podspec_file.sub!("%%%deployment_version%%%", platform.deployment_target.version)
       
       File.write(PodBuilder::basepath("PodBuilder.podspec"), podspec_file)
