@@ -192,8 +192,9 @@ module PodBuilder
                 next
               end
 
-              if buildable_pod.dependency_names.include?(dependency) && !buildable_pod.has_subspec(dependency) && !buildable_pod.has_common_spec(dependency)   then
-                raise "\n\nCan't build #{pod_to_build.name} because it has common dependencies (#{dependency}) with #{buildable_pod.name}.\n\nUse `pod_builder build #{pods_to_build.map(&:name).join(" ")} #{buildable_pod.name}` instead\n\n".red
+              if buildable_pod.dependency_names.include?(dependency) && !buildable_pod.has_subspec(dependency) && !buildable_pod.has_common_spec(dependency) then
+                expected_pod_list = pods_to_build.map(&:root_name).uniq
+                raise "\n\nCan't build #{pod_to_build.name} because it has common dependencies (#{dependency}) with #{buildable_pod.name}.\n\nUse `pod_builder build #{expected_pod_list.join(" ")} #{buildable_pod.name}` instead\n\n".red
               end
             end
           end
