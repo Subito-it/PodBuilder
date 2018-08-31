@@ -78,6 +78,10 @@ module PodBuilder
     #
     attr_accessor :libraries
 
+    # @return [Bool] Returns true if the source_files key is present
+    #
+    attr_accessor :has_source_files_key
+
     # Initialize a new instance
     #
     # @param [Specification] spec
@@ -140,6 +144,9 @@ module PodBuilder
 
       @is_static = spec.root.attributes_hash["static_framework"] || false
       @xcconfig = spec.root.attributes_hash["xcconfig"] || {}
+
+      @has_source_files_key = spec.root.attributes_hash.has_key?("source_files") || spec.attributes_hash.has_key?("source_files")
+      
       @build_configuration = spec.root.attributes_hash.dig("pod_target_xcconfig", "prebuild_configuration") || "release"
       @build_configuration.downcase!
     end
@@ -191,13 +198,13 @@ module PodBuilder
     end
 
     def dependencies(available_pods)
-      return available_pods.select { |x| dependency_names.include?(x.name) }
+      return available_pods.select { |x| @dependency_names.include?(x.name) }
     end
 
     # @return [Bool] True if it's a pod that doesn't provide source code (is already shipped as a prebuilt pod)
     #    
     def is_prebuilt
-      return vendored_items.select { |x| x.include?(root_name) }.count > 0
+      return !@has_source_files_key && @vendored_items.count > 0
     end
 
     # @return [Bool] True if it's a subspec
