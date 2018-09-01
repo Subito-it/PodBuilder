@@ -171,8 +171,8 @@ module PodBuilder
     end
 
     def self.strip_line(line)
-      stripped_line = line.dup
-      return stripped_line.gsub("\"", "'").gsub(" ", "").gsub("\n", "")
+      stripped_line = line.strip
+      return stripped_line.gsub("\"", "'").gsub(" ", "").gsub("\t", "").gsub("\n", "")
     end
 
     def self.add_install_block(podfile_path)
