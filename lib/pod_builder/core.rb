@@ -47,8 +47,8 @@ module PodBuilder
     project_name = File.basename(find_xcodeworkspace, ".*")
 
     xcodeprojects = Dir.glob("#{home}/**/#{project_name}.xcodeproj").select { |x| !x.include?("/Pods/") && !x.include?(basepath) }
-    raise "xcdeoproj not found!".red if xcodeprojects.count == 0
-    raise "Found multiple xcdeoprojs:\n#{xcodeprojects.join("\n")}".red if xcodeprojects.count > 1
+    raise "xcodeproj not found!".red if xcodeprojects.count == 0
+    raise "Found multiple xcodeproj:\n#{xcodeprojects.join("\n")}".red if xcodeprojects.count > 1
 
     return xcodeprojects.first
   end
