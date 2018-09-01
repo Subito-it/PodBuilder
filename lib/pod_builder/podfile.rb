@@ -74,6 +74,8 @@ module PodBuilder
     end
 
     def self.write_restorable(updated_pods, podfile_items, analyzer)
+      puts "Writing Restore Podfile".yellow
+
       podfile_items = podfile_items.dup
       podfile_restore_path = PodBuilder::basepath("Podfile.restore")
       podfile_path = PodBuilder::basepath("Podfile")
@@ -120,7 +122,9 @@ module PodBuilder
       File.write(podfile_restore_path, podfile_content.join("\n"))
     end
 
-    def self.write_prebuilt(all_buildable_items, analyzer)      
+    def self.write_prebuilt(all_buildable_items, analyzer)  
+      puts "Updating Application Podfile".yellow
+
       podbuilder_podfile_path = PodBuilder::basepath("Podfile")
       rel_path = Pathname.new(podbuilder_podfile_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
     
@@ -155,6 +159,8 @@ module PodBuilder
     end
 
     def self.deintegrate_install
+      puts "Deintegrating and reinstalling".yellow
+
       current_dir = Dir.pwd
 
       Dir.chdir(PodBuilder::project_path)

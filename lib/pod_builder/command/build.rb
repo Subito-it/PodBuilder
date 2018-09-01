@@ -118,6 +118,7 @@ module PodBuilder
       end
 
       def self.write_license_files(licenses, all_buildable_items)
+        puts "Writing licenses".yellow
         license_file_path = PodBuilder::project_path(Configuration.license_file_name) + ".plist"
 
         current_licenses = []

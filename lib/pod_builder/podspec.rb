@@ -27,7 +27,9 @@ module PodBuilder
     end
     private_constant :PodspecItem
 
-    def self.generate(analyzer)     
+    def self.generate(analyzer)  
+      puts "Generating PodBuilder's local podspec".yellow
+
       buildable_items = Podfile.podfile_items_at(PodBuilder::basepath("Podfile")).sort_by { |x| x.name }
       all_specs = buildable_items.map { |x| x.pod_specification(buildable_items) }
 
