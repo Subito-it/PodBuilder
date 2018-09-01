@@ -105,11 +105,13 @@ module PodBuilder
       podfile_content += ["platform :#{platform.name}, '#{platform.deployment_target.version}'", ""]
 
       analyzer.result.specs_by_target.each do |target, specifications|
-        unless result_targets.select { |x| x.end_with?(target.name) }.count > 0
+        target_name = target.name.to_s
+
+        unless result_targets.select { |x| x.end_with?(target_name) }.count > 0
           next
         end
 
-        podfile_content.push("target '#{target.name}' do")
+        podfile_content.push("target '#{target_name}' do")
 
         specifications.each do |spec|
           item = podfile_items.detect { |x| x.name == spec.name }
