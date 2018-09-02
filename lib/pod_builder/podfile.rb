@@ -87,7 +87,7 @@ module PodBuilder
           if updated_pod = updated_pods.detect { |x| x.name == podfile_item.name } then
             updated_pod
           elsif updated_pods.any? { |x| podfile_item.root_name == x.root_name } == false && # podfile_item shouldn't be among those being updated (including root specification)
-                restored_pod = restore_podfile_items.detect { |x| x.name == podfile_item.name }
+            restored_pod = restore_podfile_items.detect { |x| x.name == podfile_item.name }
             restored_pod
           else
             podfile_item
@@ -281,6 +281,66 @@ module PodBuilder
         podfile_lines.push("\n#{marker} do |installer|\n")
         podfile_lines.push(entries)
         podfile_lines.push("end\n")
+      end
+
+      File.write(podfile_path, podfile_lines.join)
+    end
+    
+    def self.update_path_entires(podfile_path, use_absolute_paths = false, path_base = PodBuilder::basepath(""))
+      podfile_content = File.read(podfile_path)
+      
+      base_path = Pathname.new(File.dirname(podfile_path))
+      regex = "(\s*pod\s*['|\"])(.*?)(['|\"])(.*?)(:path\s*=>\s*['|\"])(.*?)(['|\"])"
+
+      podfile_lines = []
+      podfile_content.each_line do |line|
+        stripped_line = strip_line(line)
+        matches = line.match(/#{regex}/)
+
+        if matches&.size == 8 && !stripped_line.start_with?("#")
+          path = matches[6]
+
+          original_path = Pathname.new(File.join(path_base, path))
+          replace_path = original_path.relative_path_from(base_path)
+          if use_absolute_paths
+            replace_path = replace_path.expand_path(base_path)
+          end
+                    
+          updated_path_line = line.gsub(/#{regex}/, '\1\2\3\4\5' + replace_path.to_s + '\7\8')
+          podfile_lines.push(updated_path_line)
+        else
+          podfile_lines.push(line)
+        end
+      end
+
+      File.write(podfile_path, podfile_lines.join)
+    end
+
+    def self.update_project_entries(podfile_path, use_absolute_paths = false, path_base = PodBuilder::basepath(""))
+      podfile_content = File.read(podfile_path)
+      
+      base_path = Pathname.new(File.dirname(podfile_path))
+      regex = "(\s*project\s*['|\"])(.*?)(['|\"])"
+
+      podfile_lines = []
+      podfile_content.each_line do |line|
+        stripped_line = strip_line(line)
+        matches = line.match(/#{regex}/)
+
+        if matches&.size == 4 && !stripped_line.start_with?("#")
+          path = matches[2]
+
+          original_path = Pathname.new(File.join(path_base, path))
+          replace_path = original_path.relative_path_from(base_path)
+          if use_absolute_paths
+            replace_path = replace_path.expand_path(base_path)
+          end
+                    
+          updated_path_line = line.gsub(/#{regex}/, '\1' + replace_path.to_s + '\3\4')
+          podfile_lines.push(updated_path_line)
+        else
+          podfile_lines.push(line)
+        end
       end
 
       File.write(podfile_path, podfile_lines.join)
