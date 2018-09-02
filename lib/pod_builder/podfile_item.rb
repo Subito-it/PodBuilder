@@ -206,7 +206,13 @@ module PodBuilder
     # @return [Bool] True if it's a pod that doesn't provide source code (is already shipped as a prebuilt pod)
     #    
     def is_prebuilt
-      return !@has_source_files_key && @vendored_items.count > 0
+      # checking if there's a vendored_item matching the module name is a pretty good guess for a prebuilt pod.
+      # Still suboptimal, maybe it should be more appropriate to use FileAccessor and check that no source code is provided (no *.{m,mm,c,cpp,swift, etc})
+      if vendored_items.map { |x| File.basename(x) }.include?("#{@module_name}.framework")
+        return true
+      else
+        return !@has_source_files_key && @vendored_items.count > 0
+      end
     end
 
     # @return [Bool] True if it's a subspec
