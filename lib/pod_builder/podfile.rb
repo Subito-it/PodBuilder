@@ -155,6 +155,8 @@ module PodBuilder
 
       project_podfile_path = PodBuilder::project_path("Podfile")
       File.write(project_podfile_path, prebuilt_lines.join)
+      Podfile.update_path_entires(project_podfile_path, false)
+      Podfile.update_project_entries(project_podfile_path, false)
 
       add_pre_install_actions(project_podfile_path)
       add_post_install_checks(project_podfile_path)
@@ -298,7 +300,12 @@ module PodBuilder
         matches = line.match(/#{regex}/)
 
         if matches&.size == 8 && !stripped_line.start_with?("#")
+          pod_name = matches[2]
           path = matches[6]
+          unless !pod_name.start_with?("PodBuilder/")
+            podfile_lines.push(line)
+            next
+          end
 
           original_path = Pathname.new(File.join(path_base, path))
           replace_path = original_path.relative_path_from(base_path)
