@@ -37,7 +37,7 @@ module PodBuilder
         PodBuilder::safe_rm_rf(Configuration.base_path)
 
         Dir.chdir(PodBuilder::project_path)
-        system("pod deintegrate; pod install;")  
+        system("pod install;")  
 
         license_base = PodBuilder::project_path(Configuration.license_file_name)
         FileUtils.rm_f("#{license_base}.plist")

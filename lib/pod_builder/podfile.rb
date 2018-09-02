@@ -161,12 +161,12 @@ module PodBuilder
     end
 
     def self.deintegrate_install
-      puts "Deintegrating and reinstalling".yellow
+      puts "Running pod install".yellow
 
       current_dir = Dir.pwd
 
       Dir.chdir(PodBuilder::project_path)
-      system("pod deintegrate; pod install;")
+      system("pod install;")
       Dir.chdir(current_dir)
     end
 
