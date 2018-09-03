@@ -50,7 +50,7 @@ module PodBuilder
     end
     
     def self.exists
-      return config_path ? File.exist?(config_path) : false
+      return File.exist?(config_path)
     end
     
     def self.load
