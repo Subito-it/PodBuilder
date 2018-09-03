@@ -216,7 +216,7 @@ Options:
         opts.on("-d", "--development", "Development pod") do |o|
           OPTIONS[:switch_mode] = "development"
         end
-        opts.on("-e", "--default", "Default version specified in PodBuilder-Podfile") do |o|
+        opts.on("-s", "--default", "Default version specified in PodBuilder-Podfile") do |o|
           OPTIONS[:switch_mode] = "default"
         end
       end,
