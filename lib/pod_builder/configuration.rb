@@ -80,12 +80,11 @@ module PodBuilder
         Configuration.build_settings.freeze
       end
 
-      if File.exist?(Configuration.dev_pods_configuration_filename)
-        json = JSON.parse(File.read(Configuration.dev_pods_configuration_filename))
-        if json.has_key?("development_pods_paths")
-          Configuration.development_pods_paths = json["development_pods_paths"]
-        end
+      dev_pods_configuration_path = File.join(Configuration.base_path, Configuration.dev_pods_configuration_filename)
 
+      if File.exist?(dev_pods_configuration_path)
+        json = JSON.parse(File.read(dev_pods_configuration_path))
+        Configuration.development_pods_paths = json || []
         Configuration.development_pods_paths.freeze
       end
     end
@@ -100,11 +99,11 @@ module PodBuilder
     private 
     
     def self.config_path
-      unless p = podbuilder_path
+      unless path = podbuilder_path
         return nil
       end
 
-      return File.join(podbuilder_path, Configuration.configuration_filename)
+      return File.join(path, Configuration.configuration_filename)
     end
 
     def self.podbuilder_path
