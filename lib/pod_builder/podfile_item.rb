@@ -28,7 +28,7 @@ module PodBuilder
 
     # @return [String] Local path, if any
     #
-    attr_reader :path
+    attr_accessor :path
 
     # @return [String] The pinned commit of the pod, if any
     #
