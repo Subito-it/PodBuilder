@@ -62,20 +62,25 @@ module PodBuilder
   end
 
   def self.prepare_basepath
-    project = PodBuilder::find_xcodeworkspace
-    if project
+    workspace_path = PodBuilder::find_xcodeworkspace
+    project_path = PodBuilder::find_xcodeproj
+    if workspace_path && project_path
       FileUtils.mkdir_p(basepath("Pods/Target Support Files"))
-      FileUtils.cp_r(project, basepath)   
+      FileUtils.cp_r(workspace_path, basepath)   
+      FileUtils.cp_r(project_path, basepath)   
       FileUtils.rm_f(basepath("Podfile.lock"))
     end
   end
 
   def self.clean_basepath
-    project = PodBuilder::find_xcodeworkspace
-    if project
-      PodBuilder::safe_rm_rf(basepath(File.basename(project)))
-      PodBuilder::safe_rm_rf(basepath("Pods"))
+    if path = PodBuilder::find_xcodeproj
+      PodBuilder::safe_rm_rf(basepath(File.basename(path)))      
     end
+    if path = PodBuilder::find_xcodeworkspace
+      PodBuilder::safe_rm_rf(basepath(File.basename(path)))      
+    end
+
+    PodBuilder::safe_rm_rf(basepath("Pods"))
   end
 
   private 
