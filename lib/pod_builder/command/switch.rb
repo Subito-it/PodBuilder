@@ -67,7 +67,7 @@ module PodBuilder
               line = podfile_items.map { |x| "#{indentation}#{x.prebuilt_entry}" }.join("\n") + "\n"
             when "development"
               unless Configuration.development_pods_paths.count > 0
-                raise "\n\nPlease add the `development_pods_paths` in #{Configuration::DEV_PODS_CONFIG_FILE} as per documentation\n".red
+                raise "\n\nPlease add the `development_pods_paths` in #{Configuration.dev_pods_configuration_filename} as per documentation\n".red
               end
 
               podspec_path = nil

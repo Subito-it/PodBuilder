@@ -1,14 +1,7 @@
 require 'json'
 
 module PodBuilder  
-  class Configuration
-    DEV_PODS_CONFIG_FILE = "PodBuilderPodSoures.json".freeze
-    CONFIG_FILE = "PodBuilder.json".freeze
-    BUILD_PATH = "/tmp/pod_builder".freeze
-    
-    private_constant :CONFIG_FILE
-    private_constant :BUILD_PATH
-
+  class Configuration    
     class <<self      
       attr_accessor :build_settings
       attr_accessor :build_settings_overrides
@@ -16,9 +9,12 @@ module PodBuilder
       attr_accessor :base_path
       attr_accessor :spec_overrides      
       attr_accessor :skip_licenses
-      attr_accessor :license_file_name
+      attr_accessor :license_filename
       attr_accessor :subspecs_to_split
       attr_accessor :development_pods_paths
+      attr_accessor :build_path
+      attr_accessor :configuration_filename
+      attr_accessor :dev_pods_configuration_filename
     end
 
     # Remember to update README.md
@@ -35,9 +31,12 @@ module PodBuilder
     @base_path = "Frameworks" # Not nice. This value is used only for initial initization. Once config is loaded it will be an absolute path. FIXME
     @spec_overrides = {}
     @skip_licenses = []
-    @license_file_name = "Pods-acknowledgements"
+    @license_filename = "Pods-acknowledgements"
     @subspecs_to_split = []
     @development_pods_paths = []
+    @build_path = "/tmp/pod_builder".freeze
+    @configuration_filename = "PodBuilder.json".freeze
+    @dev_pods_configuration_filename = "PodBuilderDevPodsPaths.json".freeze
     
     def self.check_inited
       count = Dir.glob("#{File.dirname(config_path)}/**/.pod_builder").count
@@ -77,8 +76,8 @@ module PodBuilder
         if json.has_key?("build_system")
           Configuration.build_system = json["build_system"]
         end
-        if json.has_key?("license_file_name")
-          Configuration.license_file_name = json["license_file_name"]
+        if json.has_key?("license_filename")
+          Configuration.license_filename = json["license_filename"]
         end
         if json.has_key?("subspecs_to_split")
           Configuration.subspecs_to_split = json["subspecs_to_split"]
@@ -87,8 +86,6 @@ module PodBuilder
         Configuration.build_settings.freeze
       end
 
-      if File.exist?(DEV_PODS_CONFIG_FILE)
-        json = JSON.parse(File.read(DEV_PODS_CONFIG_FILE))
         if json.has_key?("development_pods_paths")
           Configuration.development_pods_paths = json["development_pods_paths"]
         end

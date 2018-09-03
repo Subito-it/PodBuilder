@@ -41,7 +41,7 @@ module PodBuilder
         Dir.chdir(PodBuilder::project_path)
         system("pod install;")  
 
-        license_base = PodBuilder::project_path(Configuration.license_file_name)
+        license_base = PodBuilder::project_path(Configuration.license_filename)
         FileUtils.rm_f("#{license_base}.plist")
         FileUtils.rm_f("#{license_base}.md")
 
