@@ -70,11 +70,14 @@ module PodBuilder
                 raise "\n\nPlease add the `development_pods_paths` in #{Configuration.dev_pods_configuration_filename} as per documentation\n".red
               end
 
+              podfile_item = all_buildable_items.detect { |x| x.root_name == pod_name_to_switch }
+
               podspec_path = nil
               Configuration.development_pods_paths.each do |path|
-                podspec = Dir.glob("#{path}/**/#{podfile_item.root_name}*.podspec*")
+                podspec = Dir.glob(File.expand_path("#{path}/**/#{podfile_item.root_name}*.podspec*"))
                 if podspec.count > 0
-                  podspec_path = Pathname.new(podspec.first).basename.to_s
+                  podspec_path = Pathname.new(podspec.first).dirname.to_s
+                  break
                 end
               end
 
