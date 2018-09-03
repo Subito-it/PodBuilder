@@ -2,7 +2,7 @@ require 'json'
 
 module PodBuilder  
   class Configuration
-    DEV_PODS_CONFIG_FILE = "PodBuilderDevelopmentPods.json".freeze
+    DEV_PODS_CONFIG_FILE = "PodBuilderPodSoures.json".freeze
     CONFIG_FILE = "PodBuilder.json".freeze
     BUILD_PATH = "/tmp/pod_builder".freeze
     
@@ -80,13 +80,20 @@ module PodBuilder
         if json.has_key?("license_file_name")
           Configuration.license_file_name = json["license_file_name"]
         end
-        if config.has_key?("development_pods_paths")
-          Configuration.development_pods_paths = config["development_pods_paths"]
         if json.has_key?("subspecs_to_split")
           Configuration.subspecs_to_split = json["subspecs_to_split"]
         end
 
         Configuration.build_settings.freeze
+      end
+
+      if File.exist?(DEV_PODS_CONFIG_FILE)
+        json = JSON.parse(File.read(DEV_PODS_CONFIG_FILE))
+        if json.has_key?("development_pods_paths")
+          Configuration.development_pods_paths = json["development_pods_paths"]
+        end
+
+        Configuration.development_pods_paths.freeze
       end
     end
     
