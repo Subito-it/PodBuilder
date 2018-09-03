@@ -268,9 +268,9 @@ module PodBuilder
     def prebuilt_entry
       relative_path = Pathname.new(Configuration.base_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
       if Configuration.subspecs_to_split.include?(name)
-        return "pod 'PodBuilder/#{podspec_name}', :path => '#{relative_path}'"
+        return "pod 'PodBuilder/#{podspec_name}', :path => '#{relative_path}' # pb<#{name}>"
       else
-        return "pod 'PodBuilder/#{root_name}', :path => '#{relative_path}'"
+        return "pod 'PodBuilder/#{root_name}', :path => '#{relative_path}' # pb<#{name}>"
       end
     end
 
