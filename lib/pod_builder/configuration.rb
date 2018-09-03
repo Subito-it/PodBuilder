@@ -61,30 +61,29 @@ module PodBuilder
       Configuration.base_path = File.dirname(config_path)
 
       if exists
-        config = JSON.parse(File.read(config_path))
-        if config.has_key?("spec_overrides")
-          Configuration.spec_overrides = config["spec_overrides"]
+        json = JSON.parse(File.read(config_path))
+        if json.has_key?("spec_overrides")
+          Configuration.spec_overrides = json["spec_overrides"]
         end
-        if config.has_key?("skip_licenses")
-          Configuration.skip_licenses = config["skip_licenses"]
+        if json.has_key?("skip_licenses")
+          Configuration.skip_licenses = json["skip_licenses"]
         end
-        if config.has_key?("build_settings")
-          Configuration.build_settings = config["build_settings"]
+        if json.has_key?("build_settings")
+          Configuration.build_settings = json["build_settings"]
         end
-        if config.has_key?("build_settings_overrides")
-          Configuration.build_settings_overrides = config["build_settings_overrides"]
+        if json.has_key?("build_settings_overrides")
+          Configuration.build_settings_overrides = json["build_settings_overrides"]
         end
-        if config.has_key?("build_system")
-          Configuration.build_system = config["build_system"]
+        if json.has_key?("build_system")
+          Configuration.build_system = json["build_system"]
         end
-        if config.has_key?("license_file_name")
-          Configuration.license_file_name = config["license_file_name"]
-        end
-        if config.has_key?("subspecs_to_split")
-          Configuration.subspecs_to_split = config["subspecs_to_split"]
+        if json.has_key?("license_file_name")
+          Configuration.license_file_name = json["license_file_name"]
         end
         if config.has_key?("development_pods_paths")
           Configuration.development_pods_paths = config["development_pods_paths"]
+        if json.has_key?("subspecs_to_split")
+          Configuration.subspecs_to_split = json["subspecs_to_split"]
         end
 
         Configuration.build_settings.freeze
