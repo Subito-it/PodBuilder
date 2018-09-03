@@ -223,7 +223,7 @@ module PodBuilder
 
     # @return [String] The podfile entry
     #
-    def entry(include_version = true)
+    def entry(include_version = true, include_pb_entry = true)
       e = "pod '#{@name}'"
 
       unless include_version
@@ -231,23 +231,28 @@ module PodBuilder
       end
 
       if is_external
-        if @repo
-          e += ", :git => '#{@repo}'"  
-        end
-        if @tag
-          e += ", :tag => '#{@tag}'"
-        end
-        if @commit
-          e += ", :commit => '#{@commit}'"  
-        end
         if @path
           e += ", :path => '#{@path}'"  
-        end
-        if @branch
-          e += ", :branch => '#{@branch}'"  
+        else
+          if @repo
+            e += ", :git => '#{@repo}'"  
+          end
+          if @tag
+            e += ", :tag => '#{@tag}'"
+          end
+          if @commit
+            e += ", :commit => '#{@commit}'"  
+          end
+          if @branch
+            e += ", :branch => '#{@branch}'"  
+          end
         end
       else
         e += ", '=#{@version}'"  
+      end
+
+      if include_pb_entry
+        e += " # pb<#{name}>"
       end
 
       return e
@@ -265,7 +270,7 @@ module PodBuilder
       end
     end
 
-    def prebuilt_entry
+    def prebuilt_entry(include_pb_entry = true)
       relative_path = Pathname.new(Configuration.base_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
       if Configuration.subspecs_to_split.include?(name)
         entry = "pod 'PodBuilder/#{podspec_name}', :path => '#{relative_path}'"
@@ -273,7 +278,7 @@ module PodBuilder
         entry = "pod 'PodBuilder/#{root_name}', :path => '#{relative_path}'"
       end
 
-      if is_subspec
+      if include_pb_entry
         entry += " # pb<#{name}>"
       end
 
