@@ -39,13 +39,7 @@ module PodBuilder
     @dev_pods_configuration_filename = "PodBuilderDevPodsPaths.json".freeze
     
     def self.check_inited
-      count = Dir.glob("#{File.dirname(config_path)}/**/.pod_builder").count
-      raise "\n\nNot inited, run `pod_builder init`\n".red if count == 0
-      raise "\n\nToo many .pod_builder found `#{count}`\n".red if count > 1
-    end
-
-    def self.build_path
-      return BUILD_PATH
+      raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
     end
     
     def self.exists
@@ -53,11 +47,11 @@ module PodBuilder
     end
     
     def self.load
-      unless config_path
+      unless podbuilder_path
         return
       end
 
-      Configuration.base_path = File.dirname(config_path)
+      Configuration.base_path = podbuilder_path
 
       if exists
         json = JSON.parse(File.read(config_path))
@@ -86,6 +80,8 @@ module PodBuilder
         Configuration.build_settings.freeze
       end
 
+      if File.exist?(Configuration.dev_pods_configuration_filename)
+        json = JSON.parse(File.read(Configuration.dev_pods_configuration_filename))
         if json.has_key?("development_pods_paths")
           Configuration.development_pods_paths = json["development_pods_paths"]
         end
@@ -102,21 +98,20 @@ module PodBuilder
     end
 
     private 
-
+    
     def self.config_path
-      PodBuilder::find_xcodeproj
-
-      unless PodBuilder::project_path
-        return
+      unless p = podbuilder_path
+        return nil
       end
 
-      if File.expand_path(base_path) == base_path # absolute
-        path = base_path
-      else
-        path = "#{PodBuilder::project_path}/#{base_path}"  
-      end
+      return File.join(podbuilder_path, Configuration.configuration_filename)
+    end
 
-      return File.join(path, CONFIG_FILE)
+    def self.podbuilder_path
+      paths = Dir.glob("#{PodBuilder::home}/**/.pod_builder")
+      raise "\n\nToo many .pod_builder found `#{paths.join("\n")}`\n".red if paths.count > 1
+
+      return paths.count > 0 ? File.dirname(paths.first) : nil
     end
   end  
 end
