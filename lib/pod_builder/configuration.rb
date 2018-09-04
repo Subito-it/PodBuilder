@@ -15,6 +15,8 @@ module PodBuilder
       attr_accessor :build_path
       attr_accessor :configuration_filename
       attr_accessor :dev_pods_configuration_filename
+      attr_accessor :lfs_min_file_size
+      attr_accessor :update_lfs_gitattributes
     end
 
     # Remember to update README.md
@@ -37,6 +39,8 @@ module PodBuilder
     @build_path = "/tmp/pod_builder".freeze
     @configuration_filename = "PodBuilder.json".freeze
     @dev_pods_configuration_filename = "PodBuilderDevPodsPaths.json".freeze
+    @lfs_min_file_size = 256
+    @update_lfs_gitattributes = false
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
@@ -75,6 +79,13 @@ module PodBuilder
         end
         if json.has_key?("subspecs_to_split")
           Configuration.subspecs_to_split = json["subspecs_to_split"]
+        end
+        if json.has_key?("update_lfs_gitattributes")
+          Configuration.update_lfs_gitattributes = json["update_lfs_gitattributes"]
+        end
+        if json.has_key?("lfs_min_file_size")
+          Configuration.lfs_min_file_size = json["lfs_min_file_size"]
+          raise "LFS size too small, 50kb min" if Configuration.lfs_min_file_size < 50
         end
 
         Configuration.build_settings.freeze

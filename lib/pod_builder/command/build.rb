@@ -84,6 +84,7 @@ module PodBuilder
 
         write_license_files(licenses, all_buildable_items)
 
+        GenerateLFS::call(nil)
         Podspec::generate(analyzer)
 
         builded_pods = podfiles_items.flatten

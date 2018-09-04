@@ -148,6 +148,14 @@ Options:
       ]
     },
 
+    "update_lfs" => {
+      :opts => OptionParser.new do |opts|
+      end,
+      :call => [        
+        PodBuilder::Command::GenerateLFS
+      ]
+    },
+
     "deintegrate" => {           
       :opts => OptionParser.new do |opts|
         opts.banner = "
