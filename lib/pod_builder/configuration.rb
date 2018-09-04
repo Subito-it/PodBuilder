@@ -60,7 +60,7 @@ module PodBuilder
     end
     
     def self.exists
-      return File.exist?(config_path)
+      return !config_path.nil? && File.exist?(config_path)
     end
     
     def self.load
