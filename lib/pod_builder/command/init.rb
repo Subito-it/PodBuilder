@@ -19,8 +19,14 @@ module PodBuilder
 
         source_path_rel_path = "Sources"
         development_pods_config_rel_path = Configuration.dev_pods_configuration_filename
+
+        git_ignores = ["Pods/",
+                       "*.xcworkspace",
+                       "*.xcodeproj",
+                       source_path_rel_path,
+                       development_pods_config_rel_path]
         
-        File.write("#{options[:prebuild_path]}/.gitignore", "Pods/\n*.xcodeproj\n#{source_path_rel_path}\n#{development_pods_config_rel_path}\n")
+        File.write("#{options[:prebuild_path]}/.gitignore", git_ignores.join("\n"))
 
         project_podfile_path = PodBuilder::project_path("Podfile")
         prebuilt_podfile_path = File.join(options[:prebuild_path], "Podfile")
