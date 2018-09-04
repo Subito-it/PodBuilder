@@ -58,11 +58,11 @@ module PodBuilder
 
         gemfile = File.read(gemfile_path)
 
-        gemfile_lines = gemfile.gsub("'", "\"").split("\n")
-        if !gemfile_lines.include?(source_line)
+        gemfile_lines = gemfile.split("\n")
+        if !gemfile_lines.map { |x| x.gsub("'", "\"") }.include?(source_line)
           gemfile_lines.insert(0, source_line)
         end
-        if !gemfile_lines.include?(podbuilder_line)
+        if !gemfile_lines.map { |x| x.gsub("'", "\"") }.include?(podbuilder_line)
           gemfile_lines.push(podbuilder_line)
           Dir.chdir(PodBuilder::home)
           system("bundle")
