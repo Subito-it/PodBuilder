@@ -111,11 +111,14 @@ module PodBuilder
         podspec_item.resources = static_vendored_frameworks.map { |x| "#{vendored_framework_path(x)}/*.{nib,bundle,xcasset,strings,png,jpg,tif,tiff,otf,ttf,ttc,plist,json,caf,wav,p12,momd}" }.flatten.uniq
         podspec_item.exclude_files = static_vendored_frameworks.map { |x| "#{vendored_framework_path(x)}/Info.plist" }.flatten.uniq
 
-        # Merge xcconfigs. I'm unsure wheter we should just get the OTHER_LDFLAGS key
+        # Merge xcconfigs
         if !pod.xcconfig.empty?
           pod.xcconfig.each do |k, v|
             unless v != "$(inherited)"
               next
+            end
+            unless k == "OTHER_LDFLAGS"
+              next # For the time being limit to OTHER_LDFLAGS key
             end
 
             if podspec_values = podspec_item.xcconfig[k]
