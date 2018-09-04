@@ -10,10 +10,8 @@ module PodBuilder
       "SWIFT_COMPILATION_MODE" => "singlefile",
     }.freeze
     DEFAULT_SPEC_OVERRIDE = {
-      "spec_overrides" => {
-        "Google-Mobile-Ads-SDK" => {
-            "module_name": "GoogleMobileAds"
-        }
+      "Google-Mobile-Ads-SDK" => {
+        "module_name": "GoogleMobileAds"
       }
     }.freeze
     DEFAULT_BUILD_SYSTEM = "Legacy".freeze # either Latest (New build system) or Legacy (Standard build system)
@@ -22,7 +20,7 @@ module PodBuilder
     private_constant :DEFAULT_BUILD_SETTINGS
     private_constant :DEFAULT_BUILD_SYSTEM
     private_constant :MIN_LFS_SIZE_KB
-
+    
     class <<self      
       attr_accessor :build_settings
       attr_accessor :build_settings_overrides
@@ -39,7 +37,7 @@ module PodBuilder
       attr_accessor :lfs_min_file_size
       attr_accessor :update_lfs_gitattributes
     end
-
+    
     @build_settings = DEFAULT_BUILD_SETTINGS
     @build_settings_overrides = {}
     @build_system = DEFAULT_BUILD_SYSTEM
@@ -67,9 +65,9 @@ module PodBuilder
       unless podbuilder_path
         return
       end
-
+      
       Configuration.base_path = podbuilder_path
-
+      
       if exists
         json = JSON.parse(File.read(config_path))
         if value = json["spec_overrides"]
@@ -121,14 +119,14 @@ module PodBuilder
             end
           end
         end
-
+        
         Configuration.build_settings.freeze
       else
         write
       end
-
+      
       dev_pods_configuration_path = File.join(Configuration.base_path, Configuration.dev_pods_configuration_filename)
-
+      
       if File.exist?(dev_pods_configuration_path)
         json = JSON.parse(File.read(dev_pods_configuration_path))
         Configuration.development_pods_paths = json || []
@@ -138,7 +136,7 @@ module PodBuilder
     
     def self.write
       config = {}
-
+      
       config["spec_overrides"] = Configuration.spec_overrides
       config["skip_licenses"] = Configuration.skip_licenses
       config["build_settings"] = Configuration.build_settings
@@ -148,24 +146,24 @@ module PodBuilder
       config["subspecs_to_split"] = Configuration.subspecs_to_split
       config["update_lfs_gitattributes"] = Configuration.update_lfs_gitattributes
       config["lfs_min_file_size_kb"] = Configuration.lfs_min_file_size
-
+      
       File.write(config_path, JSON.pretty_generate(config))
     end
-
+    
     private 
     
     def self.config_path
       unless path = podbuilder_path
         return nil
       end
-
+      
       return File.join(path, Configuration.configuration_filename)
     end
-
+    
     def self.podbuilder_path
       paths = Dir.glob("#{PodBuilder::home}/**/.pod_builder")
       raise "\n\nToo many .pod_builder found `#{paths.join("\n")}`\n".red if paths.count > 1
-
+      
       return paths.count > 0 ? File.dirname(paths.first) : nil
     end
   end  
