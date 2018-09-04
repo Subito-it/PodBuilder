@@ -23,6 +23,7 @@ module PodBuilder
         git_ignores = ["Pods/",
                        "*.xcworkspace",
                        "*.xcodeproj",
+                       "Podfile.lock",
                        source_path_rel_path,
                        development_pods_config_rel_path]
         
