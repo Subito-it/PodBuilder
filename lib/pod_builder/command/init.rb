@@ -39,8 +39,36 @@ module PodBuilder
 
         Configuration.write
 
+        update_gemfile
+
         puts "\n\n🎉 done!\n".green
         return true
+      end
+
+      private 
+
+      def self.update_gemfile
+        gemfile_path = File.join(PodBuilder::home, "Gemfile")
+        unless File.exist?(gemfile_path)
+          FileUtils.touch(gemfile_path)
+        end
+
+        source_line = 'source "https://rubygems.org"'
+        podbuilder_line = 'gem "pod-builder"'
+
+        gemfile = File.read(gemfile_path)
+
+        gemfile_lines = gemfile.gsub("'", "\"").split("\n")
+        if !gemfile_lines.include?(source_line)
+          gemfile_lines.insert(0, source_line)
+        end
+        if !gemfile_lines.include?(podbuilder_line)
+          gemfile_lines.push(podbuilder_line)
+          Dir.chdir(PodBuilder::home)
+          system("bundle")
+        end
+
+        File.write(gemfile_path, gemfile_lines.join("\n"))
       end
     end
   end
