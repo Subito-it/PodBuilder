@@ -136,7 +136,21 @@
             "pathToRDebugIDE": "/usr/bin/rdebug-ide",
             "args": [
                 "switch",
-                "pod1/sub",
+                "-p",
+                "AFNetworking",                
+            ]
+        },
+        {
+            "name": "Update LFS",
+            "type": "Ruby",
+            "request": "launch",
+            "cwd": "/Users/tomas/Documents/Xcode/Subito4",
+            "useBundler": true,
+            "program": "${workspaceRoot}/exe/pod_builder",
+            "showDebuggerOutput": true,
+            "pathToRDebugIDE": "/usr/bin/rdebug-ide",
+            "args": [
+                "update_lfs",
             ]
         }
     ]
