@@ -39,8 +39,6 @@ module PodBuilder
       
       all_specs = analysis_result.specifications
 
-      all_specs.select! { |x| !Configuration.skip_pods.include?(x.root.name) && !Configuration.skip_pods.include?(x.name) }
-
       all_podfile_specs = all_specs.select { |x| all_podfile_pods.map(&:name).include?(x.name) }
 
       deps_names = all_podfile_specs.map { |x| x.recursive_dep_names(all_specs) }.flatten.uniq
