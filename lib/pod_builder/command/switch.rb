@@ -108,6 +108,7 @@ module PodBuilder
         podspec_path = nil
         Configuration.development_pods_paths.each do |path|
           podspec = Dir.glob(File.expand_path("#{path}/**/#{podfile_item.root_name}*.podspec*"))
+          podspec.select! { |x| !x.include?("/Local Podspecs/") }
           if podspec.count > 0
             podspec_path = Pathname.new(podspec.first).dirname.to_s
             break
