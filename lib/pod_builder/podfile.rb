@@ -34,6 +34,12 @@ module PodBuilder
         build_settings = Configuration.build_settings.dup
 
         item_build_settings = Configuration.build_settings_overrides[item.name] || {}
+        
+        # These settings need to be set as is to properly build frameworks
+        build_settings['SWIFT_COMPILATION_MODE'] = 'singlefile'
+        build_settings['CLANG_ENABLE_MODULE_DEBUGGING'] = 'NO'
+        build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
+
         build_settings['SWIFT_VERSION'] = item_build_settings["SWIFT_VERSION"] || project_swift_version(analyzer)
         if item.is_static
           # https://forums.developer.apple.com/thread/17921
