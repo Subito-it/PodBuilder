@@ -28,7 +28,7 @@ module PodBuilder
 
     # @return [String] Local path, if any
     #
-    attr_reader :path
+    attr_accessor :path
 
     # @return [String] The pinned commit of the pod, if any
     #
@@ -78,6 +78,10 @@ module PodBuilder
     #
     attr_accessor :libraries
 
+    # @return [Bool] Returns true if the source_files key is present
+    #
+    attr_accessor :has_source_files_key
+
     # Initialize a new instance
     #
     # @param [Specification] spec
@@ -97,12 +101,14 @@ module PodBuilder
       @name = spec.name
       @root_name = spec.name.split("/").first
 
-      if checkout_options.has_key?(root_name)
-        @repo = checkout_options[root_name][:git]
-        @tag = checkout_options[root_name][:tag]
-        @commit = checkout_options[root_name][:commit]
-        @path = checkout_options[root_name][:path]
-        @branch = checkout_options[root_name][:branch]
+      checkout_options_keys = [@name, @root_name]
+
+      if opts_key = checkout_options_keys.detect { |x| checkout_options.has_key?(x) }
+        @repo = checkout_options[opts_key][:git]
+        @tag = checkout_options[opts_key][:tag]
+        @commit = checkout_options[opts_key][:commit]
+        @path = checkout_options[opts_key][:path]
+        @branch = checkout_options[opts_key][:branch]
         @is_external = true
       else
         @repo = spec.root.source[:git]
@@ -140,6 +146,9 @@ module PodBuilder
 
       @is_static = spec.root.attributes_hash["static_framework"] || false
       @xcconfig = spec.root.attributes_hash["xcconfig"] || {}
+
+      @has_source_files_key = spec.root.attributes_hash.has_key?("source_files") || spec.attributes_hash.has_key?("source_files")
+      
       @build_configuration = spec.root.attributes_hash.dig("pod_target_xcconfig", "prebuild_configuration") || "release"
       @build_configuration.downcase!
     end
@@ -191,13 +200,24 @@ module PodBuilder
     end
 
     def dependencies(available_pods)
-      return available_pods.select { |x| dependency_names.include?(x.name) }
+      return available_pods.select { |x| @dependency_names.include?(x.name) }
     end
 
     # @return [Bool] True if it's a pod that doesn't provide source code (is already shipped as a prebuilt pod)
     #    
     def is_prebuilt
-      return vendored_items.select { |x| x.include?(root_name) }.count > 0
+      # We treat pods to skip like prebuilt ones
+      if Configuration.skip_pods.include?(@root_name) || Configuration.skip_pods.include?(@name)
+        return true
+      end
+
+      # checking if there's a vendored_item matching the module name is a pretty good guess for a prebuilt pod.
+      # Still suboptimal, maybe it should be more appropriate to use FileAccessor and check that no source code is provided (no *.{m,mm,c,cpp,swift, etc})
+      if vendored_items.map { |x| File.basename(x) }.include?("#{@module_name}.framework")
+        return true
+      else
+        return !@has_source_files_key && @vendored_items.count > 0
+      end
     end
 
     # @return [Bool] True if it's a subspec
@@ -208,7 +228,7 @@ module PodBuilder
 
     # @return [String] The podfile entry
     #
-    def entry(include_version = true)
+    def entry(include_version = true, include_pb_entry = true)
       e = "pod '#{@name}'"
 
       unless include_version
@@ -216,23 +236,28 @@ module PodBuilder
       end
 
       if is_external
-        if @repo
-          e += ", :git => '#{@repo}'"  
-        end
-        if @tag
-          e += ", :tag => '#{@tag}'"
-        end
-        if @commit
-          e += ", :commit => '#{@commit}'"  
-        end
         if @path
           e += ", :path => '#{@path}'"  
-        end
-        if @branch
-          e += ", :branch => '#{@branch}'"  
+        else
+          if @repo
+            e += ", :git => '#{@repo}'"  
+          end
+          if @tag
+            e += ", :tag => '#{@tag}'"
+          end
+          if @commit
+            e += ", :commit => '#{@commit}'"  
+          end
+          if @branch
+            e += ", :branch => '#{@branch}'"  
+          end
         end
       else
         e += ", '=#{@version}'"  
+      end
+
+      if include_pb_entry
+        e += " # pb<#{name}>"
       end
 
       return e
@@ -250,13 +275,19 @@ module PodBuilder
       end
     end
 
-    def prebuilt_entry
-      relative_path = Pathname.new(Configuration.base_path).relative_path_from(Pathname.new(PodBuilder::xcodepath)).to_s
+    def prebuilt_entry(include_pb_entry = true)
+      relative_path = Pathname.new(Configuration.base_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
       if Configuration.subspecs_to_split.include?(name)
-        return "pod 'PodBuilder/#{podspec_name}', :path => '#{relative_path}'"
+        entry = "pod 'PodBuilder/#{podspec_name}', :path => '#{relative_path}'"
       else
-        return "pod 'PodBuilder/#{root_name}', :path => '#{relative_path}'"
+        entry = "pod 'PodBuilder/#{root_name}', :path => '#{relative_path}'"
       end
+
+      if include_pb_entry
+        entry += " # pb<#{name}>"
+      end
+
+      return entry
     end
 
     def has_subspec(named)

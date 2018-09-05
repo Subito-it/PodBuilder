@@ -1,4 +1,4 @@
 module PodBuilder
-  VERSION = "0.1.9.beta"
+  VERSION = "0.2.0"
 end
   

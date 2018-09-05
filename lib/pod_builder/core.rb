@@ -32,45 +32,62 @@ module PodBuilder
       Dir.chdir(basepath)
     end
   end
-
-  def self.home
-    h = `git rev-parse --show-toplevel`.strip()
-    raise "\n\nNo git repository found in current folder `#{Dir.pwd}`!\n".red if h.empty?
-    return h
-  end
   
   def self.basepath(child = "")
     return "#{Configuration.base_path}/#{child}".gsub("//", "/").gsub(/\/$/, '')
   end
   
-  def self.xcodepath(child = "")
-    project = PodBuilder::find_xcodeproject
+  def self.project_path(child = "")
+    project = PodBuilder::find_xcodeworkspace
     
     return project ? "#{File.dirname(project)}/#{child}".gsub("//", "/").gsub(/\/$/, '') : nil
   end
 
-  def self.find_xcodeproject
-    return Dir.glob("#{home}/**/*.xcodeproj").detect { |x| !x.include?("/Pods/") && !x.include?(basepath) }
+  def self.find_xcodeproj
+    project_name = File.basename(find_xcodeworkspace, ".*")
+
+    xcodeprojects = Dir.glob("#{home}/**/#{project_name}.xcodeproj").select { |x| !x.include?("/Pods/") && !x.include?("/Sources/") && !x.include?(basepath) }
+    raise "xcodeproj not found!".red if xcodeprojects.count == 0
+    raise "Found multiple xcodeproj:\n#{xcodeprojects.join("\n")}".red if xcodeprojects.count > 1
+
+    return xcodeprojects.first
   end
 
   def self.find_xcodeworkspace
-    return Dir.glob("#{home}/**/*.xcworkspace").detect { |x| !x.include?("/Pods/") && !x.include?(basepath) }
+    xcworkspaces = Dir.glob("#{home}/**/*.xcworkspace").select { |x| !x.include?("/Pods/") && !x.include?("/Sources/") && !x.include?(basepath) && !x.include?(".xcodeproj/") }
+    raise "xcworkspace not found!".red if xcworkspaces.count == 0
+    raise "Found multiple xcworkspaces:\n#{xcworkspaces.join("\n")}".red if xcworkspaces.count > 1
+
+    return xcworkspaces.first
   end
 
   def self.prepare_basepath
-    project = PodBuilder::find_xcodeproject
-    if project
+    workspace_path = PodBuilder::find_xcodeworkspace
+    project_path = PodBuilder::find_xcodeproj
+    if workspace_path && project_path
       FileUtils.mkdir_p(basepath("Pods/Target Support Files"))
-      FileUtils.cp_r(project, basepath)   
+      FileUtils.cp_r(workspace_path, basepath)   
+      FileUtils.cp_r(project_path, basepath)   
       FileUtils.rm_f(basepath("Podfile.lock"))
     end
   end
 
   def self.clean_basepath
-    project = PodBuilder::find_xcodeproject
-    if project
-      PodBuilder::safe_rm_rf(basepath(File.basename(project)))
-      PodBuilder::safe_rm_rf(basepath("Pods"))
+    if path = PodBuilder::find_xcodeproj
+      PodBuilder::safe_rm_rf(basepath(File.basename(path)))      
     end
+    if path = PodBuilder::find_xcodeworkspace
+      PodBuilder::safe_rm_rf(basepath(File.basename(path)))      
+    end
+
+    PodBuilder::safe_rm_rf(basepath("Pods"))
+  end
+
+  private 
+  
+  def self.home
+    h = `git rev-parse --show-toplevel`.strip()
+    raise "\n\nNo git repository found in current folder `#{Dir.pwd}`!\n".red if h.empty?
+    return h
   end
 end

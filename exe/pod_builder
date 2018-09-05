@@ -33,6 +33,7 @@ Command:
     + install_sources                Install sources of pods to debug into prebuild frameworks
     + switch                         Switch between prebuilt/development/standard pod in the Application-Podfile
     + clean                          Remove prebuild frameworks, dSYMs and source files added by install_sources no longer in Frameworks/Podfile
+    + synch_podfile                  Update your Application-Podfile with all pods declared in the PodBuilder-Podfile
 
 Options:
 "
@@ -52,7 +53,7 @@ Usage:
         
     $ pod_builder build [OPTIONS] <PODNAME...>
 
-      Prebuild the specified CocoaPods pods
+      Prebuild the specified CocoaPods pods.
         
 Options:
 "        
@@ -78,7 +79,7 @@ Usage:
         
     $ pod_builder build_all [OPTIONS]
 
-      Prebuild all pods specified in the PodBuilder-Podfile
+      Prebuild all pods specified in the PodBuilder-Podfile.
         
 Options:
 "        
@@ -104,7 +105,7 @@ Usage:
         
     $ pod_builder restore_all [OPTIONS]
 
-      Rebuilds all pods to the version specified in the Restore-Podfile
+      Rebuilds all pods to the version specified in the Restore-Podfile.
         
 Options:
 "          
@@ -127,7 +128,7 @@ Usage:
         
     $ pod_builder init [OPTIONS]
 
-      Initializes PodBuilder
+      Initializes PodBuilder.
         
 Options:
 "         
@@ -148,6 +149,14 @@ Options:
       ]
     },
 
+    "update_lfs" => {
+      :opts => OptionParser.new do |opts|
+      end,
+      :call => [        
+        PodBuilder::Command::GenerateLFS
+      ]
+    },
+
     "deintegrate" => {           
       :opts => OptionParser.new do |opts|
         opts.banner = "
@@ -155,7 +164,7 @@ Usage:
         
     $ pod_builder deintegrate
 
-      Remove PodBuilder
+      Remove PodBuilder from your project.
         
 Options:
 "          
@@ -189,7 +198,7 @@ Usage:
         
     $ pod_builder install_sources
 
-      Install source of prebuilt pods to be able to step into and debug framework's code
+      Install source of prebuilt pods to be able to step into and debug framework's code.
         
 Options:
 "         
@@ -206,7 +215,7 @@ Usage:
         
     $ pod_builder switch PODNAME [OPTIONS]
 
-      Switch integration between prebuilt/development/default pod version
+      Switch integration between prebuilt/development/default pod version.
         
 Options:
 "        
@@ -216,14 +225,31 @@ Options:
         opts.on("-d", "--development", "Development pod") do |o|
           OPTIONS[:switch_mode] = "development"
         end
-        opts.on("-e", "--default", "Default version specified in PodBuilder-Podfile") do |o|
+        opts.on("-s", "--default", "Default version specified in PodBuilder-Podfile") do |o|
           OPTIONS[:switch_mode] = "default"
         end
       end,
       :call => [        
         PodBuilder::Command::Switch
       ]
-    }    
+    },
+
+    "synch_podfile" => {      
+      :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder synch_podfile
+
+      Rewrite the Application-Podfile based on the PodBuilder-Podfile. 
+      You may want to run this command when you add a new pod to the PodBuilder-Podfile 
+      and you want to integrate it in the project without rebuilding it.
+        
+"      end,
+      :call => [        
+        PodBuilder::Command::SynchPodfile
+      ]
+    }      
   }
    
   subcommands["none"][:opts].order!

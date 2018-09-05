@@ -35,7 +35,11 @@ module PodBuilder
           end
         end
 
-        podfile_path = PodBuilder::xcodepath("Podfile")
+        if options[:switch_mode] == "prebuilt"
+          check_prebuilded(pod_name_to_switch)
+        end
+
+        podfile_path = PodBuilder::project_path("Podfile")
         podfile_content = File.read(podfile_path)
 
         pod_lines = []
@@ -60,31 +64,30 @@ module PodBuilder
               raise "\n\nPod `#{pod_name_to_switch}` wasn't found in Podfile\n".red
             end
 
+            matches = line.match(/(#\s*pb<)(.*?)(>)/)
+            if matches&.size == 4
+              default_pod_name = matches[2]
+            else
+              puts "⚠️ Did not found pb<> entry, assigning default pod name #{pod_name}"
+              default_pod_name = pod_name
+            end
+
+            unless podfile_item = all_buildable_items.detect { |x| x.name == default_pod_name }
+              raise "\n\nPod `#{default_pod_name}` wasn't found in Podfile\n".red
+            end
+            podfile_item = podfile_item.dup
+
             indentation = line.detect_indentation
 
             case options[:switch_mode]
             when "prebuilt"
-              line = podfile_items.map { |x| "#{indentation}#{x.prebuilt_entry}" }.join("\n") + "\n"
+              line = indentation + podfile_item.prebuilt_entry + "\n"
             when "development"
-              unless Configuration.development_pods_paths.count > 0
-                raise "\n\nPlease add the `development_pods_paths` in #{Configuration::DEV_PODS_CONFIG_FILE} as per documentation\n".red
-              end
+              podfile_item.path = find_podspec(podfile_item)
 
-              podspec_path = nil
-              Configuration.development_pods_paths.each do |path|
-                podspec = Dir.glob("#{path}/**/#{podfile_item.root_name}*.podspec*")
-                if podspec.count > 0
-                  podspec_path = Pathname.new(podspec.first).basename.to_s
-                end
-              end
-
-              if podspec_path.nil?
-                raise "\n\nCouln't find `#{pod_name}` sources in the following specified development pod paths:#{Configuration.development_pods_paths.join("\n")}\n".red
-              end
-
-              line = podfile_items.map { |x| "#{indentation}pod '#{x.name}', :path => '#{podspec_path}'\n" }.join("\n") + "\n"
+              line = indentation + podfile_item.entry + "\n"
             when "default"
-              line = podfile_items.map { |x| "#{indentation}#{x.entry}" }.join("\n") + "\n"
+              line = indentation + podfile_item.entry + "\n"
             else
               break
             end
@@ -95,11 +98,33 @@ module PodBuilder
         
         File.write(podfile_path, pod_lines.join)
         
-        Dir.chdir(PodBuilder::xcodepath)
+        Dir.chdir(PodBuilder::project_path)
         system("pod install")
       end
       
-      private
+      private     
+
+      def self.find_podspec(podfile_item)
+        unless Configuration.development_pods_paths.count > 0
+          raise "\n\nPlease add the `development_pods_paths` in #{Configuration.dev_pods_configuration_filename} as per documentation\n".red
+        end
+
+        podspec_path = nil
+        Configuration.development_pods_paths.each do |path|
+          podspec = Dir.glob(File.expand_path("#{path}/**/#{podfile_item.root_name}*.podspec*"))
+          podspec.select! { |x| !x.include?("/Local Podspecs/") }
+          if podspec.count > 0
+            podspec_path = Pathname.new(podspec.first).dirname.to_s
+            break
+          end
+        end
+
+        if podspec_path.nil?
+          raise "\n\nCouln't find `#{pod_name}` sources in the following specified development pod paths: #{Configuration.development_pods_paths.join("\n")}\n".red
+        end
+
+        return podspec_path
+      end
       
       def self.request_switch_mode(pod_name, podfile_item)
         matches = podfile_item.entry.match(/(pod '.*?',)(.*)/)
@@ -118,6 +143,21 @@ module PodBuilder
       def self.check_not_building_subspec(pod_to_switch)
         if pod_to_switch.include?("/")
           raise "\n\nCan't switch subspec #{pod_to_switch} refer to podspec name.\n\nUse `pod_builder switch #{pod_to_switch.split("/").first}` instead\n\n".red
+        end
+      end
+
+      private
+
+      def self.check_prebuilded(pod_name)
+        podspec_path = PodBuilder::basepath("PodBuilder.podspec")
+        unless File.exist?(podspec_path)
+          raise "Prebuilt podspec not found!".red
+        end
+
+        prebuilt_podspec = File.read(podspec_path)
+
+        if !prebuilt_podspec.include?("s.subspec '#{pod_name}' do |p|")
+          raise "\n\n#{pod_name} is not prebuilt.\n\nRun 'pod_builder build #{pod_name}'\n".red
         end
       end
     end

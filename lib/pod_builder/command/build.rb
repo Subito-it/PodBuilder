@@ -84,7 +84,8 @@ module PodBuilder
 
         write_license_files(licenses, all_buildable_items)
 
-        Podspec::generate
+        GenerateLFS::call(nil)
+        Podspec::generate(analyzer)
 
         builded_pods = podfiles_items.flatten
         builded_pods_and_deps = add_dependencies(builded_pods, all_buildable_items).select { |x| !x.is_prebuilt }
@@ -118,7 +119,8 @@ module PodBuilder
       end
 
       def self.write_license_files(licenses, all_buildable_items)
-        license_file_path = PodBuilder::xcodepath(Configuration.license_file_name) + ".plist"
+        puts "Writing licenses".yellow
+        license_file_path = PodBuilder::project_path(Configuration.license_filename) + ".plist"
 
         current_licenses = []
         if File.exist?(license_file_path)
@@ -234,6 +236,10 @@ module PodBuilder
 
         invalid_subspecs = Configuration.subspecs_to_split & non_static_subspecs_names # intersect
 
+        unless invalid_subspecs.count > 0
+          return
+        end
+
         warn_message = "The following pods `#{invalid_subspecs.join(" ")}` are non static frameworks which are being splitted over different targets. Beware that this is an unsafe setup as per https://github.com/CocoaPods/CocoaPods/issues/5708 and https://github.com/CocoaPods/CocoaPods/issues/5643\n"
         if options[:allow_warnings]
           puts "\n\n⚠️  #{warn_message}".yellow
@@ -266,7 +272,7 @@ module PodBuilder
       end
 
       def self.sanity_checks(options)
-        lines = File.read(PodBuilder::xcodepath("Podfile")).split("\n")
+        lines = File.read(PodBuilder::project_path("Podfile")).split("\n")
         stripped_lines = lines.map { |x| Podfile.strip_line(x) }.select { |x| !x.start_with?("#")}
 
         expected_stripped = Podfile::POST_INSTALL_ACTIONS.map { |x| Podfile.strip_line(x) }

@@ -7,7 +7,10 @@ module PodBuilder
       
       init_git(Configuration.build_path) # this is needed to be able to call safe_rm_rf
 
-      File.write("#{Configuration.build_path}/Podfile", podfile_content)
+      podfile_path = "#{Configuration.build_path}/Podfile"
+      File.write(podfile_path, podfile_content)
+      Podfile.update_path_entires(podfile_path, true)
+      Podfile.update_project_entries(podfile_path, true)
 
       begin  
         lock_file = "#{Configuration.build_path}/pod_builder.lock"

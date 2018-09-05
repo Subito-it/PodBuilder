@@ -48,7 +48,7 @@ plugin 'cocoapods-rome', {  dsym: false, configuration: '%%%build_configuration%
   installer.pods_project.save
 }}
 
-platform :ios, '9.0'
+platform :%%%platform_name%%%, '%%%deployment_version%%%'
 
 # Targets
 

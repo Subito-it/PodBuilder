@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
   s.author           = { "Tomas Camin" => "tomas.camin@schibsted.com" }
   s.source           = { :git => "https://www.subito.it", :tag => s.version.to_s }
   
-  s.platform     = :ios, '9.0'
+  s.platform     = :%%%platform_name%%%, '%%%deployment_version%%%'
   s.requires_arc = true
   
 %%%podspecs%%%
