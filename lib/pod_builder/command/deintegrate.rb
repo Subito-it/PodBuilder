@@ -45,8 +45,34 @@ module PodBuilder
         FileUtils.rm_f("#{license_base}.plist")
         FileUtils.rm_f("#{license_base}.md")
 
+        update_gemfile
+
         puts "\n\n🎉 done!\n".green
         return true
+      end
+
+      private
+
+      def self.update_gemfile
+        gemfile_path = File.join(PodBuilder::home, "Gemfile")
+        unless File.exist?(gemfile_path)
+          FileUtils.touch(gemfile_path)
+        end
+
+        podbuilder_line = "gem 'pod-builder'"
+
+        gemfile = File.read(gemfile_path)
+
+        gemfile_lines = gemfile.split("\n")
+        gemfile_lines.select! { |x| !trim_gemfile_line(x).include?(trim_gemfile_line(podbuilder_line)) }
+        File.write(gemfile_path, gemfile_lines.join("\n"))
+
+        Dir.chdir(PodBuilder::home)
+        system("bundle")
+      end
+
+      def self.trim_gemfile_line(line)
+        return line.gsub("\"", "'").gsub(" ", "")
       end
     end
   end

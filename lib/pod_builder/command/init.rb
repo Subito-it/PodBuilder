@@ -53,22 +53,26 @@ module PodBuilder
           FileUtils.touch(gemfile_path)
         end
 
-        source_line = 'source "https://rubygems.org"'
-        podbuilder_line = 'gem "pod-builder"'
+        source_line = "source 'https://rubygems.org'"
+        podbuilder_line = "gem 'pod-builder'"
 
         gemfile = File.read(gemfile_path)
 
         gemfile_lines = gemfile.split("\n")
-        if !gemfile_lines.map { |x| x.gsub("'", "\"") }.include?(source_line)
-          gemfile_lines.insert(0, source_line)
-        end
-        if !gemfile_lines.map { |x| x.gsub("'", "\"") }.include?(podbuilder_line)
-          gemfile_lines.push(podbuilder_line)
-          Dir.chdir(PodBuilder::home)
-          system("bundle")
-        end
+        gemfile_lines.select! { |x| !trim_gemfile_line(x).include?(trim_gemfile_line(source_line)) }
+        gemfile_lines.select! { |x| !trim_gemfile_line(x).include?(trim_gemfile_line(podbuilder_line)) }
 
+        gemfile_lines.insert(0, source_line)
+        gemfile_lines.push(podbuilder_line)
+     
         File.write(gemfile_path, gemfile_lines.join("\n"))
+
+        Dir.chdir(PodBuilder::home)
+        system("bundle")
+      end
+
+      def self.trim_gemfile_line(line)
+        return line.gsub("\"", "'").gsub(" ", "")
       end
     end
   end
