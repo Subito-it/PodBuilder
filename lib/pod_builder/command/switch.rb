@@ -35,6 +35,10 @@ module PodBuilder
           end
         end
 
+        if options[:switch_mode] == "prebuilt"
+          check_prebuilded(pod_name_to_switch)
+        end
+
         podfile_path = PodBuilder::project_path("Podfile")
         podfile_content = File.read(podfile_path)
 
@@ -139,6 +143,21 @@ module PodBuilder
       def self.check_not_building_subspec(pod_to_switch)
         if pod_to_switch.include?("/")
           raise "\n\nCan't switch subspec #{pod_to_switch} refer to podspec name.\n\nUse `pod_builder switch #{pod_to_switch.split("/").first}` instead\n\n".red
+        end
+      end
+
+      private
+
+      def self.check_prebuilded(pod_name)
+        podspec_path = PodBuilder::basepath("PodBuilder.podspec")
+        unless File.exist?(podspec_path)
+          raise "Prebuilt podspec not found!".red
+        end
+
+        prebuilt_podspec = File.read(podspec_path)
+
+        if !prebuilt_podspec.include?("s.subspec '#{pod_name}' do |p|")
+          raise "\n\n#{pod_name} is not prebuilt.\n\nRun 'pod_builder build #{pod_name}'\n".red
         end
       end
     end
