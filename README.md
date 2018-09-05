@@ -49,6 +49,7 @@ Podbuilder comes with a set of commands:
 - `install_sources`: installs sources of pods to debug into prebuild frameworks
 - `switch`: switch between prebuilt, development or standard pod in the Application-Podfile
 - `clean`: removes unused prebuilt frameworks, dSYMs and source files added by install_sources
+- `synch_podfile`: updates the Application with all pods declared in the PodBuilder-Podfile file
 
 Commands can be run from anywhere in your project's repo that is **required to be under git**. 
 
@@ -104,6 +105,11 @@ Using the switch command you can choose to integrate it:
 #### `clean` command
 
 Deletes all unused files by PodBuilder, including .frameworks, .dSYMs and _Source_ repos.
+
+#### `synch_podfile` command
+
+Updates the Application with all pods declared in the PodBuilder-Podfile file. This can come in handy when adding a new pod to the PodBuilder-Podfile file you don't won't to prebuild straight away.
+
 
 # Configuration file
 
@@ -218,6 +224,16 @@ Change the minimum file size to add files to _.gitattributes_ when using [Git-LF
 PodBuilder leverages CocoaPods code and [cocoapods-rome plugin](https://github.com/CocoaPods/Rome) to compile pods into frameworks. Every compiled framework will be boxed (by adding it as a `vendored_framework`) as a subspec of a local podspec. When needed additional settings will be automatically ported from the original podspec, like for example xcconfig settings.
 
 # FAQ
+
+### **After prebuilding my project no longer compiles**
+
+A common problem you may encounter is with Objective-C imports. You should verify that you're properly importing all the headers of your pods with the angle bracket notation `#import <FrameworkName/HeaderFile.h>` instead of directly importing `#import "HeaderFile.h"`.
+
+How to proceed in these cases?
+1. Rebuild all frameworks with PodBuilder
+2. Switch all your pods (use switch command or manually edit your Application-Podfile) back to the standard integration
+3. One-by-one switch your pods back to prebuilt, verifying everytime that your Project still compiles.
+
 
 ### **Build failed with longish output to the stdout, what should I do next?**
 
