@@ -89,7 +89,7 @@ module PodBuilder
 
         builded_pods = podfiles_items.flatten
         builded_pods_and_deps = add_dependencies(builded_pods, all_buildable_items).select { |x| !x.is_prebuilt }
-        Podfile::write_restorable(builded_pods, all_buildable_items, analyzer)     
+        Podfile::write_restorable(builded_pods_and_deps, all_buildable_items, analyzer)     
         if !options.has_key?(:skip_prebuild_update)   
           Podfile::write_prebuilt(all_buildable_items, analyzer)
         end
