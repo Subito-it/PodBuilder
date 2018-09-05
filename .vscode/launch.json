@@ -27,7 +27,7 @@
             "showDebuggerOutput": true,
             "pathToRDebugIDE": "/usr/bin/rdebug-ide",
             "args": [
-                "init",
+                "init"
             ]
         },
         {
@@ -55,7 +55,7 @@
             "args": [
                 "build",
                 "-d",
-                "SBTGalleryView",
+                "ADvantage",
             ]
         },
         {
@@ -69,7 +69,8 @@
             "pathToRDebugIDE": "/usr/bin/rdebug-ide",
             "args": [
                 "build_all",
-                "-d"
+                "-d",
+                "--allow-warnings"
             ]
         },
         {
@@ -144,13 +145,26 @@
             "name": "Update LFS",
             "type": "Ruby",
             "request": "launch",
-            "cwd": "/Users/tomas/Documents/Xcode/Subito4",
+            "cwd": "~/Desktop",
             "useBundler": true,
             "program": "${workspaceRoot}/exe/pod_builder",
             "showDebuggerOutput": true,
             "pathToRDebugIDE": "/usr/bin/rdebug-ide",
             "args": [
                 "update_lfs",
+            ]
+        },
+        {
+            "name": "Synch Podfile",
+            "type": "Ruby",
+            "request": "launch",
+            "cwd": "~/Desktop",
+            "useBundler": true,
+            "program": "${workspaceRoot}/exe/pod_builder",
+            "showDebuggerOutput": true,
+            "pathToRDebugIDE": "/usr/bin/rdebug-ide",
+            "args": [
+                "synch_podfile",
             ]
         }
     ]
