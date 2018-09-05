@@ -149,14 +149,7 @@ module PodBuilder
       private
 
       def self.check_prebuilded(pod_name)
-        podspec_path = PodBuilder::basepath("PodBuilder.podspec")
-        unless File.exist?(podspec_path)
-          raise "Prebuilt podspec not found!".red
-        end
-
-        prebuilt_podspec = File.read(podspec_path)
-
-        if !prebuilt_podspec.include?("s.subspec '#{pod_name}' do |p|")
+        if !Podspec.include?(pod_name)
           raise "\n\n#{pod_name} is not prebuilt.\n\nRun 'pod_builder build #{pod_name}'\n".red
         end
       end

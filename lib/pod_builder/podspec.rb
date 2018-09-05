@@ -39,6 +39,22 @@ module PodBuilder
       platform = analyzer.result.targets.first.platform
       generate_podspec_from(podspec_items, platform)
     end
+
+    def self.include?(pod_name)
+      podspec_path = PodBuilder::basepath("PodBuilder.podspec")
+      unless File.exist?(podspec_path)
+        return false
+      end
+
+      if Configuration.subspecs_to_split.include?(pod_name)
+        pod_name = pod_name.gsub("/", "_")
+      else
+        pod_name = pod_name.split("/").first
+      end
+
+      podspec_content = File.read(podspec_path)
+      return podspec_content.include?("s.subspec '#{pod_name}' do |p|")      
+    end
     
     private
 
