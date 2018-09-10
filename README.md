@@ -102,6 +102,17 @@ Using the switch command you can choose to integrate it:
 - development. The _Development Pod_ used by CocoaPods
 - prebuilt. Use the prebuilt pod
 
+To support development pods you should specify the path(s) that contain the pods sources in _Frameworks/PodBuilderDevPodsPaths.json_ as follows
+
+```json
+[
+    "~/path_to_pods_1",
+    "~/path_to_pods_2",
+]
+```
+
+PodBuilder will automatically determine the proper path when switching a particular pod.
+
 #### `clean` command
 
 Deletes all unused files by PodBuilder, including .frameworks, .dSYMs and _Source_ repos.
