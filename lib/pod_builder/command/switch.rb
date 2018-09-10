@@ -106,7 +106,7 @@ module PodBuilder
 
       def self.find_podspec(podfile_item)
         unless Configuration.development_pods_paths.count > 0
-          raise "\n\nPlease add the `development_pods_paths` in #{Configuration.dev_pods_configuration_filename} as per documentation\n".red
+          raise "\n\nPlease add the development pods path(s) in #{Configuration.dev_pods_configuration_filename} as per documentation\n".red
         end
 
         podspec_path = nil
