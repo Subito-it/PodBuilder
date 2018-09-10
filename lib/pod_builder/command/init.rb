@@ -5,7 +5,12 @@ module PodBuilder
     class Init
       def self.call(options)
         raise "\n\nAlready initialized\n".red if Configuration.exists
-        raise "\n\nXcode workspace not found\n".red if PodBuilder::project_path.nil?
+
+        xcworkspace = Dir.glob("*.xcworkspace")
+        raise "\n\nNo xcworkspace found in current folder\n" if xcworkspace.count == 0
+        raise "\n\nToo many xcworkspaces found in current folder\n#{xcworkspace}\n" if xcworkspace.count > 1
+
+        Configuration.project_name = File.basename(xcworkspace.first, ".*")
         
         options[:prebuild_path] ||= Configuration.base_path
 

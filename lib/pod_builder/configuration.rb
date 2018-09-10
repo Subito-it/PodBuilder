@@ -37,6 +37,7 @@ module PodBuilder
       attr_accessor :dev_pods_configuration_filename
       attr_accessor :lfs_min_file_size
       attr_accessor :update_lfs_gitattributes
+      attr_accessor :project_name
     end
     
     @build_settings = DEFAULT_BUILD_SETTINGS
@@ -54,6 +55,7 @@ module PodBuilder
     @dev_pods_configuration_filename = "PodBuilderDevPodsPaths.json".freeze
     @lfs_min_file_size = MIN_LFS_SIZE_KB
     @update_lfs_gitattributes = false
+    @project_name = ""
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
@@ -72,6 +74,7 @@ module PodBuilder
       
       if exists
         json = JSON.parse(File.read(config_path))
+
         if value = json["spec_overrides"]
           if value.is_a?(Hash) && value.keys.count > 0
             Configuration.spec_overrides = value
@@ -126,6 +129,11 @@ module PodBuilder
             end
           end
         end
+        if value = json["project_name"]
+          if value.is_a?(String) && value.length > 0
+            Configuration.project_name = value
+          end
+        end
         
         Configuration.build_settings.freeze
       else
@@ -144,6 +152,7 @@ module PodBuilder
     def self.write
       config = {}
       
+      config["project_name"] = Configuration.project_name
       config["spec_overrides"] = Configuration.spec_overrides
       config["skip_licenses"] = Configuration.skip_licenses
       config["skip_pods"] = Configuration.skip_pods

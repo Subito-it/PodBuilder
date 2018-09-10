@@ -54,7 +54,7 @@ module PodBuilder
   end
 
   def self.find_xcodeworkspace
-    xcworkspaces = Dir.glob("#{home}/**/*.xcworkspace").select { |x| !x.include?("/Pods/") && !x.include?("/Sources/") && !x.include?(basepath) && !x.include?(".xcodeproj/") }
+    xcworkspaces = Dir.glob("#{home}/**/#{Configuration.project_name}*.xcworkspace").select { |x| !x.include?("/Pods/") && !x.include?("/Sources/") && !x.include?(basepath) && !x.include?(".xcodeproj/") }
     raise "xcworkspace not found!".red if xcworkspaces.count == 0
     raise "Found multiple xcworkspaces:\n#{xcworkspaces.join("\n")}".red if xcworkspaces.count > 1
 
