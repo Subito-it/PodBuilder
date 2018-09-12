@@ -49,7 +49,7 @@ Podbuilder comes with a set of commands:
 - `install_sources`: installs sources of pods to debug into prebuild frameworks
 - `switch`: switch between prebuilt, development or standard pod in the Application-Podfile
 - `clean`: removes unused prebuilt frameworks, dSYMs and source files added by install_sources
-- `synch_podfile`: updates the Application with all pods declared in the PodBuilder-Podfile file
+- `sync_podfile`: updates the Application with all pods declared in the PodBuilder-Podfile file
 
 Commands can be run from anywhere in your project's repo that is **required to be under git**. 
 
@@ -117,7 +117,7 @@ PodBuilder will automatically determine the proper path when switching a particu
 
 Deletes all unused files by PodBuilder, including .frameworks, .dSYMs and _Source_ repos.
 
-#### `synch_podfile` command
+#### `sync_podfile` command
 
 Updates the Application with all pods declared in the PodBuilder-Podfile file. This can come in handy when adding a new pod to the PodBuilder-Podfile file you don't won't to prebuild straight away.
 

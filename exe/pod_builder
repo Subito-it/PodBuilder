@@ -33,7 +33,7 @@ Command:
     + install_sources                Install sources of pods to debug into prebuild frameworks
     + switch                         Switch between prebuilt/development/standard pod in the Application-Podfile
     + clean                          Remove prebuild frameworks, dSYMs and source files added by install_sources no longer in Frameworks/Podfile
-    + synch_podfile                  Update your Application-Podfile with all pods declared in the PodBuilder-Podfile
+    + sync_podfile                  Update your Application-Podfile with all pods declared in the PodBuilder-Podfile
 
 Options:
 "
@@ -234,12 +234,12 @@ Options:
       ]
     },
 
-    "synch_podfile" => {      
+    "sync_podfile" => {      
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
         
-    $ pod_builder synch_podfile
+    $ pod_builder sync_podfile
 
       Rewrite the Application-Podfile based on the PodBuilder-Podfile. 
       You may want to run this command when you add a new pod to the PodBuilder-Podfile 
@@ -247,7 +247,7 @@ Usage:
         
 "      end,
       :call => [        
-        PodBuilder::Command::SynchPodfile
+        PodBuilder::Command::SyncPodfile
       ]
     }      
   }

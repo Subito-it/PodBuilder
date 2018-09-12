@@ -155,7 +155,7 @@
             ]
         },
         {
-            "name": "Synch Podfile",
+            "name": "Sync Podfile",
             "type": "Ruby",
             "request": "launch",
             "cwd": "~/Desktop",
@@ -164,7 +164,7 @@
             "showDebuggerOutput": true,
             "pathToRDebugIDE": "/usr/bin/rdebug-ide",
             "args": [
-                "synch_podfile",
+                "sync_podfile",
             ]
         }
     ]
