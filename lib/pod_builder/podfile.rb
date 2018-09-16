@@ -221,8 +221,30 @@ module PodBuilder
       File.write(podfile_restore_path, cleaned_lines.join)
     end
 
+    def self.restore_file_sanity_check
+      error = nil
+
+      begin
+        File.rename(PodBuilder::basepath("Podfile"), PodBuilder::basepath("Podfile.tmp2"))
+        File.rename(PodBuilder::basepath("Podfile.restore"), PodBuilder::basepath("Podfile"))
+
+        Analyze.installer_at(PodBuilder::basepath, false)
+      rescue Exception => e
+        error = e.to_s
+      ensure
+        File.rename(PodBuilder::basepath("Podfile"), PodBuilder::basepath("Podfile.restore"))
+        File.rename(PodBuilder::basepath("Podfile.tmp2"), PodBuilder::basepath("Podfile"))
+      end
+
+      if !error.nil?
+        FileUtils.rm(PodBuilder::basepath("Podfile.restore"))
+      end
+
+      return error
+    end
+
     private
-    
+
     def self.indentation_from_file(path)
       content = File.read(path)
 

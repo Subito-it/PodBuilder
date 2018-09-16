@@ -39,6 +39,8 @@ module PodBuilder
 
         Podfile.restore_podfile_clean(all_buildable_items)
 
+        restore_file_error = Podfile.restore_file_sanity_check
+
         check_splitted_subspecs_are_static(all_buildable_items, options)
         check_pods_exists(argument_pods, buildable_items)
 
@@ -99,6 +101,10 @@ module PodBuilder
         Podfile::deintegrate_install
 
         sanity_checks(options)
+
+        if !restore_file_error.nil?
+          puts "\n\n⚠️ Podfile.restore was found invalid and was overwritten. Error:\n #{restore_file_error}".red
+        end
 
         puts "\n\n🎉 done!\n".green
         return true
