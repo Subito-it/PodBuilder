@@ -37,6 +37,8 @@ module PodBuilder
           return true
         end
 
+        Podfile.restore_podfile_clean(all_buildable_items)
+
         check_splitted_subspecs_are_static(all_buildable_items, options)
         check_pods_exists(argument_pods, buildable_items)
 
