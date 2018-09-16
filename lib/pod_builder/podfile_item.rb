@@ -26,6 +26,10 @@ module PodBuilder
     #
     attr_reader :version
 
+    # @return Array<[String]> The available versions of the pod
+    #
+    attr_reader :available_versions
+
     # @return [String] Local path, if any
     #
     attr_accessor :path
@@ -138,6 +142,7 @@ module PodBuilder
       @libraries += extract_array(spec.root, "libraries")
 
       @version = spec.root.version.version
+      @available_versions = spec.respond_to?(:spec_source) ? spec.spec_source.versions(@root_name)&.map(&:to_s) : [@version]
       
       @swift_version = spec.root.swift_version&.to_s
       @module_name = spec.root.module_name
