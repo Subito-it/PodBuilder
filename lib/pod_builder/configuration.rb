@@ -38,6 +38,7 @@ module PodBuilder
       attr_accessor :lfs_min_file_size
       attr_accessor :update_lfs_gitattributes
       attr_accessor :project_name
+      attr_accessor :restore_enabled
     end
     
     @build_settings = DEFAULT_BUILD_SETTINGS
@@ -56,6 +57,7 @@ module PodBuilder
     @lfs_min_file_size = MIN_LFS_SIZE_KB
     @update_lfs_gitattributes = false
     @project_name = ""
+    @restore_enabled = true
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
@@ -132,6 +134,11 @@ module PodBuilder
         if value = json["project_name"]
           if value.is_a?(String) && value.length > 0
             Configuration.project_name = value
+          end
+        end
+        if value = json["restore_enabled"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.restore_enabled = value
           end
         end
         

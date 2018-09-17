@@ -80,6 +80,10 @@ module PodBuilder
     end
 
     def self.write_restorable(updated_pods, podfile_items, analyzer)
+      unless Configuration.restore_enabled
+        return
+      end
+      
       puts "Writing Restore Podfile".yellow
 
       podfile_items = podfile_items.dup
@@ -200,6 +204,10 @@ module PodBuilder
     end
 
     def self.restore_podfile_clean(pod_items)
+      unless Configuration.restore_enabled
+        return
+      end
+
       # remove pods that are no longer listed in pod_items
       podfile_restore_path = PodBuilder::basepath("Podfile.restore")
 
@@ -222,6 +230,10 @@ module PodBuilder
     end
 
     def self.restore_file_sanity_check
+      unless Configuration.restore_enabled
+        return nil
+      end
+
       error = nil
 
       begin

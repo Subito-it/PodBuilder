@@ -4,6 +4,10 @@ module PodBuilder
   module Command
     class RestoreAll
       def self.call(options)
+        unless Configuration.restore_enabled
+          return
+        end
+  
         Configuration.check_inited
         PodBuilder::prepare_basepath
 
