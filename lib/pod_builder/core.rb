@@ -8,6 +8,7 @@ require 'pod_builder/analyze'
 require 'pod_builder/install'
 require 'pod_builder/configuration'
 require 'pod_builder/podspec'
+require 'pod_builder/licenses'
 
 require 'core_ext/string'
 
