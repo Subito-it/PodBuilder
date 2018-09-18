@@ -218,8 +218,6 @@ module PodBuilder
         if pod_name = pod_definition_in(line, false)
           if pod_items.map(&:name).include?(pod_name)
             cleaned_lines.push(line)      
-          else
-            a = 2      
           end
         else
           cleaned_lines.push(line)
