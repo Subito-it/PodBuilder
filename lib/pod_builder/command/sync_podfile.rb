@@ -18,6 +18,8 @@ module PodBuilder
         Podfile::write_prebuilt(all_buildable_items, analyzer)        
         updated_podfile_content = File.read("Podfile")
 
+        Licenses::write([], all_buildable_items)
+
         if previous_podfile_content != updated_podfile_content
           system("pod install")
         end
