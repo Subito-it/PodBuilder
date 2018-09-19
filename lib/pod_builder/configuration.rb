@@ -36,7 +36,8 @@ module PodBuilder
       attr_accessor :configuration_filename
       attr_accessor :dev_pods_configuration_filename
       attr_accessor :lfs_min_file_size
-      attr_accessor :update_lfs_gitattributes
+      attr_accessor :lfs_update_gitattributes
+      attr_accessor :lfs_include_pods_folder
       attr_accessor :project_name
       attr_accessor :restore_enabled
     end
@@ -55,7 +56,8 @@ module PodBuilder
     @configuration_filename = "PodBuilder.json".freeze
     @dev_pods_configuration_filename = "PodBuilderDevPodsPaths.json".freeze
     @lfs_min_file_size = MIN_LFS_SIZE_KB
-    @update_lfs_gitattributes = false
+    @lfs_update_gitattributes = false
+    @lfs_include_pods_folder = false
     @project_name = ""
     @restore_enabled = true
     
@@ -117,18 +119,14 @@ module PodBuilder
             Configuration.subspecs_to_split = value
           end
         end
-        if value = json["update_lfs_gitattributes"]
+        if value = json["lfs_update_gitattributes"]
           if [TrueClass, FalseClass].include?(value.class)
-            Configuration.update_lfs_gitattributes = value
+            Configuration.lfs_update_gitattributes = value
           end
         end
-        if value = json["lfs_min_file_size_kb"]
-          if value.is_a?(Integer)
-            if value > 50
-              Configuration.lfs_min_file_size = value
-            else
-              puts "\n\n⚠️ Skipping `lfs_min_file_size` value too small".yellow
-            end
+        if value = json["lfs_include_pods_folder"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.lfs_include_pods_folder = value
           end
         end
         if value = json["project_name"]
@@ -168,8 +166,8 @@ module PodBuilder
       config["build_system"] = Configuration.build_system
       config["license_filename"] = Configuration.license_filename
       config["subspecs_to_split"] = Configuration.subspecs_to_split
-      config["update_lfs_gitattributes"] = Configuration.update_lfs_gitattributes
-      config["lfs_min_file_size_kb"] = Configuration.lfs_min_file_size
+      config["lfs_update_gitattributes"] = Configuration.lfs_update_gitattributes
+      config["lfs_include_pods_folder"] = Configuration.lfs_include_pods_folder
       
       File.write(config_path, JSON.pretty_generate(config))
     end
