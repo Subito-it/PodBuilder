@@ -1,5 +1,3 @@
-require 'pod_builder/cocoapods/analyzer'
-
 module PodBuilder
   class Podfile
     PODBUILDER_LOCK_ACTION = ["raise \"\\n🚨  Do not launch 'pod install' manually, use `pod_builder` instead!\\n\" if !File.exist?('pod_builder.lock')"].freeze    
