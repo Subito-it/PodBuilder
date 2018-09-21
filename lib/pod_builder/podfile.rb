@@ -208,6 +208,9 @@ module PodBuilder
 
       # remove pods that are no longer listed in pod_items
       podfile_restore_path = PodBuilder::basepath("Podfile.restore")
+      unless File.exist?(podfile_restore_path)
+        return
+      end
 
       restore_content = File.read(podfile_restore_path)
 
@@ -230,22 +233,27 @@ module PodBuilder
         return nil
       end
 
+      podfile_restore_path = PodBuilder::basepath("Podfile.restore")
+      unless File.exist?(podfile_restore_path)
+        return
+      end
+
       error = nil
 
       begin
         File.rename(PodBuilder::basepath("Podfile"), PodBuilder::basepath("Podfile.tmp2"))
-        File.rename(PodBuilder::basepath("Podfile.restore"), PodBuilder::basepath("Podfile"))
+        File.rename(podfile_restore_path, PodBuilder::basepath("Podfile"))
 
         Analyze.installer_at(PodBuilder::basepath, false)
       rescue Exception => e
         error = e.to_s
       ensure
-        File.rename(PodBuilder::basepath("Podfile"), PodBuilder::basepath("Podfile.restore"))
+        File.rename(PodBuilder::basepath("Podfile"), podfile_restore_path)
         File.rename(PodBuilder::basepath("Podfile.tmp2"), PodBuilder::basepath("Podfile"))
       end
 
       if !error.nil?
-        FileUtils.rm(PodBuilder::basepath("Podfile.restore"))
+        FileUtils.rm(podfile_restore_path)
       end
 
       return error
