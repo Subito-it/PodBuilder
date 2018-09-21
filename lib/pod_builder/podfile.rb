@@ -38,7 +38,7 @@ module PodBuilder
         build_settings['CLANG_ENABLE_MODULE_DEBUGGING'] = 'NO'
         build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
 
-        build_settings['SWIFT_VERSION'] = item_build_settings["SWIFT_VERSION"] || project_swift_version(analyzer)
+        build_settings['SWIFT_VERSION'] = item_build_settings["SWIFT_VERSION"] || item.swift_version || project_swift_version(analyzer)
         if item.is_static
           # https://forums.developer.apple.com/thread/17921
           build_settings['CLANG_ENABLE_MODULE_DEBUGGING'] = "NO"
