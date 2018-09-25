@@ -1,5 +1,3 @@
-## Beta tool: distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-
 # What is PodBuilder
 
 PodBuilder is a complementary tool to [CocoaPods](https://github.com/CocoaPods/CocoaPods) that allows to prebuild pods into frameworks which can then be included into a project’s repo. Instead of committing pod’s source code you add its compiled counterpart. While there is a size penalty in doing so, which can be overcome by using [Git-LFS](#git-lfs), compilation times will decrease significantly because pod's source files no longer need to be recompiled _very often_. Additionally frameworks contain all architecture so they’re ready to be used both on any device and simulator.
