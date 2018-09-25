@@ -1,0 +1,29 @@
+{
+  "project_name": "",
+  "spec_overrides": {
+    "Google-Mobile-Ads-SDK": {
+      "module_name": "GoogleMobileAds"
+    }
+  },
+  "skip_licenses": [
+
+  ],
+  "skip_pods": [
+
+  ],
+  "build_settings": {
+    "ENABLE_BITCODE": "NO",
+    "GCC_OPTIMIZATION_LEVEL": "s",
+    "SWIFT_OPTIMIZATION_LEVEL": "-Osize",
+    "SWIFT_COMPILATION_MODE": "singlefile"
+  },
+  "build_settings_overrides": {
+  },
+  "build_system": "Legacy",
+  "license_filename": "Pods-acknowledgements",
+  "subspecs_to_split": [
+
+  ],
+  "lfs_update_gitattributes": false,
+  "lfs_include_pods_folder": false
+}
