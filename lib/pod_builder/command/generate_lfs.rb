@@ -10,7 +10,7 @@ module PodBuilder
            return false
         end
 
-        gitattributes_excludes = ["*.h", "*.hh", "*.m", "*.mm", "*.i", "*.c", "*.cc", "*.cxx", "*.cpp", "*.def", "*.inc", "*.inl", "*.swift", "*.modulemap", "*.strings", "*.png", "*.jpg", "*.gif", "*.html", "*.htm", "*.js", "*.json", "*.xml", "*.txt", "*.md", "*.rb", "*.sh", "*.py", "*.plist", ".*"]
+        gitattributes_excludes = ["*.h", "*.hh", "*.m", "*.mm", "*.i", "*.c", "*.cc", "*.cxx", "*.cpp", "*.def", "*.inc", "*.inl", "*.swift", "*.modulemap", "*.strings", "*.png", "*.jpg", "*.gif", "*.html", "*.htm", "*.js", "*.json", "*.xml", "*.txt", "*.md", "*.rb", "*.sh", "*.py", "*.plist", "*.resolved", ".*", "README*", "LICENSE*"]
 
         gitattributes_includes_frameworks = ["**/* filter=lfs diff=lfs merge=lfs !text"]
         write_attributes(PodBuilder::basepath("Rome"), gitattributes_includes_frameworks, gitattributes_excludes)
