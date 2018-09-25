@@ -369,7 +369,9 @@ module PodBuilder
         if matches&.size == 8 && !stripped_line.start_with?("#")
           pod_name = matches[2]
           path = matches[6]
-          unless !pod_name.start_with?("PodBuilder/")
+
+          is_absolute = ["~", "/"].include?(path[0])
+          unless !pod_name.start_with?("PodBuilder/") && !is_absolute
             podfile_lines.push(line)
             next
           end
@@ -403,6 +405,12 @@ module PodBuilder
 
         if matches&.size == 4 && !stripped_line.start_with?("#")
           path = matches[2]
+
+          is_absolute = ["~", "/"].include?(path[0])
+          unless !is_absolute
+            podfile_lines.push(line)
+            next
+          end
 
           original_path = Pathname.new(File.join(path_base, path))
           replace_path = original_path.relative_path_from(base_path)
