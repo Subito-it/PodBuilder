@@ -57,8 +57,8 @@ Usage:
         
 Options:
 "        
-        opts.on("-u", "--update", "Update CocoaPods repos") do |o|
-          OPTIONS[:update_repos] = o
+        opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
+          OPTIONS[:update_repos] = false
         end
         opts.on("-w", "--allow-warnings", "Allow warnings") do |o|
           OPTIONS[:allow_warnings] = o
@@ -83,8 +83,8 @@ Usage:
         
 Options:
 "        
-        opts.on("-u", "--update", "Update CocoaPods repos") do |o|
-          OPTIONS[:update_repos] = o
+        opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
+          OPTIONS[:update_repos] = false
         end
         opts.on("-w", "--allow-warnings", "Allow warnings") do |o|
           OPTIONS[:allow_warnings] = o
@@ -109,8 +109,8 @@ Usage:
         
 Options:
 "          
-        opts.on("-u", "--update", "Update CocoaPods repos") do |o|
-          OPTIONS[:update_repos] = o
+        opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
+          OPTIONS[:update_repos] = false
         end
         opts.on("-d", "--debug", "Don't clean build folder") do |o|
           OPTIONS[:debug] = o

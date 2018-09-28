@@ -7,8 +7,8 @@ module PodBuilder
         Configuration.check_inited
         PodBuilder::prepare_basepath
 
-        update_repo = options[:update_repos] || false
-        installer, analyzer = Analyze.installer_at(PodBuilder::basepath)
+        install_update_repo = options[:update_repos] || true
+        installer, analyzer = Analyze.installer_at(PodBuilder::basepath, install_update_repo)
         framework_items = Analyze.podfile_items(installer, analyzer).select { |x| !x.is_prebuilt }
         podspec_names = framework_items.map(&:podspec_name)
 
