@@ -60,7 +60,7 @@ module PodBuilder
 
     # @return [Bool] Is external pod
     #
-    attr_reader :is_external
+    attr_accessor :is_external
 
     # @return [String] The pod's build configuration
     #

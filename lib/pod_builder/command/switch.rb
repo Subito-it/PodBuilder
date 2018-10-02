@@ -84,6 +84,7 @@ module PodBuilder
               line = indentation + podfile_item.prebuilt_entry + "\n"
             when "development"
               podfile_item.path = find_podspec(podfile_item)
+              podfile_item.is_external = true
 
               line = indentation + podfile_item.entry + "\n"
             when "default"
@@ -113,6 +114,7 @@ module PodBuilder
         Configuration.development_pods_paths.each do |path|
           podspec = Dir.glob(File.expand_path("#{path}/**/#{podfile_item.root_name}*.podspec*"))
           podspec.select! { |x| !x.include?("/Local Podspecs/") }
+          podspec.select! { |x| Dir.glob(File.join(File.dirname(x), "*")).count > 1 } # exclude podspec folder (which has one file per folder)
           if podspec.count > 0
             podspec_path = Pathname.new(podspec.first).dirname.to_s
             break
@@ -127,12 +129,12 @@ module PodBuilder
       end
       
       def self.request_switch_mode(pod_name, podfile_item)
-        matches = podfile_item.entry.match(/(pod '.*?',)(.*)/)
-        unless matches&.size == 3 
+        matches = podfile_item.entry.match(/(pod '.*?',)(.*)('.*')/)
+        unless matches&.size == 4
           raise "\n\nFailed matching pod name\n".red
         end
 
-        default_entry = matches[2].strip
+        default_entry = matches[3].strip
 
         modes = ["prebuilt", "development", "default"]
         mode_indx = ask("\n\nSwitch #{pod_name} to:\n1) Prebuilt\n2) Development pod\n3) Default (#{default_entry})\n\n") { |x| x.limit = 1, x.validate = /[1-3]/ }
