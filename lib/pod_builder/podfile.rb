@@ -89,13 +89,13 @@ module PodBuilder
       podfile_path = PodBuilder::basepath("Podfile")
 
       if File.exist?(podfile_restore_path)
-        restore_podfile_items = podfile_items_at(podfile_restore_path)
+        restore_podfile_items = podfile_items_at(podfile_restore_path, include_prebuilt = true)
 
         podfile_items.map! { |podfile_item|
           if updated_pod = updated_pods.detect { |x| x.name == podfile_item.name } then
             updated_pod
           elsif updated_pods.any? { |x| podfile_item.root_name == x.root_name } == false && # podfile_item shouldn't be among those being updated (including root specification)
-            restored_pod = restore_podfile_items.detect { |x| x.name == podfile_item.name }
+                restored_pod = restore_podfile_items.detect { |x| x.name == podfile_item.name }
             restored_pod
           else
             podfile_item
@@ -289,7 +289,7 @@ module PodBuilder
       return swift_versions.first
     end
 
-    def self.podfile_items_at(podfile_path)
+    def self.podfile_items_at(podfile_path, include_prebuilt = false)
       raise "Expecting basepath folder!" if !File.exist?(PodBuilder::basepath("Podfile"))
 
       if File.basename(podfile_path) != "Podfile"
@@ -305,7 +305,7 @@ module PodBuilder
         installer, analyzer = Analyze.installer_at(PodBuilder::basepath)
       
         podfile_items = Analyze.podfile_items(installer, analyzer)
-        buildable_items = podfile_items.select { |item| !item.is_prebuilt }   
+        buildable_items = podfile_items.select { |item| include_prebuilt || !item.is_prebuilt }   
       rescue Exception => e
         raise e
       ensure
