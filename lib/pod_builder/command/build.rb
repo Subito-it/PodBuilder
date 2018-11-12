@@ -16,7 +16,7 @@ module PodBuilder
 
         check_not_building_subspecs(argument_pods)
 
-        install_update_repo = options[:update_repos] || true
+        install_update_repo = options.fetch(:update_repos, true)
         installer, analyzer = Analyze.installer_at(PodBuilder::basepath, install_update_repo)
 
         all_buildable_items = Analyze.podfile_items(installer, analyzer)
