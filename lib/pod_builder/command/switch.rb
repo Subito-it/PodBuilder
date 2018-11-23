@@ -122,7 +122,7 @@ module PodBuilder
         end
 
         if podspec_path.nil?
-          raise "\n\nCouln't find `#{pod_name}` sources in the following specified development pod paths: #{Configuration.development_pods_paths.join("\n")}\n".red
+          raise "\n\nCouln't find `#{podfile_item.root_name}` sources in the following specified development pod paths: #{Configuration.development_pods_paths.join("\n")}\n".red
         end
 
         return podspec_path

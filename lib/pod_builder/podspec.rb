@@ -53,7 +53,10 @@ module PodBuilder
       end
 
       podspec_content = File.read(podspec_path)
-      return podspec_content.include?("s.subspec '#{pod_name}' do |p|")      
+
+      # (_.*) will include prebuild podnames like s.subspec 'Podname_Subspec' do |p|
+      subspec_regex = "s.subspec '#{pod_name}(_.*)?' do |p|" 
+      return podspec_content.match(/#{subspec_regex}/)
     end
     
     private
