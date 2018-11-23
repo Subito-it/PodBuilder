@@ -56,7 +56,7 @@ module PodBuilder
 
       # (_.*) will include prebuild podnames like s.subspec 'Podname_Subspec' do |p|
       subspec_regex = "s.subspec '#{pod_name}(_.*)?' do |p|" 
-      return podspec_content.match(/#{subspec_regex}/)
+      return (podspec_content.match(/#{subspec_regex}/) != nil)
     end
     
     private
