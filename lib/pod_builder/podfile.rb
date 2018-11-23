@@ -152,7 +152,9 @@ module PodBuilder
         if pod_name = pod_definition_in(line, true)
           if podfile_item = all_buildable_items.detect { |x| x.name == pod_name }
             if Podspec.include?(podfile_item.name)
-              line = "#{line.detect_indentation}#{podfile_item.prebuilt_entry}\n"
+              if podfile_item.is_prebuilt == false
+                line = "#{line.detect_indentation}#{podfile_item.prebuilt_entry}\n"
+              end
             end
           end
         end
