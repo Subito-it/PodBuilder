@@ -82,9 +82,9 @@ module PodBuilder
     #
     attr_accessor :libraries
 
-    # @return [Bool] Returns true if the source_files key is present
+    # @return [String] source_files
     #
-    attr_accessor :has_source_files_key
+    attr_accessor :source_files
 
     # Initialize a new instance
     #
@@ -152,7 +152,10 @@ module PodBuilder
       @is_static = spec.root.attributes_hash["static_framework"] || false
       @xcconfig = spec.root.attributes_hash["xcconfig"] || {}
 
-      @has_source_files_key = spec.root.attributes_hash.has_key?("source_files") || spec.attributes_hash.has_key?("source_files")
+      @source_files = spec.root.attributes_hash.fetch("source_files", [])
+      if @source_files.is_a? String 
+        @source_files = @source_files.split(",")
+      end
       
       @build_configuration = spec.root.attributes_hash.dig("pod_target_xcconfig", "prebuild_configuration") || "release"
       @build_configuration.downcase!
@@ -216,13 +219,16 @@ module PodBuilder
         return true
       end
 
-      # checking if there's a vendored_item matching the module name is a pretty good guess for a prebuilt pod.
-      # Still suboptimal, maybe it should be more appropriate to use FileAccessor and check that no source code is provided (no *.{m,mm,c,cpp,swift, etc})
-      if vendored_items.map { |x| File.basename(x) }.include?("#{@module_name}.framework")
-        return true
-      else
-        return !@has_source_files_key && @vendored_items.count > 0
-      end
+      # Podspecs aren't always properly written (source_file key is often used instead of header_files)
+      # Therefore it can become tricky to understand which pods are already precompiled by boxing a .framework or .a
+      vendored_items_paths = vendored_items.map { |x| File.basename(x) }
+      embedded_as_vendored = vendored_items_paths.include?("#{@module_name}.framework")
+      embedded_as_static_lib = vendored_items_paths.any? { |x| x.match(/#{module_name}.*\\.a/) != nil }
+      
+      only_headers = @source_files.include?("*.h")
+      no_sources = (@source_files.count == 0 || only_headers) && @vendored_items.count > 0
+
+      return embedded_as_static_lib || embedded_as_vendored || only_headers || no_sources
     end
 
     # @return [Bool] True if it's a subspec
