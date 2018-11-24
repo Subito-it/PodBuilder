@@ -27,22 +27,15 @@ module PodBuilder
           argument_pods = buildable_items.map(&:root_name)
         end
 
-        argument_pods.select! { |x| buildable_items.map(&:root_name).include?(x) }
+        argument_pods.select! { |x| all_buildable_items.map(&:root_name).include?(x) }
         argument_pods.uniq!
-
-        unless argument_pods.count > 0 
-          puts "\n\nNo pods to build found, `#{ARGV.join(" ")}` is/are prebuilt\n".yellow
-          puts "\n\n🎉 done!\n".green
-
-          return true
-        end
 
         Podfile.restore_podfile_clean(all_buildable_items)
 
         restore_file_error = Podfile.restore_file_sanity_check
   
         check_splitted_subspecs_are_static(all_buildable_items, options)
-        check_pods_exists(argument_pods, buildable_items)
+        check_pods_exists(argument_pods, all_buildable_items)
 
         pods_to_build = buildable_items.select { |x| argument_pods.include?(x.root_name) }
         pods_to_build += other_subspecs(pods_to_build, buildable_items)
@@ -93,7 +86,7 @@ module PodBuilder
 
         builded_pods = podfiles_items.flatten
         builded_pods_and_deps = add_dependencies(builded_pods, all_buildable_items).select { |x| !x.is_prebuilt }
-        Podfile::write_restorable(builded_pods_and_deps, all_buildable_items, analyzer)     
+        Podfile::write_restorable(builded_pods_and_deps + prebuilt_items, all_buildable_items, analyzer)     
         if !options.has_key?(:skip_prebuild_update)   
           Podfile::write_prebuilt(all_buildable_items, analyzer)
         end
