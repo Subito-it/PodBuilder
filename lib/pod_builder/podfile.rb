@@ -138,9 +138,7 @@ module PodBuilder
 
       podbuilder_podfile_path = PodBuilder::basepath("Podfile")
       rel_path = Pathname.new(podbuilder_podfile_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
-    
-      frameworks_base_path = PodBuilder::basepath("Rome")
-    
+        
       podfile_content = File.read(podbuilder_podfile_path)
 
       exclude_lines = Podfile::PODBUILDER_LOCK_ACTION.map { |x| Podfile.strip_line(x) }
