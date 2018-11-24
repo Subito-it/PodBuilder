@@ -259,6 +259,26 @@ module PodBuilder
       return error
     end
 
+    def self.sanity_check
+      podfile_path = PodBuilder::basepath("Podfile")
+      unless File.exist?(podfile_path)
+        return
+      end
+
+      lines = File.read(podfile_path).split("\n")
+      lines.each do |line|
+        stripped_line = strip_line(line)
+        unless !stripped_line.start_with?("#")
+          next
+        end
+
+        if stripped_line.match(/(pod')(.*?)(')/) != nil
+          starting_def_found = stripped_line.start_with?("def") && (line.match("\s*def\s") != nil)
+          raise "Unsupported single line def/pod. `def` and `pod` shouldn't be on the same line, please modify the following line:\n#{line}" if starting_def_found
+        end
+      end
+    end
+
     private
 
     def self.indentation_from_file(path)

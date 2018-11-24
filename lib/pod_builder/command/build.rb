@@ -14,6 +14,7 @@ module PodBuilder
           return false
         end
 
+        Podfile.sanity_check()
         check_not_building_subspecs(argument_pods)
 
         install_update_repo = options.fetch(:update_repos, true)
