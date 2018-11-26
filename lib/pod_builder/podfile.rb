@@ -122,6 +122,10 @@ module PodBuilder
 
         podfile_content.push("target '#{target_name}' do")
 
+        if project_path = target.user_project_path
+          podfile_content.push("\tproject '#{project_path}'")
+        end
+
         specifications.each do |spec|
           item = podfile_items.detect { |x| x.name == spec.name }
           podfile_content.push("\t#{item.entry}")
