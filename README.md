@@ -167,7 +167,7 @@ Xcode build settings to use. You can override the default values which are:
         "ENABLE_BITCODE": "NO",
         "GCC_OPTIMIZATION_LEVEL": "s",
         "SWIFT_OPTIMIZATION_LEVEL": "-Osize",
-        "SWIFT_COMPILATION_MODE": "singlefile"
+        "SWIFT_COMPILATION_MODE": "wholemodule"
     }
 } 
 ```

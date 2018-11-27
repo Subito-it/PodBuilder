@@ -7,7 +7,7 @@ module PodBuilder
       "ENABLE_BITCODE" => "NO",
       "GCC_OPTIMIZATION_LEVEL" => "s",
       "SWIFT_OPTIMIZATION_LEVEL" => "-Osize",
-      "SWIFT_COMPILATION_MODE" => "singlefile",
+      "SWIFT_COMPILATION_MODE" => "wholemodule",
     }.freeze
     DEFAULT_SPEC_OVERRIDE = {
       "Google-Mobile-Ads-SDK" => {
