@@ -17,7 +17,7 @@ module PodBuilder
         write_attributes(PodBuilder::basepath("dSYM"), gitattributes_includes_frameworks, gitattributes_excludes)
 
         if Configuration.lfs_include_pods_folder
-          gitattributes_includes_pods = ["**/*.frameworks/**/* filter=lfs diff=lfs merge=lfs !text"]
+          gitattributes_includes_pods = ["**/*.framework/**/* filter=lfs diff=lfs merge=lfs !text"]
           write_attributes(PodBuilder::project_path("Pods"), gitattributes_includes_pods, gitattributes_excludes)
         end
       end
