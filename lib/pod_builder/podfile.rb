@@ -175,7 +175,7 @@ module PodBuilder
       add_post_install_checks(project_podfile_path)
     end
 
-    def self.deintegrate_install
+    def self.install
       puts "Running pod install".yellow
 
       current_dir = Dir.pwd

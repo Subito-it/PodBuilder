@@ -92,7 +92,7 @@ module PodBuilder
           Podfile::write_prebuilt(all_buildable_items, analyzer)
         end
 
-        Podfile::deintegrate_install
+        Podfile::install
 
         sanity_checks(options)
 
