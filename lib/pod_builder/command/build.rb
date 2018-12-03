@@ -30,6 +30,8 @@ module PodBuilder
 
         argument_pods.select! { |x| all_buildable_items.map(&:root_name).include?(x) }
         argument_pods.uniq!
+        
+        prebuilt_pods_to_install = prebuilt_items.select { |x| argument_pods.include?(x.root_name) }
 
         Podfile.restore_podfile_clean(all_buildable_items)
 
@@ -87,7 +89,7 @@ module PodBuilder
 
         builded_pods = podfiles_items.flatten
         builded_pods_and_deps = add_dependencies(builded_pods, all_buildable_items).select { |x| !x.is_prebuilt }
-        Podfile::write_restorable(builded_pods_and_deps + prebuilt_items, all_buildable_items, analyzer)     
+        Podfile::write_restorable(builded_pods_and_deps + prebuilt_pods_to_install, all_buildable_items, analyzer)     
         if !options.has_key?(:skip_prebuild_update)   
           Podfile::write_prebuilt(all_buildable_items, analyzer)
         end
