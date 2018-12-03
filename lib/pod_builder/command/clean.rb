@@ -84,13 +84,12 @@ module PodBuilder
           end
         end
 
-        current_dir = Dir.pwd
-        Dir.chdir(base_path)
-        # Before deleting anything be sure we're in a git repo
-        h = `git rev-parse --show-toplevel`.strip()
-        raise "\n\nNo git repository found in current folder `#{Dir.pwd}`!\n".red if h.empty?    
-        system("find . -type d -empty -delete") # delete empty folders
-        Dir.chdir(current_dir)
+        Dir.chdir(base_path) do
+          # Before deleting anything be sure we're in a git repo
+          h = `git rev-parse --show-toplevel`.strip()
+          raise "\n\nNo git repository found in current folder `#{Dir.pwd}`!\n".red if h.empty?    
+          system("find . -type d -empty -delete") # delete empty folders
+        end
       end
     end
   end

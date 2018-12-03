@@ -178,11 +178,9 @@ module PodBuilder
     def self.install
       puts "Running pod install".yellow
 
-      current_dir = Dir.pwd
-
-      Dir.chdir(PodBuilder::project_path)
-      system("pod install;")
-      Dir.chdir(current_dir)
+      Dir.chdir(PodBuilder::project_path) do
+        system("pod install;")
+      end
     end
 
     def self.strip_line(line)
