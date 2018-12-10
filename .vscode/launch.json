@@ -155,6 +155,19 @@
             ]
         },
         {
+            "name": "Update",
+            "type": "Ruby",
+            "request": "launch",
+            "cwd": "/Users/tomas/Documents/Xcode/Subito-iOS",
+            "useBundler": true,
+            "program": "${workspaceRoot}/exe/pod_builder",
+            "showDebuggerOutput": true,
+            "pathToRDebugIDE": "/usr/bin/rdebug-ide",
+            "args": [
+                "update",
+            ]
+        },
+        {
             "name": "Sync Podfile",
             "type": "Ruby",
             "request": "launch",

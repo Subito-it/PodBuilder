@@ -29,6 +29,7 @@ Command:
     + deintegrate                    Deintegrate prebuild folders
     + build                          Build a specific pod declared in the PodBuilder-Podfile
     + build_all                      Build all pods declared in the PodBuilder-Podfile
+    + update                         Rebuild frameworks that are outdated
     + restore_all                    Rebuild all pods declared in the Restore-Podfile
     + install_sources                Install sources of pods to debug into prebuild frameworks
     + switch                         Switch between prebuilt/development/standard pod in the Application-Podfile
@@ -95,6 +96,32 @@ Options:
       end,
       :call => [
         PodBuilder::Command::BuildAll
+      ]
+    },
+
+    "update" => {            
+      :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder update [OPTIONS]
+
+      Rebuild frameworks that are outdated
+        
+Options:
+"        
+        opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
+          OPTIONS[:update_repos] = false
+        end
+        opts.on("-w", "--allow-warnings", "Allow warnings") do |o|
+          OPTIONS[:allow_warnings] = o
+        end
+        opts.on("-d", "--debug", "Don't clean build folder") do |o|
+          OPTIONS[:debug] = o
+        end
+      end,
+      :call => [
+        PodBuilder::Command::Update
       ]
     },
 
