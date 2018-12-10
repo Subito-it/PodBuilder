@@ -34,7 +34,7 @@ module PodBuilder
 
           matches = data['entry'].gsub(" ", "").match(/(^pod')(.*?)(')(.*)/)
           raise "Unexpected error\n".red if matches&.size != 5          
-          delete_regex = matches[1] + matches[2].split("/").first + "(/.*)?" + matches[3]
+          delete_regex = matches[1] + matches[2].split("/").first + matches[3]
 
           if data['is_prebuilt'] == false
             delete_regex += matches[4] 
