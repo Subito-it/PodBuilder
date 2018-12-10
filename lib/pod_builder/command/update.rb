@@ -7,7 +7,7 @@ module PodBuilder
       def self.call(options)          
         Configuration.check_inited
         PodBuilder::prepare_basepath
-
+        
         if check_in_sync
           puts "Frameworks in sync!\n".green
           return true
@@ -40,7 +40,7 @@ module PodBuilder
             puts "Skipping #{framework_name}. You may need to clean up your framework folder, run `podbuilder clean`\n".red
           end
         end
-
+        
         pods_to_rebuild.uniq!
         
         # TODO: call build
@@ -48,21 +48,24 @@ module PodBuilder
       end        
       
       private 
-
+      
       def self.check_in_sync
+        # This is an euristic and quick way to check if the framework is in sync
+        # In the call method will do 
         podfile_path = PodBuilder::basepath("Podfile.restore")
         podfile_content = File.read(podfile_path)
-
+        
         pod_entries = []
         podfile_content.each_line do |line|
           if pod_entry = pod_entry_in(line)
-            pod_entries.push(pod_entry)
+            if line.match(/(pb<)(.*?)(>)/) # is not prebuilt
+              pod_entries.push(pod_entry)
+            end
           end
         end
-
+        
         pod_entries.uniq!
-
-        in_sync = true
+        
         Dir.glob(PodBuilder::basepath("Rome/**/*.framework")) do |framework_path|
           framework_name = File.basename(framework_path)
           plist_filename = File.join(framework_path, Configuration.framework_plist_filename)
@@ -73,28 +76,32 @@ module PodBuilder
           plist = CFPropertyList::List.new(:file => plist_filename)
           data = CFPropertyList.native_types(plist.value)
 
-          unless data['is_prebuilt'] == false
-            next
+          matches = data['entry'].gsub(" ", "").match(/(^pod')(.*?)(')(.*)/)
+          raise "Unexpected error\n".red if matches&.size != 5          
+          delete_regex = matches[1] + matches[2].split("/").first + "(/.*)?" + matches[3]
+
+          if data['is_prebuilt'] == false
+            delete_regex += matches[4] 
           end
-          unless pod_entries.include?(data['entry'].gsub(" ", ""))
-            in_sync = false
-          end
+
+          pod_entries.select! { |x| x.match(delete_regex) == nil }
         end
-
-        return in_sync
+        
+        return pod_entries.count == 0
       end
-
+      
       def self.pod_entry_in(line)
         stripped_line = line.gsub("\"", "'").gsub(" ", "").gsub("\t", "").gsub("\n", "")
-        matches = stripped_line.match(/(^pod')(.*?)(')/)
+        matches = stripped_line.match(/(^pod')(.*?)(')(.*)/)
         
-        if matches&.size == 4
-          return stripped_line.split("#").first
+        if matches&.size == 5
+          entry = matches[1] + matches[2].split("/").first + matches[3] + matches[4]
+          return entry.split("#pb<").first
         else
           return nil
         end
       end
-
+      
       
       def self.pod_definition_in(entry)
         condensed_entry = entry.gsub(" ", "")
