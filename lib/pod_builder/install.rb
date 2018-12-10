@@ -61,7 +61,7 @@ module PodBuilder
     end
 
     def self.add_framework_plist_info(podfile_items)
-      swift_version = `swiftc --version | grep -o 'swiftlang-.*\s'`.strip()
+      swift_version = PodBuilder::system_swift_version
       Dir.glob("#{Configuration.build_path}/Rome/*.framework") do |framework_path|
         filename = File.basename(framework_path, ".*")
         if podfile_item = podfile_items.detect { |x| x.module_name == filename }

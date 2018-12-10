@@ -84,6 +84,10 @@ module PodBuilder
     PodBuilder::safe_rm_rf(basepath("Pods"))
   end
 
+  def self.system_swift_version
+    return `swiftc --version | grep -o 'swiftlang-.*\s'`.strip()
+  end
+
   private 
   
   def self.home
