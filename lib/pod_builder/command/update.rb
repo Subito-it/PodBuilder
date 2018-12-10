@@ -47,8 +47,16 @@ module PodBuilder
           puts "Frameworks in sync!\n".green
           return true
         end
+
+        ARGV.clear
+        pod_entries.each { |x|
+          matches = x.match(/(^pod')(.*?)(')/)
+          raise "Unexpected error\n".red if matches&.size != 4          
+          ARGV << matches[2]
+        }
+
+        PodBuilder::Command::Build.call(options)
         
-        # TODO: call build
         # TODO: add auto dependencies resolution
       end        
       
