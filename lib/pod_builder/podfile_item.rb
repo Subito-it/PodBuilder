@@ -267,7 +267,7 @@ module PodBuilder
         e += ", '=#{@version}'"  
       end
 
-      if include_pb_entry
+      if include_pb_entry && !is_prebuilt
         e += " # pb<#{name}>"
       end
 
@@ -294,7 +294,7 @@ module PodBuilder
         entry = "pod 'PodBuilder/#{root_name}', :path => '#{relative_path}'"
       end
 
-      if include_pb_entry
+      if include_pb_entry && !is_prebuilt
         entry += " # pb<#{name}>"
       end
 
