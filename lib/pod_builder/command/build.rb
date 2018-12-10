@@ -1,5 +1,4 @@
 require 'pod_builder/core'
-require 'cfpropertylist'
 
 module PodBuilder
   module Command

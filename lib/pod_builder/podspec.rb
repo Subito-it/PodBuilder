@@ -129,6 +129,7 @@ module PodBuilder
         
         podspec_item.resources = static_vendored_frameworks.map { |x| "#{vendored_framework_path(x)}/*.{nib,bundle,xcasset,strings,png,jpg,tif,tiff,otf,ttf,ttc,plist,json,caf,wav,p12,momd}" }.flatten.uniq
         podspec_item.exclude_files = static_vendored_frameworks.map { |x| "#{vendored_framework_path(x)}/Info.plist" }.flatten.uniq
+        podspec_item.exclude_files += podspec_item.vendored_frameworks.map { |x| "#{vendored_framework_path(x)}/#{Configuration.framework_plist_filename}" }.flatten.uniq.sort
 
         # Merge xcconfigs
         if !pod.xcconfig.empty?
