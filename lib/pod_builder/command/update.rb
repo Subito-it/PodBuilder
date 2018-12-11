@@ -39,6 +39,9 @@ module PodBuilder
           if data['is_prebuilt'] == false
             delete_regex += matches[4] 
           end
+          if (swift_version = data['swift_version']) && swift_version != PodBuilder::system_swift_version
+            next
+          end
 
           pod_entries.select! { |x| x.match(delete_regex) == nil }
         end
@@ -57,8 +60,6 @@ module PodBuilder
 
         options[:auto_resolve_dependencies] = true
         PodBuilder::Command::Build.call(options)
-        
-        # TODO: add auto dependencies resolution
       end        
       
      private
