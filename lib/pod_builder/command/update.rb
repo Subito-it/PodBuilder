@@ -55,6 +55,7 @@ module PodBuilder
           ARGV << matches[2]
         }
 
+        options[:auto_resolve_dependencies] = true
         PodBuilder::Command::Build.call(options)
         
         # TODO: add auto dependencies resolution
