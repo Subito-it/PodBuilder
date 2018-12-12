@@ -33,8 +33,8 @@ Command:
     + restore_all                    Rebuild all pods declared in the Restore-Podfile
     + install_sources                Install sources of pods to debug into prebuild frameworks
     + switch                         Switch between prebuilt/development/standard pod in the Application-Podfile
-    + clean                          Remove prebuild frameworks, dSYMs and source files added by install_sources no longer in Frameworks/Podfile
-    + sync_podfile                  Update your Application-Podfile with all pods declared in the PodBuilder-Podfile
+    + clean                          Remove prebuild frameworks, dSYMs and source files added by `install_sources` command that are no longer in the PodBuilder-Podfile
+    + sync_podfile                   Update your Application-Podfile with all pods declared in the PodBuilder-Podfile
 
 Options:
 "
