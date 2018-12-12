@@ -1,6 +1,6 @@
 # What is PodBuilder
 
-PodBuilder is a complementary tool to [CocoaPods](https://github.com/CocoaPods/CocoaPods) that allows to prebuild pods into frameworks which can then be included into a project’s repo. Instead of committing pod’s source code you add its compiled counterpart. While there is a size penalty in doing so, which can be overcome by using [Git-LFS](#git-lfs), compilation times will decrease significantly because pod's source files no longer need to be recompiled _very often_. Additionally frameworks contain all architecture so they’re ready to be used both on any device and simulator.
+PodBuilder is a complementary tool to [CocoaPods](https://github.com/CocoaPods/CocoaPods) that allows to prebuild pods into frameworks which can then be included into a project’s repo. Instead of committing pod’s source code you add its compiled counterpart. While there is a size penalty in doing so compilation times will decrease significantly because pod's source files no longer need to be recompiled _very often_ and there's also a lot less for SourceKit to index. Additionally frameworks contain all architecture so they’re ready to be used both on any device and simulator.
 
 Depending on the size of the project and number of pods this can translate in a significant reduction of compilation times (for a large project we designed this tool for we saw a 50% faster compile times, but YMMV).
 
@@ -43,6 +43,7 @@ Podbuilder comes with a set of commands:
 - `deintegrate`: deintegrates PodBuilder's initialization
 - `build`: prebuilts a specific pod declared in the PodBuilder-Podfile
 - `build_all`: prebuilts all pods declared in the PodBuilder-Podfile
+- `update`: prebuilts all pods that are out-of-sync with the Restore-Podfile
 - `restore_all`: rebuilts all pods declared in the Restore-Podfile file
 - `install_sources`: installs sources of pods to debug into prebuild frameworks
 - `switch`: switch between prebuilt, development or standard pod in the Application-Podfile
@@ -81,6 +82,10 @@ The following will happen:
 #### `build_all` command
 
 As `build` but will prebuild all pods defined in PodBuilder-Podfile.
+
+#### `update` command
+
+If you decide not to commit the _Rome_ and _dSYM_ folders you can use this command to rebuild all those frameworks that are out-of-sync with the Restore-Podfile or that were built with a different version of the Swift compiler.
 
 #### `restore_all` command
 
@@ -251,7 +256,7 @@ Relaunch the build command passing `-d`, this won't delete the temporary _/tmp/p
 
 ### **Do I need to commit compiled frameworks?**
 
-No. If the size of compiled frameworks in your repo is a concern (and for whatever reason you can't use [Git-LFS](#git-lfs)) you can choose add the _Rome_ and _dSYM_ folder to .gitignore and re-run `pod_builder build_all` locally on every machine.
+No. If the size of compiled frameworks in your repo is a concern (and for whatever reason you can't use [Git-LFS](#git-lfs)) you can choose add the _Rome_ and _dSYM_ folder to .gitignore and run `pod_builder update` to rebuild all frameworks that need to be recompiled.
 
 ### **I get an _'attempt to read non existent folder `/private/tmp/pod_builder/Pods/ podname'_ when building**
 
