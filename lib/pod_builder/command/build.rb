@@ -140,7 +140,7 @@ module PodBuilder
               end
 
               if buildable_pod.dependency_names.include?(dependency) && !buildable_pod.has_subspec(dependency) && !buildable_pod.has_common_spec(dependency) then
-                expected_pod_list += pods_to_build.map(&:root_name) + [buildable_pod.name]
+                expected_pod_list += pods_to_build.map(&:root_name) + [buildable_pod.root_name]
                 expected_pod_list.uniq!
                 errors.push("Can't build #{pod_to_build.name} because it has common dependencies (#{dependency}) with #{buildable_pod.name}.\n\nUse `pod_builder build #{expected_pod_list.join(" ")}` instead\n\n")
                 errors.uniq!
@@ -153,20 +153,21 @@ module PodBuilder
       end
 
       def self.expected_parent_dependencies(pods_to_build, buildable_items)
+        expected_pod_list = []
+        errors = []
+
         buildable_items_dependencies = buildable_items.map(&:dependency_names).flatten.uniq
         pods_to_build.each do |pod_to_build|
           if buildable_items_dependencies.include?(pod_to_build.name)
             parent = buildable_items.detect { |x| x.dependency_names.include?(pod_to_build.name) }
 
-            expected_pod_list = pods_to_build + [parent]
-            expected_pod_list.map!(&:name)
+            expected_pod_list += (pods_to_build + [parent]).map(&:root_name)
             expected_pod_list.uniq!
-            error = "Can't build #{pod_to_build.name} because it is a dependency of #{parent.name}.\n\nUse `pod_builder build #{expected_pod_list.join(" ")}` instead\n\n"
-            return expected_pod_list, error
+            errors.push("Can't build #{pod_to_build.name} because it is a dependency of #{parent.name}.\n\nUse `pod_builder build #{expected_pod_list.join(" ")}` instead\n\n")
           end
         end
 
-        return [], []
+        return expected_pod_list, errors
       end
 
       def self.check_not_building_subspecs(pods_to_build)
