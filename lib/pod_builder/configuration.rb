@@ -40,6 +40,7 @@ module PodBuilder
       attr_accessor :lfs_include_pods_folder
       attr_accessor :project_name
       attr_accessor :restore_enabled
+      attr_accessor :framework_plist_filename
     end
     
     @build_settings = DEFAULT_BUILD_SETTINGS
@@ -60,6 +61,7 @@ module PodBuilder
     @lfs_include_pods_folder = false
     @project_name = ""
     @restore_enabled = true
+    @framework_plist_filename = "PodBuilder.plist"
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?

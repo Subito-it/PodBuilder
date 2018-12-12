@@ -1,6 +1,7 @@
 require 'pod_builder/command/none'
 require 'pod_builder/command/build'
 require 'pod_builder/command/build_all'
+require 'pod_builder/command/update'
 require 'pod_builder/command/restore_all'
 require 'pod_builder/command/init'
 require 'pod_builder/command/clean'

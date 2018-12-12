@@ -152,10 +152,7 @@ module PodBuilder
       @is_static = spec.root.attributes_hash["static_framework"] || false
       @xcconfig = spec.root.attributes_hash["xcconfig"] || {}
 
-      @source_files = spec.root.attributes_hash.fetch("source_files", [])
-      if @source_files.is_a? String 
-        @source_files = @source_files.split(",")
-      end
+      @source_files = source_files_from(spec)
       
       @build_configuration = spec.root.attributes_hash.dig("pod_target_xcconfig", "prebuild_configuration") || "release"
       @build_configuration.downcase!
@@ -267,7 +264,7 @@ module PodBuilder
         e += ", '=#{@version}'"  
       end
 
-      if include_pb_entry
+      if include_pb_entry && !is_prebuilt
         e += " # pb<#{name}>"
       end
 
@@ -294,7 +291,7 @@ module PodBuilder
         entry = "pod 'PodBuilder/#{root_name}', :path => '#{relative_path}'"
       end
 
-      if include_pb_entry
+      if include_pb_entry && !is_prebuilt
         entry += " # pb<#{name}>"
       end
 
@@ -367,6 +364,19 @@ module PodBuilder
       end
 
       return element
+    end
+
+    def source_files_from(spec)
+      root_source_files = spec.root.attributes_hash.fetch("source_files", [])
+      if root_source_files.is_a? String 
+        root_source_files = root_source_files.split(",")
+      end
+      source_files = spec.attributes_hash.fetch("source_files", [])
+      if source_files.is_a? String 
+        source_files = source_files.split(",")
+      end
+
+      return source_files + root_source_files
     end
   end
 end

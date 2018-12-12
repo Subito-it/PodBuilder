@@ -1,3 +1,4 @@
+require 'cfpropertylist'
 
 module PodBuilder
   class Install
@@ -17,7 +18,8 @@ module PodBuilder
         FileUtils.touch(lock_file)
   
         install
-        
+
+        add_framework_plist_info(podfile_items)
         cleanup_frameworks(podfile_items)
         copy_frameworks(podfile_items)
         if build_configuration != "debug"
@@ -55,6 +57,30 @@ module PodBuilder
         return "#{podfile_item.prebuilt_rel_path}"
       else
         return framework_name
+      end
+    end
+
+    def self.add_framework_plist_info(podfile_items)
+      swift_version = PodBuilder::system_swift_version
+      Dir.glob("#{Configuration.build_path}/Rome/*.framework") do |framework_path|
+        filename = File.basename(framework_path, ".*")
+        if podfile_item = podfile_items.detect { |x| x.module_name == filename }
+          podbuilder_file = File.join(framework_path, Configuration.framework_plist_filename)
+          entry = podfile_item.entry(true, false)
+
+          plist = CFPropertyList::List.new
+          plist_data = {}
+          plist_data['entry'] = entry
+          plist_data['is_prebuilt'] = podfile_item.is_prebuilt  
+          if Dir.glob(File.join(framework_path, "Headers/*-Swift.h")).count > 0
+            plist_data['swift_version'] = swift_version
+          end
+  
+          plist.value = CFPropertyList.guess(plist_data)
+          plist.save(podbuilder_file, CFPropertyList::List::FORMAT_BINARY)
+        else
+          raise "Unable to detect item for framework #{filename}.framework. Please open a bug report!"
+        end
       end
     end
 
