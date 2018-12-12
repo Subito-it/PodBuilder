@@ -64,6 +64,9 @@ Options:
         opts.on("-w", "--allow-warnings", "Allow warnings") do |o|
           OPTIONS[:allow_warnings] = o
         end
+        opts.on("-a", "--auto-resolve-deps", "Resolve pod dependencies automatically") do |o|
+          OPTIONS[:auto_resolve_dependencies] = o
+        end
         opts.on("-d", "--debug", "Don't clean build folder") do |o|
           OPTIONS[:debug] = o
         end
