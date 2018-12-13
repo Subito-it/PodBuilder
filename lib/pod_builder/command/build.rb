@@ -27,8 +27,11 @@ module PodBuilder
           argument_pods = buildable_items.map(&:root_name)
         end
 
-        argument_pods.select! { |x| all_buildable_items.map(&:root_name).include?(x) }
-        argument_pods.uniq!
+        available_argument_pods = argument_pods.select { |x| all_buildable_items.map(&:root_name).include?(x) }     
+        (argument_pods - available_argument_pods).each { |x|
+          puts "'#{x}' not found, skipping".magenta
+        }
+        argument_pods = available_argument_pods.uniq
         
         prebuilt_pods_to_install = prebuilt_items.select { |x| argument_pods.include?(x.root_name) }
 
