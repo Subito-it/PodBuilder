@@ -50,6 +50,11 @@ module PodBuilder
           puts "Frameworks in sync!\n".green
           return true
         end
+        if options.has_key?(:dry_run)
+          rebuilding_pods = pod_entries.map { |x| x.match(/(^pod')(.*?)(')/)[2] }.compact
+          puts "`#{rebuilding_pods.join("`, `")}` need to be rebuilt!\n".red
+          return true
+        end
 
         ARGV.clear
         pod_entries.each { |x|

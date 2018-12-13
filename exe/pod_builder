@@ -119,6 +119,9 @@ Options:
         opts.on("-w", "--allow-warnings", "Allow warnings") do |o|
           OPTIONS[:allow_warnings] = o
         end
+        opts.on("-r", "--dry", "Determine which frameworks need update") do |o|
+          OPTIONS[:dry_run] = o
+        end
         opts.on("-d", "--debug", "Don't clean build folder") do |o|
           OPTIONS[:debug] = o
         end
