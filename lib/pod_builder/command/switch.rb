@@ -10,11 +10,10 @@ module PodBuilder
         argument_pods = ARGV.dup
         
         unless argument_pods.count > 0 
-          return false
+          return -1
         end
         unless argument_pods.count == 1
           raise "\n\nSpecify a single pod to switch\n\n".red 
-          return false
         end
         
         pod_name_to_switch = argument_pods.first
@@ -31,7 +30,7 @@ module PodBuilder
           options[:switch_mode] = request_switch_mode(pod_name_to_switch, podfile_item)
 
           if options[:switch_mode].nil?
-            return true
+            return 0
           end
         end
 
@@ -101,6 +100,8 @@ module PodBuilder
         
         Dir.chdir(PodBuilder::project_path)
         system("pod install")
+
+        return 0
       end
       
       private     

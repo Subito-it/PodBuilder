@@ -36,7 +36,7 @@ module PodBuilder
         clean_sources(podspec_names)
 
         puts "\n\n🎉 done!\n".green
-        return true
+        return 0
       end
 
       def self.clean_sources(podspec_names)        

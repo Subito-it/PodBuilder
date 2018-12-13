@@ -28,7 +28,7 @@ module PodBuilder
         rewrite_lldinit
 
         puts "\n\n🎉 done!\n".green
-        return true
+        return 0
       end
 
       private

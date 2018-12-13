@@ -10,7 +10,7 @@ module PodBuilder
         argument_pods = ARGV.dup
 
         unless argument_pods.count > 0 
-          return false
+          return -1
         end
 
         Podfile.sanity_check()
@@ -100,7 +100,7 @@ module PodBuilder
         end
 
         puts "\n\n🎉 done!\n".green
-        return true
+        return 0
       end
 
       private

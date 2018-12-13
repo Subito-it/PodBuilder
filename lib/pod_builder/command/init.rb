@@ -47,7 +47,7 @@ module PodBuilder
         update_gemfile
 
         puts "\n\n🎉 done!\n".green
-        return true
+        return 0
       end
 
       private 

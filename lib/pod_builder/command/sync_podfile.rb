@@ -24,7 +24,7 @@ module PodBuilder
           system("pod install")
         end
         
-        return true
+        return 0
       end
     end
   end

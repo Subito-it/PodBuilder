@@ -289,6 +289,7 @@ Usage:
    
   subcommand = subcommands[ARGV.shift]
    
+  ret = -1
   if subcommand
     if ARGV.include?("--help") || ARGV.include?("-h")
       puts subcommand[:opts].help
@@ -297,29 +298,27 @@ Usage:
 
       subcommand[:opts].order!
       subcommand[:call].each do |k|
-        if !k.call(OPTIONS)
+        if (ret = k.call(OPTIONS)) && ret == -1
           puts subcommand[:opts].help
         end
       end
-    end
-
-    return true
+    end    
   else  
     if !subcommands["none"][:call].first&.call(OPTIONS)
       puts subcommands["none"][:opts].help
     end
-
-    return false
   end
+
+  return ret
 end
 
-command_executed = false
+command_ret = -1
 begin
   unless ENV['USER'] != "root"
     raise "\n\nFor safety do not run this as root\n".red
   end
 
-  command_executed = parse_commandline
+  command_ret = parse_commandline
 rescue Exception => e
   error = e.to_s
 
@@ -333,12 +332,12 @@ rescue Exception => e
     File.write(error_log, error)
   end
 ensure
-  unless command_executed
-    exit(0)
+  if command_ret == 0
+    PodBuilder::clean_basepath
+    if !OPTIONS.has_key?(:debug)
+      PodBuilder::safe_rm_rf(PodBuilder::Configuration.build_path)
+    end    
   end
 
-  PodBuilder::clean_basepath
-  if !OPTIONS.has_key?(:debug)
-    PodBuilder::safe_rm_rf(PodBuilder::Configuration.build_path)
-  end
+  exit(command_ret)
 end

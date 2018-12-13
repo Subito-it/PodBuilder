@@ -12,7 +12,7 @@ module PodBuilder
         Podspec::generate(analyzer)
 
         puts "\n\n🎉 done!\n".green
-        return true
+        return 0
       end
     end
   end

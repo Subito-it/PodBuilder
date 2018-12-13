@@ -6,10 +6,10 @@ module PodBuilder
       def self.call(options)
         unless !options.has_key?(:version)
           puts VERSION
-          return true
+          return 0
         end
 
-        return false
+        return -1
       end
     end
   end

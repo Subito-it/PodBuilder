@@ -7,7 +7,7 @@ module PodBuilder
         Configuration.check_inited
 
         unless Configuration.lfs_update_gitattributes
-           return false
+           return -1
         end
 
         gitattributes_excludes = ["*.h", "*.hh", "*.m", "*.mm", "*.i", "*.c", "*.cc", "*.cxx", "*.cpp", "*.def", "*.inc", "*.inl", "*.swift", "*.modulemap", "*.strings", "*.png", "*.jpg", "*.gif", "*.html", "*.htm", "*.js", "*.json", "*.xml", "*.txt", "*.md", "*.rb", "*.sh", "*.py", "*.plist", "*.resolved", ".*", "README*", "LICENSE*"]
@@ -20,6 +20,8 @@ module PodBuilder
           gitattributes_includes_pods = ["**/*.framework/**/* filter=lfs diff=lfs merge=lfs !text"]
           write_attributes(PodBuilder::project_path("Pods"), gitattributes_includes_pods, gitattributes_excludes)
         end
+
+        return 0
       end
 
       private

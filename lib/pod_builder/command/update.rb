@@ -48,12 +48,12 @@ module PodBuilder
         
         unless pod_entries.count > 0
           puts "Frameworks in sync!\n".green
-          return true
+          return 0
         end
         if options.has_key?(:dry_run)
           rebuilding_pods = pod_entries.map { |x| x.match(/(^pod')(.*?)(')/)[2] }.compact
           puts "`#{rebuilding_pods.join("`, `")}` need to be rebuilt!\n".red
-          return true
+          return -2
         end
 
         ARGV.clear
@@ -64,7 +64,7 @@ module PodBuilder
         }
 
         options[:auto_resolve_dependencies] = true
-        PodBuilder::Command::Build.call(options)
+        return PodBuilder::Command::Build.call(options)
       end        
       
      private
