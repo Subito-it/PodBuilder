@@ -124,22 +124,18 @@ module PodBuilder
       @vendored_items = recursive_vendored_items(spec, all_specs)
 
       @frameworks = []
-      @frameworks += extract_array(spec, "framework")
-      @frameworks += extract_array(spec, "frameworks")
-      @frameworks += extract_array(spec.root, "framework")
-      @frameworks += extract_array(spec.root, "frameworks")
-
       @weak_frameworks = []
-      @weak_frameworks += extract_array(spec, "weak_frameworks")
-      @weak_frameworks += extract_array(spec, "weak_frameworks")
-      @weak_frameworks += extract_array(spec.root, "weak_frameworks")
-      @weak_frameworks += extract_array(spec.root, "weak_frameworks")
-
       @libraries = []
-      @libraries += extract_array(spec, "library")
-      @libraries += extract_array(spec, "libraries")
-      @libraries += extract_array(spec.root, "library")
-      @libraries += extract_array(spec.root, "libraries")
+      spec_and_dependencies(spec, all_specs).each do |spec|
+        @frameworks += extract_array(spec, "framework")
+        @frameworks += extract_array(spec, "frameworks")
+        
+        @weak_frameworks += extract_array(spec, "weak_framework")
+        @weak_frameworks += extract_array(spec, "weak_frameworks")  
+
+        @libraries += extract_array(spec, "library")
+        @libraries += extract_array(spec, "libraries")  
+      end
 
       @version = spec.root.version.version
       @available_versions = spec.respond_to?(:spec_source) ? spec.spec_source.versions(@root_name)&.map(&:to_s) : [@version]
