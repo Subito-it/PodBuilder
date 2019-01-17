@@ -267,8 +267,7 @@ module PodBuilder
         return
       end
 
-      lines = File.read(podfile_path).split("\n")
-      lines.each do |line|
+      File.read(podfile_path).each_line do |line|
         stripped_line = strip_line(line)
         unless !stripped_line.start_with?("#")
           next
