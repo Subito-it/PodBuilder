@@ -378,5 +378,12 @@ module PodBuilder
 
       return source_files + root_source_files
     end
+
+    def spec_and_dependencies(spec, all_specs)
+      specs = all_specs.select { |x| spec.dependencies.map(&:name).include?(x.name) }
+      specs += [spec, spec.root] 
+      
+      return specs.compact.uniq
+    end
   end
 end
