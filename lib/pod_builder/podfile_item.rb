@@ -121,7 +121,7 @@ module PodBuilder
         @is_external = false
       end    
 
-      @vendored_items = recursive_vendored_items(spec)
+      @vendored_items = recursive_vendored_items(spec, all_specs)
 
       @frameworks = []
       @frameworks += extract_array(spec, "framework")
@@ -327,34 +327,24 @@ module PodBuilder
 
     private
 
-    def recursive_vendored_items(spec)
+    def recursive_vendored_items(spec, all_specs)
       items = []
-
-      items += [spec.root.attributes_hash["vendored_frameworks"]]
-      items += [spec.root.attributes_hash["vendored_framework"]]
-      items += [spec.root.attributes_hash["vendored_libraries"]]
-      items += [spec.root.attributes_hash["vendored_library"]]
-
-      items += [spec.attributes_hash["vendored_frameworks"]]
-      items += [spec.attributes_hash["vendored_framework"]]
-      items += [spec.attributes_hash["vendored_libraries"]]
-      items += [spec.attributes_hash["vendored_library"]]
 
       supported_platforms = spec.available_platforms.flatten.map(&:name).map(&:to_s)
 
-      items += supported_platforms.map { |x| spec.root.attributes_hash.fetch(x, {})["vendored_frameworks"] }
-      items += supported_platforms.map { |x| spec.root.attributes_hash.fetch(x, {})["vendored_framework"] }
-      items += supported_platforms.map { |x| spec.root.attributes_hash.fetch(x, {})["vendored_libraries"] }
-      items += supported_platforms.map { |x| spec.root.attributes_hash.fetch(x, {})["vendored_library"] }
+      spec_and_dependencies(spec, all_specs).each do |spec|
+        items += [spec.attributes_hash["vendored_frameworks"]]
+        items += [spec.attributes_hash["vendored_framework"]]
+        items += [spec.attributes_hash["vendored_libraries"]]
+        items += [spec.attributes_hash["vendored_library"]]  
 
-      items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_frameworks"] }
-      items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_framework"] }
-      items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_libraries"] }
-      items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_library"] }
+        items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_frameworks"] }
+        items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_framework"] }
+        items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_libraries"] }
+        items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_library"] }  
+      end
 
-      items = items.flatten.compact
-
-      return items.flatten
+      return items.flatten.uniq.compact
     end
 
     def extract_array(spec, key)
