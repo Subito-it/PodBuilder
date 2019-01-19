@@ -4,7 +4,7 @@ require 'CFPropertyList'
 
 use_frameworks!
 
-plugin 'cocoapods-rome', {  dsym: false, configuration: '%%%build_configuration%%%', pre_compile: Proc.new { |installer|
+plugin 'cocoapods-rome', {  dsym: true, configuration: '%%%build_configuration%%%', pre_compile: Proc.new { |installer|
 
   def set_build_settings(target_name, build_configurations, installer)
     installer.pods_project.targets.each do |target|
