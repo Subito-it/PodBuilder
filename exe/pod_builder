@@ -285,8 +285,6 @@ Usage:
     }      
   }
    
-  subcommands["none"][:opts].order!
-   
   subcommand = subcommands[ARGV.shift]
    
   ret = -1
@@ -304,7 +302,8 @@ Usage:
       end
     end    
   else  
-    if !subcommands["none"][:call].first&.call(OPTIONS)
+    subcommands["none"][:opts].order!    
+    if subcommands["none"][:call].first&.call(OPTIONS) != 0
       puts subcommands["none"][:opts].help
     end
   end
