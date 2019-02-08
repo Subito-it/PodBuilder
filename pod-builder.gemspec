@@ -29,8 +29,8 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'xcodeproj'
   spec.add_runtime_dependency 'colored'
   spec.add_runtime_dependency 'highline'  
-  spec.add_runtime_dependency 'cocoapods', '~> 1.0'
-  spec.add_runtime_dependency 'cocoapods-core', '~> 1.0'
+  spec.add_runtime_dependency 'cocoapods', '~> 1.6'
+  spec.add_runtime_dependency 'cocoapods-core', '~> 1.6'
   spec.add_runtime_dependency 'cocoapods-rome', '~> 1.0'
   spec.add_runtime_dependency 'CFPropertyList'
 end
