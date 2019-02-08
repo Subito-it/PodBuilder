@@ -15,6 +15,8 @@ module PodBuilder
       installer.repo_update = repo_update
       installer.update = false 
 
+      installer.prepare
+
       analyzer = installer.resolve_dependencies
 
       Dir.chdir(current_dir)

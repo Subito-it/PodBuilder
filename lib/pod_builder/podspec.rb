@@ -36,7 +36,7 @@ module PodBuilder
             
       podspec_items = podspec_items_from(buildable_items)
 
-      platform = analyzer.result.targets.first.platform
+      platform = analyzer.instance_variable_get("@result").targets.first.platform
       generate_podspec_from(podspec_items, platform)
     end
 
