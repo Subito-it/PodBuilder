@@ -59,6 +59,11 @@ end
 pre_install do |installer|
   raise "\n\n🚨  Do not launch 'pod install' manually, use `pod_builder` instead!\n" if !File.exist?('pod_builder.lock')
 
+  installer.pod_targets.each do |target|
+    # set a random version to please CocoaPods, the proper version will be overridden by set_build_settings()
+    target.root_spec.swift_version = "1.0" 
+  end
+
   # workaround for https://github.com/CocoaPods/CocoaPods/issues/3289
   Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_static_framework_transitive_dependencies) {}
   Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}
