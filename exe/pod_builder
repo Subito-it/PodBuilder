@@ -285,28 +285,27 @@ Usage:
     }      
   }
    
-  subcommand = subcommands[ARGV.shift]
+  argv = ARGV.dup
+  if subcommand = subcommands[argv.first]
+    ARGV.shift
+  else
+    subcommand = subcommands["none"]
+  end
    
   ret = -1
-  if subcommand
-    if ARGV.include?("--help") || ARGV.include?("-h")
-      puts subcommand[:opts].help
-    else
-      PodBuilder::Configuration.load
+  show_help = argv.include?("--help") || argv.include?("-h") || argv.count == 0
+  if show_help
+    puts subcommand[:opts].help
+  else
+    PodBuilder::Configuration.load
 
-      subcommand[:opts].order!
-      subcommand[:call].each do |k|
-        if (ret = k.call(OPTIONS)) && ret == -1
-          puts subcommand[:opts].help
-        end
+    subcommand[:opts].order!    
+    subcommand[:call].each do |k|
+      if (ret = k.call(OPTIONS)) && ret == -1
+        puts subcommand[:opts].help
       end
-    end    
-  else  
-    subcommands["none"][:opts].order!    
-    if subcommands["none"][:call].first&.call(OPTIONS) != 0
-      puts subcommands["none"][:opts].help
     end
-  end
+  end    
 
   return ret
 end
