@@ -85,7 +85,9 @@ module PodBuilder
   end
 
   def self.system_swift_version
-    return `swiftc --version | grep -o 'swiftlang-.*\s'`.strip()
+    swift_version = `swiftc --version | grep -o 'swiftlang-.*\s'`.strip()
+    raise "Unsupported swift compiler version, expecting `swiftlang` keyword in `swiftc --version`" if swift_version.length == 0
+    return swift_version
   end
 
   private 
