@@ -219,6 +219,7 @@ module PodBuilder
       embedded_as_static_lib = vendored_items_paths.any? { |x| x.match(/#{module_name}.*\\.a/) != nil }
       
       only_headers = @source_files.include?("*.h")
+      only_headers |= (source_files.count > 0 && @source_files.all? { |x| x.end_with?(".h") })
       no_sources = (@source_files.count == 0 || only_headers) && @vendored_items.count > 0
 
       return embedded_as_static_lib || embedded_as_vendored || only_headers || no_sources
