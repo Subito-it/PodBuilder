@@ -107,7 +107,7 @@ module PodBuilder
         subspec_exists = File.exist?(PodBuilder::basepath(vendored_subspec_framework_path(pod)))
         
         unless spec_exists || subspec_exists
-          puts "Skipping #{pod.name}, not prebuilt".blue
+          puts "Skipping `#{pod.name}`, not prebuilt".blue
           next
         end
         
