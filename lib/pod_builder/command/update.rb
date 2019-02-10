@@ -10,18 +10,27 @@ module PodBuilder
         
         podfile_path = PodBuilder::basepath("Podfile.restore")
         podfile_content = File.read(podfile_path)
-        
+
+        podspec_path = PodBuilder::basepath("PodBuilder.podspec")
+        podspec_content = File.read(podspec_path).split("\n")
+
         pod_entries = []
         podfile_content.each_line do |line|
           if pod_entry = pod_entry_in(line)
-            if line.match(/(pb<)(.*?)(>)/) # is not prebuilt
-              pod_entries.push(pod_entry)
+            if (matches = line.match(/(pb<)(.*?)(>)/)) && matches.size == 4 # is not prebuilt
+              # we make sure that the podname is contained in PodBuilder's podspec
+              # which guarantees that the pod was precompiled with PodBuilder
+              podspec_line = "  s.subspec '#{matches[2]}' do |p|"
+              if podspec_content.include?(podspec_line)
+                pod_entries.push(pod_entry)
+              end
             end
           end
         end
         
         pod_entries.uniq!
         
+        # inspect existing .framework files removing valid pod_entries from the array (those with matching pod version and swift compiler)
         Dir.glob(PodBuilder::basepath("Rome/**/*.framework")) do |framework_path|
           framework_name = File.basename(framework_path)
           plist_filename = File.join(framework_path, Configuration.framework_plist_filename)
