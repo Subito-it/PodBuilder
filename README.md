@@ -49,6 +49,7 @@ Podbuilder comes with a set of commands:
 - `switch`: switch between prebuilt, development or standard pod in the Application-Podfile
 - `clean`: removes unused prebuilt frameworks, dSYMs and source files added by install_sources
 - `sync_podfile`: updates the Application with all pods declared in the PodBuilder-Podfile file
+- `info`: outputs json-formatted information reflecting the current status of prebuilt pods
 
 Commands can be run from anywhere in your project's repo that is **required to be under git**. 
 
@@ -123,6 +124,27 @@ Deletes all unused files by PodBuilder, including .frameworks, .dSYMs and _Sourc
 #### `sync_podfile` command
 
 Updates the Application with all pods declared in the PodBuilder-Podfile file. This can come in handy when adding a new pod to the PodBuilder-Podfile file you don't won't to prebuild straight away.
+
+#### `info` command
+
+Outputs json-formatted information reflecting the current status of prebuilt pods.
+
+The output hash contains one key for each pod containing the following keys:
+
+- `framework_path`: the expected path for the prebuilt framework
+- `prebuilt_info`: some additional information about the the prebuilt framework, if it exists on disk
+- `prebuilt_info.version`: the version of the pod that produced the current prebuilt framework
+- `prebuilt_info.specs`: the specs of the pod that produced the current prebuilt framework (there might be multiple subspec that produce a single .framework)
+- `restore_version`: the current expected version for the pod
+- `podbuilder_name`: this is an internal name used by PodBuilder. It's equal to the pod name apart for subspec pods
+
+**Version format**
+
+`restore_version` and `prebuilt_info.version` are hashes containing the following keys:
+- `tag`: pods pinned to a specific tag of the CocoaPods official Specs
+- `repo`, `hash`: pods pointing to an external repo + commit
+- `repo`, `branch`: pods pointing to an external repo + branch
+- `repo`, `tag`: pods pointing to an external repo + tag
 
 
 # Configuration file
