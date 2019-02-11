@@ -64,7 +64,9 @@ module PodBuilder
       swift_version = PodBuilder::system_swift_version
       Dir.glob("#{Configuration.build_path}/Rome/*.framework") do |framework_path|
         filename = File.basename(framework_path, ".*")
-        if podfile_item = podfile_items.detect { |x| x.module_name == filename }
+
+        specs = podfile_items.select { |x| x.module_name == filename }
+        if podfile_item = specs.first
           podbuilder_file = File.join(framework_path, Configuration.framework_plist_filename)
           entry = podfile_item.entry(true, false)
 
@@ -75,7 +77,8 @@ module PodBuilder
           if Dir.glob(File.join(framework_path, "Headers/*-Swift.h")).count > 0
             plist_data['swift_version'] = swift_version
           end
-  
+          plist_data['specs'] = specs.map(&:name)
+
           plist.value = CFPropertyList.guess(plist_data)
           plist.save(podbuilder_file, CFPropertyList::List::FORMAT_BINARY)
         else

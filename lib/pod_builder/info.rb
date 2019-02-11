@@ -102,6 +102,7 @@ module PodBuilder
       
       result.merge!({ "pod_name": pod_name })
       result.merge!({ "version": pod_version })
+      result.merge!({ "specs": data["specs"] })
       
       return result
     end
