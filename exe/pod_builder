@@ -35,6 +35,7 @@ Command:
     + switch                         Switch between prebuilt/development/standard pod in the Application-Podfile
     + clean                          Remove prebuild frameworks, dSYMs and source files added by `install_sources` command that are no longer in the PodBuilder-Podfile
     + sync_podfile                   Update your Application-Podfile with all pods declared in the PodBuilder-Podfile
+    + info                           Print json-formatted informations about prebuilt frameworks
 
 Options:
 "
@@ -281,6 +282,21 @@ Usage:
 "      end,
       :call => [        
         PodBuilder::Command::SyncPodfile
+      ]
+    },
+    
+    "info" => {      
+      :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder info
+
+      Output dependencies and prebuilt informations
+        
+"      end,
+      :call => [        
+        PodBuilder::Command::Info
       ]
     }      
   }
