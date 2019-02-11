@@ -41,7 +41,7 @@ module PodBuilder
             raise "pod `#{name}` not found in restore file"
           end
           restore_line = matches[0]
-          pod_name, version = version_info(restore_line)
+          version = version_info(restore_line)
           result[name].merge!({ "restore_version": version })
           
           prebuilt_info = prebuilt_info(plist_path)
@@ -61,25 +61,25 @@ module PodBuilder
         pod_name = matches[1]
         tag = matches[2]
         
-        return pod_name, { "tag": tag }
+        return { "tag": tag }
       elsif (matches = line&.match(/pod '(.*)', :git => '(.*)', :commit => '(.*)'/)) && matches.size == 4
         pod_name = matches[1]
         repo = matches[2]
         hash = matches[3]
         
-        return pod_name, { "repo": repo, "hash": hash }
+        return { "repo": repo, "hash": hash }
       elsif (matches = line&.match(/pod '(.*)', :git => '(.*)', :branch => '(.*)'/)) && matches.size == 4
         pod_name = matches[1]
         repo = matches[2]
         branch = matches[3]
         
-        return pod_name, { "repo": repo, "branch": branch }
+        return { "repo": repo, "branch": branch }
       elsif (matches = line&.match(/pod '(.*)', :git => '(.*)', :tag => '(.*)'/)) && matches.size == 4
         pod_name = matches[1]
         repo = matches[2]
         tag = matches[3]
         
-        return pod_name, { "repo": repo, "tag": tag }
+        return { "repo": repo, "tag": tag }
       else
         raise "Failed extracting version from line:\n#{line}\n\n"
       end
@@ -98,9 +98,8 @@ module PodBuilder
         result.merge!({ "swift_version": swift_version})
       end
       
-      pod_name, pod_version = version_info(data["entry"])
+      pod_version = version_info(data["entry"])
       
-      result.merge!({ "pod_name": pod_name })
       result.merge!({ "version": pod_version })
       result.merge!({ "specs": data["specs"] })
       
