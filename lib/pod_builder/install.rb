@@ -77,7 +77,9 @@ module PodBuilder
           if Dir.glob(File.join(framework_path, "Headers/*-Swift.h")).count > 0
             plist_data['swift_version'] = swift_version
           end
-          plist_data['specs'] = specs.map(&:name)
+          subspecs_deps = specs.map(&:dependency_names).flatten
+          subspec_self_deps = subspecs_deps.select { |x| x.start_with?("#{podfile_item.root_name}/") }
+          plist_data['specs'] = (specs.map(&:name) + subspec_self_deps).uniq
 
           plist.value = CFPropertyList.guess(plist_data)
           plist.save(podbuilder_file, CFPropertyList::List::FORMAT_BINARY)
