@@ -37,10 +37,9 @@ module PodBuilder
           end
           result[name] = { "podbuilder_name": podbuilder_name, framework_path: path }
 
-          unless (matches = restore_content.match(/pod '#{name}(\/.*)?'.*/)) && matches.size == 2
             raise "pod `#{name}` not found in restore file"
           end
-          restore_line = matches[0]
+          restore_line = restore_line(name, restore_content)
           version = version_info(restore_line)
           result[name].merge!({ "version": version })
           
@@ -104,6 +103,13 @@ module PodBuilder
       result.merge!({ "specs": data["specs"] })
       
       return result
+    end
+
+    def self.restore_line(name, restore_content)
+      unless (matches = restore_content.match(/pod '#{name}(\/.*)?'.*/)) && matches.size == 2
+        raise "pod `#{name}` not found in restore file"
+      end
+      return matches[0]
     end
   end
 end
