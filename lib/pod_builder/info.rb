@@ -41,11 +41,10 @@ module PodBuilder
           unless specs.count > 0
             raise "pod `#{name}` not found in restore file"
           end
-          result[name].merge!({ "specs": specs })
 
           restore_line = restore_line(name, restore_content)
           version = version_info(restore_line)
-          result[name].merge!({ "version": version })
+          result[name].merge!({ "restore_info": { "version": version, "specs": specs }})
           
           prebuilt_info = prebuilt_info(plist_path)
           if prebuilt_info.count > 0 
@@ -104,7 +103,7 @@ module PodBuilder
       pod_version = version_info(data["entry"])
       
       result.merge!({ "version": pod_version })
-      result.merge!({ "specs": data["specs"] })
+      result.merge!({ "specs": (data["specs"] || []) })
       
       return result
     end

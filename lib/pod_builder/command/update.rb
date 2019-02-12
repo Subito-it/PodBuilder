@@ -14,7 +14,7 @@ module PodBuilder
 
         pods_to_update = []
         info.each do |pod_name, info|
-          if info[:restore_version] != info.dig(:prebuilt_info, :version)
+          if info.dig(:restore_info, :version) != info.dig(:prebuilt_info, :version)
             pods_to_update.append(pod_name)
           end
           if (prebuilt_swift_version = info.dig(:prebuilt_info, :swift_version)) && prebuilt_swift_version != swift_version
