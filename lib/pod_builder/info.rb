@@ -36,13 +36,13 @@ module PodBuilder
             end
           end
           result[name] = { "podbuilder_name": podbuilder_name, framework_path: path }
-          
+
           unless (matches = restore_content.match(/pod '#{name}(\/.*)?'.*/)) && matches.size == 2
             raise "pod `#{name}` not found in restore file"
           end
           restore_line = matches[0]
           version = version_info(restore_line)
-          result[name].merge!({ "restore_version": version })
+          result[name].merge!({ "version": version })
           
           prebuilt_info = prebuilt_info(plist_path)
           if prebuilt_info.count > 0 
