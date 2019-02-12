@@ -37,8 +37,12 @@ module PodBuilder
           end
           result[name] = { "podbuilder_name": podbuilder_name, framework_path: path }
 
+          specs = restore_podspecs(name.split("/").first, restore_content)
+          unless specs.count > 0
             raise "pod `#{name}` not found in restore file"
           end
+          result[name].merge!({ "specs": specs })
+
           restore_line = restore_line(name, restore_content)
           version = version_info(restore_line)
           result[name].merge!({ "version": version })
@@ -103,6 +107,17 @@ module PodBuilder
       result.merge!({ "specs": data["specs"] })
       
       return result
+    end
+
+    def self.restore_podspecs(root_name, restore_content)
+      specs = []
+      restore_content.each_line do |line|
+        if (matches = line.match(/pod '(#{root_name})(\/.*?)?'/)) && matches.size == 3
+          specs.push(matches[1] + (matches[2] || ""))
+        end
+      end
+
+      return specs.uniq
     end
 
     def self.restore_line(name, restore_content)
