@@ -132,10 +132,11 @@ Outputs json-formatted information reflecting the current status of prebuilt pod
 The output hash contains one key for each pod containing the following keys:
 
 - `framework_path`: the expected path for the prebuilt framework
+- `version`: the expected version for the pod
+- `specs`: the expected list of specs for the pod
 - `prebuilt_info`: some additional information about the the prebuilt framework, if it exists on disk
 - `prebuilt_info.version`: the version of the pod that produced the current prebuilt framework
 - `prebuilt_info.specs`: the specs of the pod that produced the current prebuilt framework (there might be multiple subspec that produce a single .framework)
-- `restore_version`: the current expected version for the pod
 - `podbuilder_name`: this is an internal name used by PodBuilder. It's equal to the pod name apart for subspec pods
 
 **Version format**
