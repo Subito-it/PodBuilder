@@ -1,5 +1,24 @@
 require 'cfpropertylist'
 
+
+# We swizzle generate_pods_project to inject spec_overrides before building
+class Pod::Installer
+  alias_method :swz_generate_pods_project, :generate_pods_project
+
+  def generate_pods_project(*args)
+    analysis_result.specifications.each do |spec|
+      if overrides = PodBuilder::Configuration.spec_overrides[spec.name]
+        overrides.each do |k, v|
+          spec.attributes_hash[k] = v
+        end
+      end
+    end
+
+    swz_generate_pods_project(*args)
+  end
+end
+
+
 module PodBuilder
   class Install
     def self.podfile(podfile_content, podfile_items, build_configuration)
