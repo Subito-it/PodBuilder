@@ -341,7 +341,7 @@ rescue Exception => e
     puts e.backtrace.join("\n\t").red
     puts "\n\nCommand failed!".red
   else
-    error_log = "/tmp/pod_builder.err"
+    error_log = File.join(PodBuilder::Configuration.build_path, "pod_builder.err")
     puts "\n\nCommand failed, check #{error_log}!".red
     File.write(error_log, error)
   end
