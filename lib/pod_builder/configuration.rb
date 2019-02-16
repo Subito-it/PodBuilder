@@ -81,7 +81,11 @@ module PodBuilder
       Configuration.base_path = podbuilder_path
       
       if exists
-        json = JSON.parse(File.read(config_path))
+        begin
+          json = JSON.parse(File.read(config_path))
+        rescue => exception
+          raise "\n\n#{File.basename(config_path)} is an invalid JSON\n".red
+        end
 
         if value = json["spec_overrides"]
           if value.is_a?(Hash) && value.keys.count > 0
@@ -152,7 +156,12 @@ module PodBuilder
       dev_pods_configuration_path = File.join(Configuration.base_path, Configuration.dev_pods_configuration_filename)
       
       if File.exist?(dev_pods_configuration_path)
+        begin
           json = JSON.parse(File.read(dev_pods_configuration_path))  
+        rescue => exception
+          raise "\n\n#{File.basename(dev_pods_configuration_path)} is an invalid JSON\n".red
+        end
+
         Configuration.development_pods_paths = json || []
         Configuration.development_pods_paths.freeze
       end
