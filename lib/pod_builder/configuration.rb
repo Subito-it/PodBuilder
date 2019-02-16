@@ -41,6 +41,7 @@ module PodBuilder
       attr_accessor :project_name
       attr_accessor :restore_enabled
       attr_accessor :framework_plist_filename
+      attr_accessor :lock_filename
     end
     
     @build_settings = DEFAULT_BUILD_SETTINGS
@@ -62,6 +63,7 @@ module PodBuilder
     @project_name = ""
     @restore_enabled = true
     @framework_plist_filename = "PodBuilder.plist"
+    @lock_filename = "PodBuilder.lock"
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
@@ -150,7 +152,7 @@ module PodBuilder
       dev_pods_configuration_path = File.join(Configuration.base_path, Configuration.dev_pods_configuration_filename)
       
       if File.exist?(dev_pods_configuration_path)
-        json = JSON.parse(File.read(dev_pods_configuration_path))
+          json = JSON.parse(File.read(dev_pods_configuration_path))  
         Configuration.development_pods_paths = json || []
         Configuration.development_pods_paths.freeze
       end

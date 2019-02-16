@@ -91,6 +91,22 @@ module PodBuilder
     return swift_version
   end
 
+  def self.write_lock_file
+    lockfile_path = File.join(home, Configuration.lock_filename)
+    unless !File.exist?(lockfile_path)
+      raise "\n\nFound Podfile.lock! Check that there are no aother PodBuilder pending task running or manually delete PodBuilder.lock\n".red
+    end
+
+    File.write(lockfile_path, "")
+  end
+
+  def self.remove_lock_file
+    lockfile_path = File.join(home, Configuration.lock_filename)
+    if File.exist?(lockfile_path)
+      FileUtils.rm(lockfile_path)
+    end
+  end
+
   private 
   
   def self.home
