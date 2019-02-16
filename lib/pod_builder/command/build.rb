@@ -132,6 +132,7 @@ module PodBuilder
       end
 
       def self.expected_common_dependencies(pods_to_build, buildable_items)
+        warned_expected_pod_list = []
         expected_pod_list = []
         errors = []
 
@@ -145,8 +146,13 @@ module PodBuilder
               if buildable_pod.dependency_names.include?(dependency) && !buildable_pod.has_subspec(dependency) && !buildable_pod.has_common_spec(dependency) then
                 expected_pod_list += pods_to_build.map(&:root_name) + [buildable_pod.root_name]
                 expected_pod_list.uniq!
-                errors.push("Can't build #{pod_to_build.name} because it has common dependencies (#{dependency}) with #{buildable_pod.name}.\n\nUse `pod_builder build #{expected_pod_list.join(" ")}` instead\n\n")
-                errors.uniq!
+
+                expected_list = expected_pod_list.join(" ")
+                if !warned_expected_pod_list.include?(expected_list)
+                  errors.push("Can't build #{pod_to_build.name} because it has common dependencies (#{dependency}) with #{buildable_pod.name}.\n\nUse `pod_builder build #{expected_list}` instead or use `pod_builder build -a #{pod_to_build.name}` to automatically resolve missing dependencies\n\n")
+                  errors.uniq!
+                  warned_expected_pod_list.push(expected_list)
+                end
               end
             end
           end
