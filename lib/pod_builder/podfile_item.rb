@@ -105,7 +105,7 @@ module PodBuilder
       @name = spec.name
       @root_name = spec.name.split("/").first
 
-      checkout_options_keys = [@name, @root_name]
+      checkout_options_keys = [@root_name, @name]
 
       if opts_key = checkout_options_keys.detect { |x| checkout_options.has_key?(x) }
         @repo = checkout_options[opts_key][:git]
