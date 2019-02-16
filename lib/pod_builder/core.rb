@@ -93,11 +93,19 @@ module PodBuilder
 
   def self.write_lock_file
     lockfile_path = File.join(home, Configuration.lock_filename)
-    unless !File.exist?(lockfile_path)
-      raise "\n\nFound Podfile.lock! Check that there are no aother PodBuilder pending task running or manually delete PodBuilder.lock\n".red
+
+    if File.exist?(lockfile_path)
+      if pid = File.read(lockfile_path)
+        begin
+          if Process.getpgid(pid)
+              raise "\n\nAnother PodBuilder pending task is running on this project\n".red    
+          end
+        rescue
+        end
+      end  
     end
 
-    File.write(lockfile_path, "")
+    File.write(lockfile_path, Process.pid, mode: "w")
   end
 
   def self.remove_lock_file
