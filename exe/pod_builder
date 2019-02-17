@@ -332,7 +332,7 @@ begin
     raise "\n\nFor safety do not run this as root\n".red
   end
 
-  PodBuilder::write_lock_file
+  PodBuilder::add_lock_file
   valid_lock_file = true
   command_ret = parse_commandline
 rescue Exception => e

@@ -91,7 +91,7 @@ module PodBuilder
     return swift_version
   end
 
-  def self.write_lock_file
+  def self.add_lock_file
     lockfile_path = File.join(home, Configuration.lock_filename)
 
     if File.exist?(lockfile_path)
