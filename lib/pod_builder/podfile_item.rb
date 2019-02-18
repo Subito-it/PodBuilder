@@ -262,7 +262,20 @@ module PodBuilder
       end
 
       if include_pb_entry && !is_prebuilt
-        e += " # pb<#{name}>"
+        plists = Dir.glob(PodBuilder::basepath("Rome/**/#{module_name}.framework/#{Configuration::framework_plist_filename}"))
+        if plists.count > 0
+          plist = CFPropertyList::List.new(:file => plists.first)
+          data = CFPropertyList.native_types(plist.value)
+          swift_version = data["swift_version"]
+          is_static = data["is_static"] || false
+        
+          e += " # pb<#{name}> is<#{is_static}>"
+          if swift_version
+            e += " sv<#{swift_version}>"
+          end
+        else
+          e += " # pb<#{name}>"
+        end
       end
 
       return e
@@ -282,6 +295,7 @@ module PodBuilder
 
     def prebuilt_entry(include_pb_entry = true)
       relative_path = Pathname.new(Configuration.base_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
+
       if Configuration.subspecs_to_split.include?(name)
         entry = "pod 'PodBuilder/#{podspec_name}', :path => '#{relative_path}'"
       else

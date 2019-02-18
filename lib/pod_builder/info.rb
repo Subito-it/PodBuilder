@@ -19,23 +19,24 @@ module PodBuilder
       
       swift_version = PodBuilder::system_swift_version
       result = {}
-      podbuilder_name = nil
+      name = nil
       File.read(podspec_path).each_line do |line|
         if (matches = line.match(/s.subspec '(.*)' do \|p\|/)) && matches.size == 2
-          podbuilder_name = matches[1]
-        elsif (matches = line.match(/p.vendored_frameworks = '(.*)'/)) && matches.size == 2
+          name = matches[1]
+        elsif (matches = line.match(/p.vendored_frameworks = '(.*)'/)) && matches.size == 2          
           path = matches[1].split("'").first
           plist_path = File.join(PodBuilder::basepath(path), Configuration.framework_plist_filename)
-          
-          name = podbuilder_name
-          
-          # check if it's a subspec
-          if (subspec_items = podbuilder_name.split("_")) && (subspec = subspec_items.last) && subspec_items.count > 1
+
+          # fix name if it's a subspec
+          if (subspec_items = name.split("_")) && (subspec = subspec_items.last) && subspec_items.count > 1
             if path.include?("/#{subspec}")
-              name = podbuilder_name.sub(/_#{subspec}$/, "/#{subspec}")
+              name = name.sub(/_#{subspec}$/, "/#{subspec}")
             end
           end
-          result[name] = { "podbuilder_name": podbuilder_name, framework_path: path }
+                    
+          base = PodBuilder::basepath.gsub(PodBuilder::home + "/", "")
+          framework_path = File.join(base, matches[1].split("'").first)
+          result[name] = { framework_path: framework_path }
 
           specs = restore_podspecs(name.split("/").first, restore_content)
           unless specs.count > 0
@@ -44,7 +45,11 @@ module PodBuilder
 
           restore_line = restore_line(name, restore_content)
           version = version_info(restore_line)
-          result[name].merge!({ "restore_info": { "version": version, "specs": specs }})
+          is_static = is_static(restore_line)
+          result[name].merge!({ "restore_info": { "version": version, "specs": specs, "is_static": is_static }})
+          if swift_version = swift_version(restore_line)
+            result[name][:restore_info].merge!({ "swift_version": swift_version })
+          end
           
           prebuilt_info = prebuilt_info(plist_path)
           if prebuilt_info.count > 0 
@@ -86,6 +91,22 @@ module PodBuilder
         raise "Failed extracting version from line:\n#{line}\n\n"
       end
     end
+
+    def self.swift_version(line)
+      return podbuilder_tag("sv", line)
+    end
+
+    def self.is_static(line)
+      return podbuilder_tag("is", line)
+    end
+
+    def self.podbuilder_tag(name, line)
+      if (matches = line&.match(/#{name}<(.*?)?>/)) && matches.size == 2
+        return matches[1]
+      end
+
+      return nil
+    end
     
     def self.prebuilt_info(path)
       unless File.exist?(path)
@@ -104,6 +125,7 @@ module PodBuilder
       
       result.merge!({ "version": pod_version })
       result.merge!({ "specs": (data["specs"] || []) })
+      result.merge!({ "is_static": (data["is_static"] || false) })
       
       return result
     end

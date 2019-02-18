@@ -134,10 +134,13 @@ The output hash contains one key for each pod containing the following keys:
 - `framework_path`: the expected path for the prebuilt framework
 - `restore_info.version`: the expected version for the pod
 - `restore_info.specs`: the expected list of specs for the pod
+- `restore_info.is_static`: true if the expected pod produces a static framework
+- `restore_info.swift_version`: the expected swift compiler version to prebuild pod
 - `prebuilt_info`: some additional information about the the prebuilt framework, if it exists on disk
 - `prebuilt_info.version`: the version of the pod that produced the current prebuilt framework
 - `prebuilt_info.specs`: the specs of the pod that produced the current prebuilt framework (there might be multiple subspec that produce a single .framework)
-- `podbuilder_name`: this is an internal name used by PodBuilder. It's equal to the pod name except for subspec pods
+- `prebuilt_info.is_static`: true if the current prebuilt framework is static
+- `prebuilt_info.swift_version`: the swift compiler version that produced the current prebuilt framework
 
 **Version format**
 
