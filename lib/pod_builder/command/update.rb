@@ -21,6 +21,8 @@ module PodBuilder
             pods_to_update.append(pod_name)
           end
         end
+
+        pods_to_update.map! { |x| x.split("/").first }.uniq!
         
         unless pods_to_update.count > 0
           puts "Frameworks in sync!\n".green
