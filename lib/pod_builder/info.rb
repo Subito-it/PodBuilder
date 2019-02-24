@@ -97,7 +97,11 @@ module PodBuilder
     end
 
     def self.is_static(line)
-      return podbuilder_tag("is", line)
+      if str_tag = podbuilder_tag("is", line)
+        return str_tag == "true"
+      end
+
+      return nil
     end
 
     def self.podbuilder_tag(name, line)
