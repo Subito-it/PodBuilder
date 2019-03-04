@@ -65,9 +65,15 @@ module PodBuilder
       podspecs = []
       podspec_items.each do |item|
         vendored_frameworks = item.vendored_frameworks.map { |x| vendored_framework_path(x) }.compact.uniq
+        vendored_libraries = Dir.glob(PodBuilder::basepath("Rome/#{item.module_name}/**/*.a")).map { |x| x.to_s.gsub(PodBuilder::basepath, "")[1..-1] }
         
         podspec = "  s.subspec '#{item.name.gsub("/", "_")}' do |p|\n"
-        podspec += "    p.vendored_frameworks = '#{vendored_frameworks.join("','")}'\n"
+        if vendored_frameworks.count > 0
+          podspec += "    p.vendored_frameworks = '#{vendored_frameworks.join("','")}'\n"
+        end
+        if vendored_libraries.count > 0
+          podspec += "    p.vendored_libraries = '#{vendored_libraries.join("','")}'\n"
+        end
         if item.frameworks.count > 0
           podspec += "    p.frameworks = '#{item.frameworks.join("', '")}'\n"
         end
