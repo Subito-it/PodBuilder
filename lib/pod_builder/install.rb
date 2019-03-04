@@ -41,6 +41,7 @@ module PodBuilder
         add_framework_plist_info(podfile_items)
         cleanup_frameworks(podfile_items)
         copy_frameworks(podfile_items)
+        copy_libraries(podfile_items)
         if build_configuration != "debug"
           copy_dsyms(podfile_items)
         end
@@ -129,6 +130,66 @@ module PodBuilder
         destination_path = PodBuilder::basepath("Rome/#{framework_rel_path}")
         FileUtils.mkdir_p(File.dirname(destination_path))
         FileUtils.cp_r(framework_path, destination_path)
+      end
+    end
+
+    def self.copy_libraries(podfile_items)
+      module_names = podfile_items.map(&:root_name).uniq
+      module_names.each do |module_name|
+        base_destination_dir = PodBuilder::basepath("Rome/#{module_name}")
+        PodBuilder::safe_rm_rf(base_destination_dir)
+      end
+
+      Dir.glob("#{Configuration.build_path}/Rome/*.a") do |library_path|
+        library_name = File.basename(library_path)
+
+        # Find vendored libraries in the build folder:
+        # This allows to determine which Pod is associated to the vendored_library
+        # because there are cases where vendored_libraries are specified with wildcards (*.a)
+        # making it impossible to determine the associated Pods when building multiple pods at once
+        search_base = "#{Configuration.build_path}/Pods/"
+        podfile_items.each do |podfile_item|
+          podfile_item.vendored_items.each do |vendored_item|
+            unless vendored_item.end_with?(".a")
+              next
+            end
+            
+            if result = Dir.glob("#{search_base}**/#{vendored_item}").first
+              result_path = result.gsub(search_base, "")
+              module_name = result_path.split("/").first
+              if module_name == podfile_item.module_name
+                library_rel_path = rel_path(module_name, podfile_items)
+                                
+                result_path = result_path.split("/").drop(1).join("/")
+
+                destination_path = PodBuilder::basepath("Rome/#{library_rel_path}/#{result_path}")
+                FileUtils.mkdir_p(File.dirname(destination_path))
+                FileUtils.cp_r(library_path, destination_path)        
+              end
+            end
+          end
+
+          # A pod might depend upon a static library that is shipped with a prebuilt framework
+          # which is not added to the Rome folder and the PodBuilder.podspec
+          # 
+          # An example is Google-Mobile-Ads-SDK which adds
+          # - vendored framework: GooleMobileAds.framework 
+          # - vendored library: libGooleMobileAds.a
+          # These might be used by another pod (e.g AppNexusSDK/GoogleAdapterThatDependsOnGooglePod)
+          podfile_item.libraries.each do |library|            
+            if result = Dir.glob("#{search_base}**/lib#{library}.a").first
+              result_path = result.gsub(search_base, "")
+
+              library_rel_path = rel_path(podfile_item.module_name, podfile_items)
+                                
+              result_path = result_path.split("/").drop(1).join("/")
+
+              destination_path = PodBuilder::basepath("Rome/#{library_rel_path}/#{result_path}")
+              FileUtils.mkdir_p(File.dirname(destination_path))
+              FileUtils.cp_r(library_path, destination_path)        
+            end
+          end
+        end
       end
     end
 
