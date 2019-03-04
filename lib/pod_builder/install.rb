@@ -69,13 +69,13 @@ module PodBuilder
       Dir.chdir(current_dir)
     end
 
-    def self.framework_rel_path(framework_path, podfile_items)
-      framework_name = File.basename(framework_path)
-      framework_name_no_ext = File.basename(framework_name, File.extname(framework_name))
-      if podfile_item = podfile_items.detect { |x| x.module_name == framework_name_no_ext && Configuration.subspecs_to_split.include?(x.name) }
+    def self.rel_path(path, podfile_items)
+      name = File.basename(path)
+      name_no_ext = File.basename(name, File.extname(name))
+      if podfile_item = podfile_items.detect { |x| x.module_name == name_no_ext && Configuration.subspecs_to_split.include?(x.name) }
         return "#{podfile_item.prebuilt_rel_path}"
       else
-        return framework_name
+        return name
       end
     end
 
@@ -113,7 +113,7 @@ module PodBuilder
 
     def self.cleanup_frameworks(podfile_items)
       Dir.glob("#{Configuration.build_path}/Rome/*.framework") do |framework_path|
-        framework_rel_path = framework_rel_path(framework_path, podfile_items)
+        framework_rel_path = rel_path(framework_path, podfile_items)
         dsym_path = framework_rel_path + ".dSYM"
 
         PodBuilder::safe_rm_rf(PodBuilder::basepath("Rome/#{framework_rel_path}"))
@@ -124,7 +124,7 @@ module PodBuilder
 
     def self.copy_frameworks(podfile_items)
       Dir.glob("#{Configuration.build_path}/Rome/*.framework") do |framework_path|
-        framework_rel_path = framework_rel_path(framework_path, podfile_items)
+        framework_rel_path = rel_path(framework_path, podfile_items)
 
         destination_path = PodBuilder::basepath("Rome/#{framework_rel_path}")
         FileUtils.mkdir_p(File.dirname(destination_path))
@@ -134,7 +134,7 @@ module PodBuilder
 
     def self.copy_dsyms(podfile_items)
       Dir.glob("#{Configuration.build_path}/dSYM/*iphoneos/**/*.dSYM") do |dsym_path|
-        framework_rel_path = framework_rel_path(dsym_path.gsub(File.extname(dsym_path), ""), podfile_items)
+        framework_rel_path = rel_path(dsym_path.gsub(File.extname(dsym_path), ""), podfile_items)
         
         destination_path = PodBuilder::basepath("dSYM/iphoneos/#{File.dirname(framework_rel_path)}") 
         FileUtils.mkdir_p(destination_path)
@@ -142,7 +142,7 @@ module PodBuilder
       end
 
       Dir.glob("#{Configuration.build_path}/dSYM/*iphonesimulator/**/*.dSYM") do |dsym_path|
-        framework_rel_path = framework_rel_path(dsym_path.gsub(File.extname(dsym_path), ""), podfile_items)
+        framework_rel_path = rel_path(dsym_path.gsub(File.extname(dsym_path), ""), podfile_items)
 
         destination_path = PodBuilder::basepath("dSYM/iphonesimulator/#{File.dirname(framework_rel_path)}") 
         FileUtils.mkdir_p(destination_path)
