@@ -82,9 +82,11 @@ module PodBuilder
     def self.add_framework_plist_info(podfile_items)
       swift_version = PodBuilder::system_swift_version
       Dir.glob("#{Configuration.build_path}/Rome/*.framework") do |framework_path|
+        filename_ext = File.basename(framework_path)
         filename = File.basename(framework_path, ".*")
 
         specs = podfile_items.select { |x| x.module_name == filename }
+        specs += podfile_items.select { |x| x.vendored_items.map { |x| File.basename(x) }.include?(filename_ext) }
         if podfile_item = specs.first
           podbuilder_file = File.join(framework_path, Configuration.framework_plist_filename)
           entry = podfile_item.entry(true, false)
