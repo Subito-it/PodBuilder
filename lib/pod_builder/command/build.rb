@@ -54,6 +54,8 @@ module PodBuilder
         # 2. pods to build in release
         # 3. pods to build in debug
 
+        check_not_building_development_pods(pods_to_build)
+
         pods_to_build_subspecs = pods_to_build.select { |x| x.is_subspec && Configuration.subspecs_to_split.include?(x.name) }
         pods_to_build -= pods_to_build_subspecs
         pods_to_build_debug = pods_to_build.select { |x| x.build_configuration == "debug" }
@@ -225,6 +227,13 @@ module PodBuilder
           pods_with_unaligned_build_configuration.map!(&:name)
 
           raise "Dependencies of `#{pod.name}` don't have the same build configuration (#{pod.build_configuration}) of `#{pods_with_unaligned_build_configuration.join(",")}`'s dependencies" if pods_with_unaligned_build_configuration.count > 0
+        end
+      end
+
+      def self.check_not_building_development_pods(pods)
+        if (development_pods = pods.select { |x| x.is_development_pod }) && development_pods.count > 0
+          pod_names = development_pods.map(&:name).join(", ")
+          raise "Cannot build the following pods: `#{pod_names}` in development mode"
         end
       end
 

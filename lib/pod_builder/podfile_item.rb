@@ -231,6 +231,12 @@ module PodBuilder
       @root_name != @name
     end
 
+    # @return [Bool] True if it's a development pod
+    #
+    def is_development_pod
+      @path != nil
+    end
+
     # @return [String] The podfile entry
     #
     def entry(include_version = true, include_pb_entry = true)
