@@ -132,12 +132,6 @@ module PodBuilder
     end
 
     def self.copy_libraries(podfile_items)
-      module_names = podfile_items.map(&:root_name).uniq
-      module_names.each do |module_name|
-        base_destination_dir = PodBuilder::basepath("Rome/#{module_name}")
-        PodBuilder::safe_rm_rf(base_destination_dir)
-      end
-
       Dir.glob("#{Configuration.build_path}/Rome/*.a") do |library_path|
         library_name = File.basename(library_path)
 
