@@ -140,6 +140,10 @@ module PodBuilder
 
         pods_to_build.each do |pod_to_build|
           pod_to_build.dependency_names.each do |dependency|
+            unless buildable_items.detect { |x| x.root_name == dependency || x.name == dependency } != nil
+              next
+            end
+
             buildable_items.each do |buildable_pod|
               unless !pod_to_build.dependency_names.include?(buildable_pod.name)
                 next
