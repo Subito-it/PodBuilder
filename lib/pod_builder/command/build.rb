@@ -45,10 +45,6 @@ module PodBuilder
         pods_to_build = resolve_pods_to_build(argument_pods, buildable_items, options)
         buildable_items -= pods_to_build
 
-        # Remove dependencies from pods to build
-        all_dependencies_name = pods_to_build.map(&:dependency_names).flatten.uniq
-        pods_to_build.select! { |x| !all_dependencies_name.include?(x.name) }
-
         # We need to split pods to build in 3 groups
         # 1. subspecs: because the resulting .framework path is treated differently when added to Configuration.subspecs_to_split
         # 2. pods to build in release
@@ -57,6 +53,11 @@ module PodBuilder
         check_not_building_development_pods(pods_to_build)
 
         pods_to_build_subspecs = pods_to_build.select { |x| x.is_subspec && Configuration.subspecs_to_split.include?(x.name) }
+
+        # Remove dependencies from pods to build
+        all_dependencies_name = pods_to_build.map(&:dependency_names).flatten.uniq
+        pods_to_build.select! { |x| !all_dependencies_name.include?(x.name) }
+
         pods_to_build -= pods_to_build_subspecs
         pods_to_build_debug = pods_to_build.select { |x| x.build_configuration == "debug" }
         pods_to_build_release = pods_to_build - pods_to_build_debug
