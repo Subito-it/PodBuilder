@@ -48,7 +48,7 @@ module PodBuilder
   def self.find_xcodeproj
     project_name = File.basename(find_xcodeworkspace, ".*")
 
-    xcodeprojects = Dir.glob("#{home}/**/#{project_name}.xcodeproj").select { |x| !x.include?("/Pods/") && !x.include?("/Sources/") && !x.include?(basepath) }
+    xcodeprojects = Dir.glob("#{home}/**/#{project_name}.xcodeproj").select { |x| !x.include?("/Pods/") && !x.include?(PodBuilder::basepath("Sources")) && !x.include?(basepath) }
     raise "xcodeproj not found!".red if xcodeprojects.count == 0
     raise "Found multiple xcodeproj:\n#{xcodeprojects.join("\n")}".red if xcodeprojects.count > 1
 
@@ -56,7 +56,7 @@ module PodBuilder
   end
 
   def self.find_xcodeworkspace
-    xcworkspaces = Dir.glob("#{home}/**/#{Configuration.project_name}*.xcworkspace").select { |x| !x.include?("/Pods/") && !x.include?("/Sources/") && !x.include?(basepath) && !x.include?(".xcodeproj/") }
+    xcworkspaces = Dir.glob("#{home}/**/#{Configuration.project_name}*.xcworkspace").select { |x| !x.include?("/Pods/") && !x.include?(PodBuilder::basepath("Sources")) && !x.include?(basepath) && !x.include?(".xcodeproj/") }
     raise "xcworkspace not found!".red if xcworkspaces.count == 0
     raise "Found multiple xcworkspaces:\n#{xcworkspaces.join("\n")}".red if xcworkspaces.count > 1
 
