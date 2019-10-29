@@ -4,6 +4,7 @@ module PodBuilder
       attr_accessor :name
       attr_accessor :module_name
       attr_accessor :vendored_frameworks
+      attr_accessor :vendored_items
       attr_accessor :frameworks
       attr_accessor :weak_frameworks
       attr_accessor :libraries
@@ -15,6 +16,7 @@ module PodBuilder
         @name = ""
         @module_name = ""
         @vendored_frameworks = []
+        @vendored_items = []
         @frameworks = []
         @weak_frameworks = []
         @libraries = []
@@ -64,10 +66,13 @@ module PodBuilder
     def self.generate_podspec_from(podspec_items, platform)
       podspecs = []
       podspec_items.each do |item|
-        vendored_frameworks = item.vendored_frameworks.map { |x| vendored_framework_path(x) }.compact.uniq
+        vendored_frameworks = item.vendored_frameworks.map { |x| vendored_framework_path(x) }.compact
+        vendored_frameworks += item.vendored_items.select { |x| File.exist?(PodBuilder::basepath(vendored_name_framework_path(x))) }.map { |x| "Rome/#{x}" }
+        vendored_frameworks.uniq!
         vendored_libraries = Dir.glob(PodBuilder::basepath("Rome/#{item.module_name}/**/*.a")).map { |x| x.to_s.gsub(PodBuilder::basepath, "")[1..-1] }
         
         podspec = "  s.subspec '#{item.name.gsub("/", "_")}' do |p|\n"
+
         if vendored_frameworks.count > 0
           podspec += "    p.vendored_frameworks = '#{vendored_frameworks.join("','")}'\n"
         end
@@ -123,6 +128,7 @@ module PodBuilder
           podspec_items.push(podspec_item)
           podspec_item.name = pod_name
           podspec_item.module_name = pod.module_name
+          podspec_item.vendored_items = pod.vendored_items
         end
         
         podspec_item.vendored_frameworks += [pod] + pod.dependencies(buildable_items)
@@ -177,6 +183,10 @@ module PodBuilder
     
     def self.vendored_spec_framework_path(pod)
       return "Rome/#{pod.module_name}.framework"
+    end
+
+    def self.vendored_name_framework_path(name)
+      return "Rome/#{name}"
     end
   end
 end
