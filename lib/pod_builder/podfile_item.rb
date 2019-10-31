@@ -373,17 +373,45 @@ module PodBuilder
       return element
     end
 
-    def source_files_from(spec)
-      root_source_files = spec.root.attributes_hash.fetch("source_files", [])
-      if root_source_files.is_a? String 
-        root_source_files = root_source_files.split(",")
+    def source_files_from_string(source)
+      files = []
+      if source.is_a? String 
+        matches = source.match(/(.*)({(.),?(.)?})/)
+        if matches&.size == 5
+          source = matches[1] + matches[3]
+          if matches[4].length > 0
+            source += "," + matches[1] + matches[4]
+          end
+        end
+
+        return source.split(",")
+      else
+        return source
       end
-      source_files = spec.attributes_hash.fetch("source_files", [])
-      if source_files.is_a? String 
-        source_files = source_files.split(",")
+    end
+
+    def source_files_from(spec)
+      files = spec.root.attributes_hash.fetch("source_files", [])
+      root_source_files = source_files_from_string(files)
+
+      files = spec.attributes_hash.fetch("source_files", [])
+      source_files = source_files_from_string(files)
+
+      subspec_source_files = []
+      if spec.name == spec.root.name
+        default_podspecs = spec.attributes_hash.fetch("default_subspecs", [])
+        if default_podspecs.is_a? String 
+          default_podspecs = [default_podspecs]
+        end
+        default_podspecs.each do |subspec_name|
+          if subspec = spec.subspecs.detect { |x| x.name == "#{spec.root.name}/#{subspec_name}" }
+            files = subspec.attributes_hash.fetch("source_files", [])
+            subspec_source_files += source_files_from_string(files)
+          end
+        end
       end
 
-      return source_files + root_source_files
+      return source_files + root_source_files + subspec_source_files
     end
 
     def spec_and_dependencies(spec, all_specs)
