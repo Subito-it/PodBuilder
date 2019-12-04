@@ -3,6 +3,15 @@
   "spec_overrides": {
     "Google-Mobile-Ads-SDK": {
       "module_name": "GoogleMobileAds"
+    },
+    "Firebase/Core": {
+      "module_name": "FirebaseCore"
+    },
+    "Firebase/Performance": {
+      "module_name": "FirebasePerformance"
+    },
+    "Firebase/RemoteConfig": {
+      "module_name": "FirebaseRemoteConfig"
     }
   },
   "skip_licenses": [

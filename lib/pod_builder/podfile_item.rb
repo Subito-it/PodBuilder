@@ -307,6 +307,8 @@ module PodBuilder
 
       if Configuration.subspecs_to_split.include?(name)
         entry = "pod 'PodBuilder/#{podspec_name}', :path => '#{relative_path}'"
+      elsif override_name = Configuration.spec_overrides.dig(name, "module_name")
+        entry = "pod 'PodBuilder/#{override_name}', :path => '#{relative_path}'"
       else
         entry = "pod 'PodBuilder/#{root_name}', :path => '#{relative_path}'"
       end
