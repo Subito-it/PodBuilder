@@ -207,6 +207,10 @@ module PodBuilder
     # @return [Bool] True if it's a pod that doesn't provide source code (is already shipped as a prebuilt pod)
     #    
     def is_prebuilt
+      if Configuration.force_prebuild_pods.include?(@root_name) || Configuration.force_prebuild_pods.include?(@name)
+        return false
+      end
+
       # We treat pods to skip like prebuilt ones
       if Configuration.skip_pods.include?(@root_name) || Configuration.skip_pods.include?(@name)
         return true

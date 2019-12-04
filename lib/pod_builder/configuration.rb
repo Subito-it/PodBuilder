@@ -29,6 +29,7 @@ module PodBuilder
       attr_accessor :spec_overrides      
       attr_accessor :skip_licenses
       attr_accessor :skip_pods
+      attr_accessor :force_prebuild_pods
       attr_accessor :license_filename
       attr_accessor :subspecs_to_split
       attr_accessor :development_pods_paths
@@ -51,6 +52,7 @@ module PodBuilder
     @spec_overrides = DEFAULT_SPEC_OVERRIDE
     @skip_licenses = []
     @skip_pods = []
+    @force_prebuild_pods = []
     @license_filename = "Pods-acknowledgements"
     @subspecs_to_split = []
     @development_pods_paths = []
@@ -100,6 +102,11 @@ module PodBuilder
         if value = json["skip_pods"]
           if value.is_a?(Array) && value.count > 0
             Configuration.skip_pods = value
+          end
+        end
+        if value = json["force_prebuild_pods"]
+          if value.is_a?(Array) && value.count > 0
+            Configuration.force_prebuild_pods = value
           end
         end
         if value = json["build_settings"]
@@ -174,6 +181,7 @@ module PodBuilder
       config["spec_overrides"] = Configuration.spec_overrides
       config["skip_licenses"] = Configuration.skip_licenses
       config["skip_pods"] = Configuration.skip_pods
+      config["force_prebuild_pods"] = Configuration.force_prebuild_pods
       config["build_settings"] = Configuration.build_settings
       config["build_settings_overrides"] = Configuration.build_settings_overrides
       config["build_system"] = Configuration.build_system

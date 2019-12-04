@@ -11,6 +11,18 @@
   "skip_pods": [
 
   ],
+  "force_prebuild_pods": [
+    "FirebaseAnalytics",
+    "FirebaseAnalyticsInterop",
+    "Firebase/Core", 
+    "Firebase/CoreOnly",
+    "FirebaseCoreDiagnosticsInterop",
+    "FirebasePerformance", 
+    "Firebase/Performance", 
+    "FirebaseRemoteConfig", 
+    "GoogleAppMeasurement", 
+    "GoogleToolboxForMac"
+  ],
   "build_settings": {
     "ENABLE_BITCODE": "NO",
     "GCC_OPTIMIZATION_LEVEL": "s",

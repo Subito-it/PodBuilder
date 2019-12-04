@@ -186,6 +186,19 @@ You may want to skip some pods to be prebuilt, you can do that as follows:
         ]
 }
 ```
+
+
+### `force_prebuild_pods`
+
+You may want to force some pods to be prebuilt, this might be the case for prebuilt ones (pods with a single vendored .framework) which are dependencies of othere pods
+
+```json
+{
+    "force_prebuild_pods": [
+        "PodA"
+        ]
+}
+```
   
 
 #### `build_settings`
