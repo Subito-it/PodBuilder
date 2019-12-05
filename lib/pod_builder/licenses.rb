@@ -10,10 +10,14 @@
         dict = CFPropertyList.native_types(plist.value)  
         current_licenses = dict["PreferenceSpecifiers"]
       
-        licenses_header = current_licenses.shift
-        raise "Unexpected license found in header" if licenses_header.has_key?("License")
-        license_footer = current_licenses.pop
-        raise "Unexpected license found in footer" if license_footer.has_key?("License")
+        if current_licenses.count > 0 
+          licenses_header = current_licenses.shift
+          raise "Unexpected license found in header" if licenses_header.has_key?("License")
+        end
+        if current_licenses.count > 0 
+          license_footer = current_licenses.pop
+          raise "Unexpected license found in footer" if license_footer.has_key?("License")
+        end
       end
 
       if licenses.count > 0
@@ -33,7 +37,7 @@
       licenses.select! { |x| all_buildable_items.map(&:root_name).include?(x["Title"]) } # Remove items that are no longer included
 
       license_dict = {}
-      license_dict["PreferenceSpecifiers"] = [licenses_header, licenses, license_footer].flatten
+      license_dict["PreferenceSpecifiers"] = [licenses_header, licenses, license_footer].compact.flatten
       license_dict["StringsTable"] = "Acknowledgements"
       license_dict["Title"] = license_dict["StringsTable"]
 
@@ -41,7 +45,9 @@
       plist.value = CFPropertyList.guess(license_dict)
       plist.save(license_file_path, CFPropertyList::List::FORMAT_BINARY)
 
-      write_markdown(license_file_path)
+      if licenses.count > 0
+        write_markdown(license_file_path)
+      end
     end
     
     private 
@@ -50,6 +56,7 @@
       plist = CFPropertyList::List.new(:file => plist_path)
       dict = CFPropertyList.native_types(plist.value)  
       licenses = dict["PreferenceSpecifiers"]
+
       header = licenses.shift
 
       markdown = []
