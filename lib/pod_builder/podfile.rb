@@ -302,9 +302,9 @@ module PodBuilder
     def self.project_swift_version(analyzer)
       swift_versions = analyzer.instance_variable_get("@result").targets.map { |x| x.target_definition.swift_version }.compact.uniq
 
-      raise "Found different Swift versions in targets. Expecting one, got `#{swift_versions}`" if swift_versions.count != 1
+      raise "Found different Swift versions in targets. Expecting one, got `#{swift_versions}`" if swift_versions.count > 1
 
-      return swift_versions.first
+      return swift_versions.first || PodBuilder::system_swift_version
     end
 
     def self.podfile_items_at(podfile_path, include_prebuilt = false)
