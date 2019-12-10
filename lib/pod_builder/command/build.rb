@@ -82,7 +82,7 @@ module PodBuilder
           FileUtils.rm_f(PodBuilder::basepath("Podfile.lock"))
         end
 
-        cleanup_framework_folder(all_buildable_items)
+        clean_frameworks_folder(all_buildable_items)
 
         Licenses::write(licenses, all_buildable_items)
 
@@ -297,7 +297,9 @@ module PodBuilder
         return pods_to_build
       end
 
-      def self.cleanup_framework_folder(buildable_items)
+      def self.clean_frameworks_folder(buildable_items)
+        puts "Cleaning framework folder".yellow
+
         expected_frameworks = buildable_items.map { |x| "#{x.module_name}.framework" }
         expected_frameworks += buildable_items.map { |x| x.vendored_items }.flatten.map { |x| x.split("/").last }
         expected_frameworks.uniq!
@@ -309,6 +311,15 @@ module PodBuilder
           if !expected_frameworks.include?(existing_framework_name)
             puts "Cleanining up `#{existing_framework_name}`, no longer found among dependencies".blue
             FileUtils.rm_rf(existing_framework)
+          end
+        end
+
+        existing_dsyms = Dir.glob("#{PodBuilder::basepath("dSYM")}/**/*.dSYM")
+        existing_dsyms.each do |existing_dsym|
+          existing_dsym_name = File.basename(existing_dsym)
+          if !expected_frameworks.include?(existing_dsym_name.gsub(".dSYM", ""))
+            puts "Cleanining up `#{existing_dsym_name}`, no longer found among dependencies".blue
+            FileUtils.rm_rf(existing_dsym)
           end
         end
       end
