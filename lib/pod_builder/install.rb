@@ -141,6 +141,10 @@ module PodBuilder
         # making it impossible to determine the associated Pods when building multiple pods at once
         search_base = "#{Configuration.build_path}/Pods/"
         podfile_items.each do |podfile_item|
+          if podfile_item.vendored_framework_path.nil?
+            next
+          end
+          
           podfile_item.vendored_items.each do |vendored_item|
             unless vendored_item.end_with?(".a")
               next
