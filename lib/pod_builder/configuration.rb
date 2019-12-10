@@ -14,6 +14,8 @@ module PodBuilder
         "module_name": "GoogleMobileAds"
       }
     }.freeze
+    DEFAULT_SKIP_PODS = ["GoogleMaps"]
+    DEFAULT_FORCE_PREBUILD_PODS = ["Firebase"]
     DEFAULT_BUILD_SYSTEM = "Legacy".freeze # either Latest (New build system) or Legacy (Standard build system)
     MIN_LFS_SIZE_KB = 256.freeze
     
@@ -51,8 +53,8 @@ module PodBuilder
     @base_path = "Frameworks" # Not nice. This value is used only for initial initization. Once config is loaded it will be an absolute path. FIXME
     @spec_overrides = DEFAULT_SPEC_OVERRIDE
     @skip_licenses = []
-    @skip_pods = []
-    @force_prebuild_pods = []
+    @skip_pods = DEFAULT_SKIP_PODS
+    @force_prebuild_pods = DEFAULT_FORCE_PREBUILD_PODS
     @license_filename = "Pods-acknowledgements"
     @subspecs_to_split = []
     @development_pods_paths = []
