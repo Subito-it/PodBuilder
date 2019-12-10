@@ -11,6 +11,7 @@ module PodBuilder
       attr_accessor :resources
       attr_accessor :exclude_files
       attr_accessor :xcconfig
+      attr_accessor :dependencies
       
       def initialize
         @name = ""
@@ -23,6 +24,7 @@ module PodBuilder
         @resources = []
         @exclude_files = []
         @xcconfig = {}
+        @dependencies = []
       end
       
       def to_s
@@ -68,6 +70,8 @@ module PodBuilder
         vendored_frameworks += item.vendored_items.map { |x| File.basename(x) }.select { |x| File.exist?(PodBuilder::basepath(PodfileItem::vendored_name_framework_path(x))) }.map { |x| "Rome/#{x}" }
         vendored_frameworks.uniq!
         vendored_libraries = Dir.glob(PodBuilder::basepath("Rome/#{item.module_name}/**/*.a")).map { |x| x.to_s.gsub(PodBuilder::basepath, "")[1..-1] }
+
+        non_prebuilt_dependencies = item.dependencies.select { |x| x.vendored_framework_path.nil? }
         
         podspec = "  s.subspec '#{item.name.gsub("/", "_")}' do |p|\n"
 
@@ -91,6 +95,9 @@ module PodBuilder
         end
         if item.xcconfig.keys.count > 0
           podspec += "    p.xcconfig = #{item.xcconfig.to_s}\n"
+        end
+        non_prebuilt_dependencies.each do |non_prebuilt_dependency|
+          podspec += "    p.dependency '#{non_prebuilt_dependency.name}'\n"
         end
 
         podspec += "  end"
@@ -160,6 +167,8 @@ module PodBuilder
             podspec_item.xcconfig[k] = v
           end
         end
+
+        podspec_item.dependencies = buildable_items.select { |x| pod.dependency_names.include?(x.name) }
       end
 
       return podspec_items
