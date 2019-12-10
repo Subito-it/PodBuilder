@@ -278,12 +278,12 @@ module PodBuilder
           swift_version = data["swift_version"]
           is_static = data["is_static"] || false
         
-          e += " # pb<#{name}> is<#{is_static}>"
+          e += "#{prebuilt_marker()} is<#{is_static}>"
           if swift_version
             e += " sv<#{swift_version}>"
           end
         else
-          e += " # pb<#{name}>"
+          e += prebuilt_marker()
         end
       end
 
@@ -314,10 +314,14 @@ module PodBuilder
       end
 
       if include_pb_entry && !is_prebuilt
-        entry += " # pb<#{name}>"
+        entry += prebuilt_marker()
       end
 
       return entry
+    end
+
+    def prebuilt_marker
+      return " # pb<#{name}>"
     end
 
     def has_subspec(named)
