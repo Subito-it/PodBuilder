@@ -85,7 +85,7 @@ module PodBuilder
         Licenses::write(licenses, all_buildable_items)
 
         GenerateLFS::call(nil)
-        Podspec::generate(analyzer)
+        Podspec::generate(all_buildable_items, analyzer)
 
         builded_pods = podfiles_items.flatten
         builded_pods_and_deps = add_dependencies(builded_pods, all_buildable_items).select { |x| !x.is_prebuilt }

@@ -31,12 +31,10 @@ module PodBuilder
     end
     private_constant :PodspecItem
     
-    def self.generate(analyzer)  
+    def self.generate(all_buildable_items, analyzer)  
       puts "Generating PodBuilder's local podspec".yellow
-      
-      buildable_items = Podfile.podfile_items_at(PodBuilder::basepath("Podfile")).sort_by { |x| x.name }
-            
-      podspec_items = podspec_items_from(buildable_items)
+                  
+      podspec_items = podspec_items_from(all_buildable_items)
 
       platform = analyzer.instance_variable_get("@result").targets.first.platform
       generate_podspec_from(podspec_items, platform)
