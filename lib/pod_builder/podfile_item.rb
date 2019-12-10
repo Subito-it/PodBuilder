@@ -432,9 +432,15 @@ module PodBuilder
 
     def spec_and_dependencies(spec, all_specs)
       specs = all_specs.select { |x| spec.dependencies.map(&:name).include?(x.name) }
+      specs += all_specs.select { |x| spec.default_subspecs.include?(x.name.split("/").last) }
       specs += [spec, spec.root] 
+
+      all_remaining_specs = all_specs.reject { |x| specs.map(&:name).include?(x.name) } 
+      if all_remaining_specs.count < all_specs.count
+        specs += specs.map { |x| spec_and_dependencies(x, all_remaining_specs) }
+      end
       
-      return specs.compact.uniq
+      return specs.flatten.compact.uniq
     end
   end
 end
