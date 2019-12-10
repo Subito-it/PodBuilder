@@ -154,12 +154,21 @@ module PodBuilder
         if pod_name = pod_definition_in(line, true)
           if podfile_item = all_buildable_items.detect { |x| x.name == pod_name }
             if Podspec.include?(podfile_item.name)
-              if podfile_item.is_prebuilt == false
-                line = "#{line.detect_indentation}#{podfile_item.prebuilt_entry}\n"
+              if Configuration.force_prebuild_pods.include?(podfile_item.root_name) || Configuration.force_prebuild_pods.include?(podfile_item.name) || podfile_item.is_prebuilt == false
+                if podfile_item.vendored_framework_path.nil?
+                  marker = podfile_item.prebuilt_marker()
+
+                  podfile_item_dependency_items = all_buildable_items.select { |x| podfile_item.dependency_names.include?(x.name) && x.vendored_framework_path.nil? == false }
+                  prebuilt_lines += podfile_item_dependency_items.map { |x| "#{line.detect_indentation}#{x.prebuilt_entry(include_pb_entry = false)}#{marker}\n" }.uniq
+                else 
+                  prebuilt_lines.push("#{line.detect_indentation}#{podfile_item.prebuilt_entry}\n")
+                end
               end
             end
           end
         end
+
+        prebuilt_lines.push(line)
       end
 
       project_podfile_path = PodBuilder::project_path("Podfile")
