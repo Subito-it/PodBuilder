@@ -31,12 +31,10 @@ module PodBuilder
     end
     private_constant :PodspecItem
     
-    def self.generate(analyzer)  
+    def self.generate(all_buildable_items, analyzer)  
       puts "Generating PodBuilder's local podspec".yellow
-      
-      buildable_items = Podfile.podfile_items_at(PodBuilder::basepath("Podfile")).sort_by { |x| x.name }
-            
-      podspec_items = podspec_items_from(buildable_items)
+                  
+      podspec_items = podspec_items_from(all_buildable_items)
 
       platform = analyzer.instance_variable_get("@result").targets.first.platform
       generate_podspec_from(podspec_items, platform)
@@ -66,8 +64,8 @@ module PodBuilder
     def self.generate_podspec_from(podspec_items, platform)
       podspecs = []
       podspec_items.each do |item|
-        vendored_frameworks = item.vendored_frameworks.map { |x| vendored_framework_path(x) }.compact
-        vendored_frameworks += item.vendored_items.select { |x| File.exist?(PodBuilder::basepath(vendored_name_framework_path(x))) }.map { |x| "Rome/#{x}" }
+        vendored_frameworks = item.vendored_frameworks.map { |x| x.vendored_framework_path }.compact
+        vendored_frameworks += item.vendored_items.map { |x| File.basename(x) }.select { |x| File.exist?(PodBuilder::basepath(PodfileItem::vendored_name_framework_path(x))) }.map { |x| "Rome/#{x}" }
         vendored_frameworks.uniq!
         vendored_libraries = Dir.glob(PodBuilder::basepath("Rome/#{item.module_name}/**/*.a")).map { |x| x.to_s.gsub(PodBuilder::basepath, "")[1..-1] }
         
@@ -114,8 +112,8 @@ module PodBuilder
       podspec_items = []
 
       buildable_items.each do |pod|
-        spec_exists = File.exist?(PodBuilder::basepath(vendored_spec_framework_path(pod))) 
-        subspec_exists = File.exist?(PodBuilder::basepath(vendored_subspec_framework_path(pod)))
+        spec_exists = File.exist?(PodBuilder::basepath(pod.vendored_spec_framework_path))
+        subspec_exists = File.exist?(PodBuilder::basepath(pod.vendored_subspec_framework_path))
         
         unless spec_exists || subspec_exists
           puts "Skipping `#{pod.name}`, not prebuilt".blue
@@ -138,10 +136,10 @@ module PodBuilder
         podspec_item.libraries = podspec_item.vendored_frameworks.map { |x| x.libraries }.flatten.uniq.sort
         
         static_vendored_frameworks = podspec_item.vendored_frameworks.select { |x| x.is_static }
-        
-        podspec_item.resources = static_vendored_frameworks.map { |x| vendored_framework_path(x).nil? ? nil : "#{vendored_framework_path(x)}/*.{nib,bundle,xcasset,strings,png,jpg,tif,tiff,otf,ttf,ttc,plist,json,caf,wav,p12,momd}" }.compact.flatten.uniq
-        podspec_item.exclude_files = static_vendored_frameworks.map { |x| vendored_framework_path(x).nil? ? nil : "#{vendored_framework_path(x)}/Info.plist" }.compact.flatten.uniq
-        podspec_item.exclude_files += podspec_item.vendored_frameworks.map { |x| vendored_framework_path(x).nil? ? nil : "#{vendored_framework_path(x)}/#{Configuration.framework_plist_filename}" }.compact.flatten.uniq.sort
+
+        podspec_item.resources = static_vendored_frameworks.map { |x| x.vendored_framework_path.nil? ? nil : "#{x.vendored_framework_path}/*.{nib,bundle,xcasset,strings,png,jpg,tif,tiff,otf,ttf,ttc,plist,json,caf,wav,p12,momd}" }.compact.flatten.uniq
+        podspec_item.exclude_files = static_vendored_frameworks.map { |x| x.vendored_framework_path.nil? ? nil : "#{x.vendored_framework_path}/Info.plist" }.compact.flatten.uniq
+        podspec_item.exclude_files += podspec_item.vendored_frameworks.map { |x| x.vendored_framework_path.nil? ? nil : "#{x.vendored_framework_path}/#{Configuration.framework_plist_filename}" }.compact.flatten.uniq.sort
 
         # Merge xcconfigs
         if !pod.xcconfig.empty?
@@ -165,28 +163,6 @@ module PodBuilder
       end
 
       return podspec_items
-    end
-    
-    def self.vendored_framework_path(pod)
-      if File.exist?(PodBuilder::basepath(vendored_subspec_framework_path(pod)))
-        return vendored_subspec_framework_path(pod)
-      elsif File.exist?(PodBuilder::basepath(vendored_spec_framework_path(pod)))
-        return vendored_spec_framework_path(pod)
-      end
-      
-      return nil
-    end
-    
-    def self.vendored_subspec_framework_path(pod)
-      return "Rome/#{pod.prebuilt_rel_path}"
-    end
-    
-    def self.vendored_spec_framework_path(pod)
-      return "Rome/#{pod.module_name}.framework"
-    end
-
-    def self.vendored_name_framework_path(name)
-      return "Rome/#{name}"
     end
   end
 end

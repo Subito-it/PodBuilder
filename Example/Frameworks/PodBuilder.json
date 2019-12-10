@@ -4,33 +4,15 @@
     "Google-Mobile-Ads-SDK": {
       "module_name": "GoogleMobileAds"
     },
-    "Firebase/Core": {
-      "module_name": "FirebaseCore"
-    },
-    "Firebase/Performance": {
-      "module_name": "FirebasePerformance"
-    },
-    "Firebase/RemoteConfig": {
-      "module_name": "FirebaseRemoteConfig"
-    }
   },
   "skip_licenses": [
 
   ],
   "skip_pods": [
-
+    "GoogleMaps"
   ],
   "force_prebuild_pods": [
-    "FirebaseAnalytics",
-    "FirebaseAnalyticsInterop",
-    "Firebase/Core", 
-    "Firebase/CoreOnly",
-    "FirebaseCoreDiagnosticsInterop",
-    "FirebasePerformance", 
-    "Firebase/Performance", 
-    "FirebaseRemoteConfig", 
-    "GoogleAppMeasurement", 
-    "GoogleToolboxForMac"
+    "Firebase"
   ],
   "build_settings": {
     "ENABLE_BITCODE": "NO",

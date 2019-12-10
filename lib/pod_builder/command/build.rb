@@ -82,10 +82,12 @@ module PodBuilder
           FileUtils.rm_f(PodBuilder::basepath("Podfile.lock"))
         end
 
+        cleanup_framework_folder(all_buildable_items)
+
         Licenses::write(licenses, all_buildable_items)
 
         GenerateLFS::call(nil)
-        Podspec::generate(analyzer)
+        Podspec::generate(all_buildable_items, analyzer)
 
         builded_pods = podfiles_items.flatten
         builded_pods_and_deps = add_dependencies(builded_pods, all_buildable_items).select { |x| !x.is_prebuilt }
@@ -293,6 +295,22 @@ module PodBuilder
         end
 
         return pods_to_build
+      end
+
+      def self.cleanup_framework_folder(buildable_items)
+        expected_frameworks = buildable_items.map { |x| "#{x.module_name}.framework" }
+        expected_frameworks += buildable_items.map { |x| x.vendored_items }.flatten.map { |x| x.split("/").last }
+        expected_frameworks.uniq!
+
+        existing_frameworks = Dir.glob("#{PodBuilder::basepath("Rome")}/*.framework")
+
+        existing_frameworks.each do |existing_framework|
+          existing_framework_name = File.basename(existing_framework)
+          if !expected_frameworks.include?(existing_framework_name)
+            puts "Cleanining up `#{existing_framework_name}`, no longer found among dependencies".blue
+            FileUtils.rm_rf(existing_framework)
+          end
+        end
       end
     end
   end

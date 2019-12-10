@@ -278,12 +278,12 @@ module PodBuilder
           swift_version = data["swift_version"]
           is_static = data["is_static"] || false
         
-          e += " # pb<#{name}> is<#{is_static}>"
+          e += "#{prebuilt_marker()} is<#{is_static}>"
           if swift_version
             e += " sv<#{swift_version}>"
           end
         else
-          e += " # pb<#{name}>"
+          e += prebuilt_marker()
         end
       end
 
@@ -314,10 +314,14 @@ module PodBuilder
       end
 
       if include_pb_entry && !is_prebuilt
-        entry += " # pb<#{name}>"
+        entry += prebuilt_marker()
       end
 
       return entry
+    end
+
+    def prebuilt_marker
+      return " # pb<#{name}>"
     end
 
     def has_subspec(named)
@@ -332,19 +336,26 @@ module PodBuilder
       return root_name == named.split("/").first
     end
 
-    def git_hard_checkout
-      prefix = "git fetch --all --tags --prune; git reset --hard"
-      if @tag
-        return "#{prefix} tags/#{@tag}"
+    def vendored_framework_path
+      if File.exist?(PodBuilder::basepath(vendored_subspec_framework_path))
+        return vendored_subspec_framework_path
+      elsif File.exist?(PodBuilder::basepath(vendored_spec_framework_path))
+        return vendored_spec_framework_path
       end
-      if @commit
-        return "#{prefix} #{@commit}"
-      end
-      if @branch
-        return "#{prefix} origin/#{@branch}"
-      end
-
+      
       return nil
+    end
+    
+    def vendored_subspec_framework_path
+      return "Rome/#{prebuilt_rel_path}"
+    end
+    
+    def vendored_spec_framework_path
+      return "Rome/#{module_name}.framework"
+    end
+
+    def self.vendored_name_framework_path(name)
+      return "Rome/#{name}"
     end
 
     private
@@ -421,9 +432,15 @@ module PodBuilder
 
     def spec_and_dependencies(spec, all_specs)
       specs = all_specs.select { |x| spec.dependencies.map(&:name).include?(x.name) }
+      specs += all_specs.select { |x| spec.default_subspecs.include?(x.name.split("/").last) }
       specs += [spec, spec.root] 
+
+      all_remaining_specs = all_specs.reject { |x| specs.map(&:name).include?(x.name) } 
+      if all_remaining_specs.count < all_specs.count
+        specs += specs.map { |x| spec_and_dependencies(x, all_remaining_specs) }
+      end
       
-      return specs.compact.uniq
+      return specs.flatten.compact.uniq
     end
   end
 end

@@ -47,9 +47,24 @@ module PodBuilder
 
         Dir.chdir(repo_dir)
         puts "Checking out #{spec.podspec_name}".yellow
-        raise "Failed cheking out #{spec.name}" if !system(spec.git_hard_checkout)
+        raise "Failed cheking out #{spec.name}" if !system(git_hard_checkout_cmd(spec))
 
         Dir.chdir(current_dir)
+      end
+
+      def self.git_hard_checkout_cmd(spec)
+        prefix = "git fetch --all --tags --prune; git reset --hard"
+        if @tag
+          return "#{prefix} tags/#{spec.tag}"
+        end
+        if @commit
+          return "#{prefix} #{spec.commit}"
+        end
+        if @branch
+          return "#{prefix} origin/#{spec.branch}"
+        end
+  
+        return nil
       end
 
       def self.rewrite_lldinit
