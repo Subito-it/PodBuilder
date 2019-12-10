@@ -342,9 +342,26 @@ module PodBuilder
       end
       if @branch
         return "#{prefix} origin/#{@branch}"
+    def vendored_framework_path
+      if File.exist?(PodBuilder::basepath(vendored_subspec_framework_path))
+        return vendored_subspec_framework_path
+      elsif File.exist?(PodBuilder::basepath(vendored_spec_framework_path))
+        return vendored_spec_framework_path
       end
-
+      
       return nil
+    end
+    
+    def vendored_subspec_framework_path
+      return "Rome/#{prebuilt_rel_path}"
+    end
+    
+    def vendored_spec_framework_path
+      return "Rome/#{module_name}.framework"
+    end
+
+    def self.vendored_name_framework_path(name)
+      return "Rome/#{name}"
     end
 
     private
