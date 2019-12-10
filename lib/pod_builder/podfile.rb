@@ -158,7 +158,11 @@ module PodBuilder
                 marker = podfile_item.prebuilt_marker()
 
                 podfile_item_dependency_items = all_buildable_items.select { |x| podfile_item.dependency_names.include?(x.name) && x.vendored_framework_path.nil? == false }
-                prebuilt_lines += podfile_item_dependency_items.map { |x| "#{line.detect_indentation}#{x.prebuilt_entry(include_pb_entry = false)}#{marker}\n" }.uniq
+                if podfile_item_dependency_items.count > 0
+                  prebuilt_lines += podfile_item_dependency_items.map { |x| "#{line.detect_indentation}#{x.prebuilt_entry(include_pb_entry = false)}#{marker}\n" }.uniq
+                else
+                  prebuilt_lines.push(line)
+                end
               else 
                 prebuilt_lines.push("#{line.detect_indentation}#{podfile_item.prebuilt_entry}\n")
               end
