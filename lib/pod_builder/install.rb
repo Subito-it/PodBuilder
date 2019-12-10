@@ -156,7 +156,7 @@ module PodBuilder
 
                 destination_path = PodBuilder::basepath("Rome/#{library_rel_path}/#{result_path}")
                 FileUtils.mkdir_p(File.dirname(destination_path))
-                FileUtils.cp_r(library_path, destination_path)        
+                FileUtils.cp_r(library_path, destination_path, :remove_destination => true)
               end
             end
           end
