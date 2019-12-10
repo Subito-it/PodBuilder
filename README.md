@@ -279,6 +279,21 @@ PodBuilder leverages CocoaPods code and [cocoapods-rome plugin](https://github.c
 
 # FAQ
 
+### **I get an _'`Alamofire` does not specify a Swift version and none of the targets (`DummyTarget`)'_ when building**
+
+The podspec of the Pod you're trying to build doesn't specify the swift_version which is required in recent versions of CocoaPods. Either contact the author/mantainer of the Pod asking it to fix the podspec or add a `spec_overrides` in _PodBuilder.json_.
+
+```json
+"spec_overrides": {
+    "Google-Mobile-Ads-SDK": {
+      "module_name": "GoogleMobileAds"
+    },
+    "Swifter": {
+      "swift_version": "5.0"
+    }
+}
+```
+
 ### **After prebuilding my project no longer compiles**
 
 A common problem you may encounter is with Objective-C imports. You should verify that you're properly importing all the headers of your pods with the angle bracket notation `#import <FrameworkName/HeaderFile.h>` instead of directly importing `#import "HeaderFile.h"`.
@@ -293,9 +308,11 @@ How to proceed in these cases?
 
 Relaunch the build command passing `-d`, this won't delete the temporary _/tmp/pod_builder_ folder on failure. Open _/tmp/pod_builder/Pods/Pods.xcproject_, make the Pods-DummyTarget target visible by clicking on _Show_ under _Product->Scheme->Manage shemes..._ and build from within Xcode. This will help you understand what went wrong. Remeber to verify that you're building the _Release_ build configuration.
 
+
 ### **Do I need to commit compiled frameworks?**
 
 No. If the size of compiled frameworks in your repo is a concern (and for whatever reason you can't use [Git-LFS](#git-lfs)) you can choose add the _Rome_ and _dSYM_ folder to .gitignore and run `pod_builder update` to rebuild all frameworks that need to be recompiled.
+
 
 ### **I get an _'attempt to read non existent folder `/private/tmp/pod_builder/Pods/ podname'_ when building**
 
