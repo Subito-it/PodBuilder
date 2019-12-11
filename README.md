@@ -279,7 +279,7 @@ PodBuilder leverages CocoaPods code and [cocoapods-rome plugin](https://github.c
 
 # FAQ
 
-### **I get an _'`Alamofire` does not specify a Swift version and none of the targets (`DummyTarget`)'_ when building**
+### **I get an _'`PodWithError` does not specify a Swift version and none of the targets (`DummyTarget`)'_ when building**
 
 The podspec of the Pod you're trying to build doesn't specify the swift_version which is required in recent versions of CocoaPods. Either contact the author/mantainer of the Pod asking it to fix the podspec or add a `spec_overrides` in _PodBuilder.json_.
 
@@ -288,7 +288,7 @@ The podspec of the Pod you're trying to build doesn't specify the swift_version 
     "Google-Mobile-Ads-SDK": {
       "module_name": "GoogleMobileAds"
     },
-    "Swifter": {
+    "PodWithError": {
       "swift_version": "5.0"
     }
 }
