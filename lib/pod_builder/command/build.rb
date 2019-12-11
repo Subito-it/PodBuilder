@@ -215,7 +215,7 @@ module PodBuilder
           return
         end
 
-        warn_message = "The following pods `#{invalid_subspecs.join(" ")}` are non static frameworks which are being splitted over different targets. Beware that this is an unsafe setup as per https://github.com/CocoaPods/CocoaPods/issues/5708 and https://github.com/CocoaPods/CocoaPods/issues/5643\n"
+        warn_message = "The following pods `#{invalid_subspecs.join(" ")}` are non static frameworks which are being splitted over different targets. Beware that this is an unsafe setup as per https://github.com/CocoaPods/CocoaPods/issues/5708 and https://github.com/CocoaPods/CocoaPods/issues/5643\n\nYou can ignore this error by passing the `--allow-warnings` flag to the build command\n"
         if options[:allow_warnings]
           puts "\n\n⚠️  #{warn_message}".yellow
         else
