@@ -301,7 +301,7 @@ module PodBuilder
         puts "Cleaning framework folder".yellow
 
         expected_frameworks = buildable_items.map { |x| "#{x.module_name}.framework" }
-        expected_frameworks += buildable_items.map { |x| x.vendored_items }.flatten.map { |x| x.split("/").last }
+        expected_frameworks += buildable_items.map { |x| x.vendored_items }.flatten.map { |x| File.basename(x) }
         expected_frameworks.uniq!
 
         existing_frameworks = Dir.glob("#{PodBuilder::basepath("Rome")}/*.framework")
