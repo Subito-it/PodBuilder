@@ -50,7 +50,7 @@ module PodBuilder
         # 2. pods to build in release
         # 3. pods to build in debug
 
-        check_not_building_development_pods(pods_to_build)
+        check_not_building_development_pods(pods_to_build, options)
 
         pods_to_build_subspecs = pods_to_build.select { |x| x.is_subspec && Configuration.subspecs_to_split.include?(x.name) }
 
@@ -237,10 +237,10 @@ module PodBuilder
         end
       end
 
-      def self.check_not_building_development_pods(pods)
-        if (development_pods = pods.select { |x| x.is_development_pod }) && development_pods.count > 0
+      def self.check_not_building_development_pods(pods, options)
+        if (development_pods = pods.select { |x| x.is_development_pod }) && development_pods.count > 0 && options[:allow_warnings].nil?
           pod_names = development_pods.map(&:name).join(", ")
-          raise "Cannot build the following pods: `#{pod_names}` in development mode"
+          raise "The following pods are in development mode: `#{pod_names}`, won't proceed building.\n\nYou can ignore this error by passing the `--allow-warnings` flag to the build command\n"
         end
       end
 
