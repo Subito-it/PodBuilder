@@ -112,7 +112,7 @@ module PodBuilder
 
       def self.license_specifiers
         acknowledge_files = Dir.glob("#{PodBuilder::Configuration.build_path}/Pods/**/*acknowledgements.plist")
-        raise "Too many acknoledge file found" if acknowledge_files.count > 1
+        raise "Too many ackwnoledge files found" if acknowledge_files.count > 1
 
         if acknowledge_file = acknowledge_files.first
           plist = CFPropertyList::List.new(:file => acknowledge_file)
