@@ -241,6 +241,10 @@ Specify which build system to use to compile frameworks. Either `Legacy` (standa
 
 PodBuilder will create two license files a plist and a markdown file which contains the licenses of each pod specified in the PodBuilder-Podfile. Defailt value: `Pods-acknowledgements`(plist|md).
 
+#### `project_name`
+
+In complex project setups you may end up with the following error: "Found multiple xcodeproj/xcworkspaces...". If that is the case you can specify the name of your main project manually. For example if your application's project is "Example.xcworkspace" set the value for this key to `Example`.
+
 #### `allow_building_development_pods`
 
 Building development pods is by default not allowed unless you explicitly pass the allow_warnings flag. You can override this behavior by setting this key to true
