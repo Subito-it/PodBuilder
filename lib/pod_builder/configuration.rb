@@ -24,6 +24,7 @@ module PodBuilder
     private_constant :MIN_LFS_SIZE_KB
     
     class <<self      
+      attr_accessor :allow_building_development_pods
       attr_accessor :build_settings
       attr_accessor :build_settings_overrides
       attr_accessor :build_system
@@ -47,6 +48,7 @@ module PodBuilder
       attr_accessor :lock_filename
     end
     
+    @allow_building_development_pods = false
     @build_settings = DEFAULT_BUILD_SETTINGS
     @build_settings_overrides = {}
     @build_system = DEFAULT_BUILD_SYSTEM
@@ -154,6 +156,11 @@ module PodBuilder
         if value = json["restore_enabled"]
           if [TrueClass, FalseClass].include?(value.class)
             Configuration.restore_enabled = value
+          end
+        end
+        if value = json["allow_building_development_pods"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.allow_building_development_pods = value
           end
         end
         

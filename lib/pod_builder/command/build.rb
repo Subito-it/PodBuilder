@@ -238,7 +238,7 @@ module PodBuilder
       end
 
       def self.check_not_building_development_pods(pods, options)
-        if (development_pods = pods.select { |x| x.is_development_pod }) && development_pods.count > 0 && options[:allow_warnings].nil?
+        if (development_pods = pods.select { |x| x.is_development_pod }) && development_pods.count > 0 && (options[:allow_warnings].nil?  && Configuration.allow_building_development_pods == false)
           pod_names = development_pods.map(&:name).join(", ")
           raise "The following pods are in development mode: `#{pod_names}`, won't proceed building.\n\nYou can ignore this error by passing the `--allow-warnings` flag to the build command\n"
         end

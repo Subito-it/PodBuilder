@@ -241,6 +241,10 @@ Specify which build system to use to compile frameworks. Either `Legacy` (standa
 
 PodBuilder will create two license files a plist and a markdown file which contains the licenses of each pod specified in the PodBuilder-Podfile. Defailt value: `Pods-acknowledgements`(plist|md).
 
+#### `allow_building_development_pods`
+
+Building development pods is by default not allowed unless you explicitly pass the allow_warnings flag. You can override this behavior by setting this key to true
+
 #### `skip_licenses`
 
 PodBuilder writes a plist and markdown license files of pods specified in the PodBuilder-Podfile. You can specify pods that should not be included, for example for private pods. 
