@@ -6,6 +6,9 @@ module PodBuilder
   class Podfile
     def self.remove_target_support_duplicate_entries
       puts "[PodBuilder] Removing target support duplicated entries".yellow
+      
+      Configuration.load
+      
       # Frameworks and resources
       find_xcodeproj_targets.map(&:name).each do |target|
         remove_duplicate_entries("Pods/Target Support Files/Pods-#{target}/Pods-#{target}-frameworks.sh")
@@ -15,6 +18,8 @@ module PodBuilder
 
     def self.check_target_support_resource_collisions
       puts "[PodBuilder] Checking target support resource collisions".yellow
+
+      Configuration.load
 
       targets = find_xcodeproj_targets
 
