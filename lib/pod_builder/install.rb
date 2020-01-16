@@ -23,10 +23,17 @@ module PodBuilder
       PodBuilder::safe_rm_rf(Configuration.build_path)
       FileUtils.mkdir_p(Configuration.build_path)
 
+      # Copy the repo to extract license (and potentially other files in the future)
       podfile_items.select { |x| x.is_development_pod }.each do |podfile_item|
         destination_path = "#{Configuration.build_path}/Pods/#{podfile_item.module_name}"
         FileUtils.mkdir_p(destination_path)
-        FileUtils.cp_r("#{podfile_item.path}/.", destination_path)
+
+        if Pathname.new(podfile_item.path).absolute?
+          FileUtils.cp_r("#{podfile_item.path}/.", destination_path)
+        else 
+          FileUtils.cp_r("#{PodBuilder::basepath(podfile_item.path)}/.", destination_path)
+        end
+        
         license_files = Dir.glob("#{destination_path}/**/*acknowledgements.plist").each { |f| File.delete(f) }
       end
       

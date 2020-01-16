@@ -111,9 +111,7 @@ module PodBuilder
         @repo = checkout_options[opts_key][:git]
         @tag = checkout_options[opts_key][:tag]
         @commit = checkout_options[opts_key][:commit]
-        if checkout_path = checkout_options[opts_key][:path]
-          @path = Pathname.new(checkout_path).realpath.to_s
-        end
+        @path = checkout_options[opts_key][:path]
         @branch = checkout_options[opts_key][:branch]
         @is_external = true
       else
