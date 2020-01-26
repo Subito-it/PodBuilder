@@ -31,7 +31,8 @@ Command:
     + build_all                      Build all pods declared in the PodBuilder-Podfile
     + update                         Rebuild frameworks that are outdated
     + restore_all                    Rebuild all pods declared in the Restore-Podfile
-    + install_sources                Install sources of pods to debug into prebuild frameworks
+    + install_sources                Install sources of pods to debug into prebuilt frameworks
+    + update_lldbinit                Update ~/.lldbinit-Xcode setting target.source-map to debug prebuilt frameworks
     + switch                         Switch between prebuilt/development/standard pod in the Application-Podfile
     + clean                          Remove prebuild frameworks, dSYMs and source files added by `install_sources` command that are no longer in the PodBuilder-Podfile
     + sync_podfile                   Update your Application-Podfile with all pods declared in the PodBuilder-Podfile
@@ -233,12 +234,30 @@ Usage:
     $ pod_builder install_sources
 
       Install source of prebuilt pods to be able to step into and debug framework's code.
-        
-Options:
+
 "         
       end,
       :call => [        
         PodBuilder::Command::InstallSources
+      ]
+    },
+
+    "update_lldbinit" => {         
+      :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder install_sources PATH
+
+      Update ~/.lldbinit-Xcode setting target.source-map in order to be able to step into 
+      and debug framework's code.
+
+      Specify the PATH of the folder containing the source code of prebuilt frameworks. PATH can be relative to PodBuilder's Framework folder.
+
+"         
+      end,
+      :call => [        
+        PodBuilder::Command::UpdateLldbInit
       ]
     },
 

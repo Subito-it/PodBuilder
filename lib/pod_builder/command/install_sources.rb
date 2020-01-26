@@ -25,7 +25,8 @@ module PodBuilder
 
         Command::Clean::clean_sources()
 
-        rewrite_lldinit
+        ARGV << PodBuilder::basepath("Sources")
+        Command::UpdateLldbInit::call(options)
 
         puts "\n\n🎉 done!\n".green
         return 0
@@ -65,32 +66,6 @@ module PodBuilder
         end
   
         return nil
-      end
-
-      def self.rewrite_lldinit
-        puts "Writing ~/.lldbinit-Xcode".yellow
-
-        lldbinit_path = File.expand_path('~/.lldbinit-Xcode')
-        FileUtils.touch(lldbinit_path)
-
-        lldbinit_lines = []
-        File.read(lldbinit_path).each_line do |line|
-          if lldbinit_lines.include?(line.strip()) ||
-             line.start_with?("settings set target.source-map") ||
-             line.strip() == "" then
-            next
-          end
-            
-          lldbinit_lines.push(line)
-        end
-
-        build_path = "#{PodBuilder::Configuration.build_path}/Pods"
-        source_path = PodBuilder::basepath("Sources")
-
-        lldbinit_lines.push("settings set target.source-map '#{build_path}' '#{source_path}'")
-        lldbinit_lines.push("")
-      
-        File.write(lldbinit_path, lldbinit_lines.join("\n"))
       end
     end
   end

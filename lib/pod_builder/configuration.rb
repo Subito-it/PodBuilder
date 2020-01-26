@@ -36,6 +36,7 @@ module PodBuilder
       attr_accessor :license_filename
       attr_accessor :subspecs_to_split
       attr_accessor :development_pods_paths
+      attr_accessor :build_base_path
       attr_accessor :build_path
       attr_accessor :configuration_filename
       attr_accessor :dev_pods_configuration_filename
@@ -60,7 +61,8 @@ module PodBuilder
     @license_filename = "Pods-acknowledgements"
     @subspecs_to_split = []
     @development_pods_paths = []
-    @build_path = "/tmp/pod_builder_#{(Time.now.to_f * 1000).to_i}".freeze
+    @build_base_path = "/tmp/pod_builder_".freeze
+    @build_path = "#{build_base_path}#{(Time.now.to_f * 1000).to_i}".freeze
     @configuration_filename = "PodBuilder.json".freeze
     @dev_pods_configuration_filename = "PodBuilderDevPodsPaths.json".freeze
     @lfs_min_file_size = MIN_LFS_SIZE_KB
