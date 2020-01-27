@@ -1,5 +1,13 @@
 #!/usr/bin/env ruby
 
+require 'pod_builder/version'
+
+show_version = ARGV.include?("version") && ARGV.count == 1
+if show_version
+  puts PodBuilder::VERSION
+  exit(0)
+end
+
 if ENV['DEBUGGING']
   puts "Running in debug, injecting $LOAD_PATH"
   libdir = File.expand_path("#{File.dirname(__FILE__)}/../lib")
@@ -8,7 +16,6 @@ end
 
 require 'optparse'
 require 'pod_builder/core'
-require 'pod_builder/version'
 require 'pod_builder/command'
 
 OPTIONS = {}  
