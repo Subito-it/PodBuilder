@@ -21,7 +21,7 @@ module PodBuilder
         lldbinit_path = File.expand_path('~/.lldbinit-Xcode')
         lldbinit_content = File.exists?(lldbinit_path) ? File.read(lldbinit_path) : ""
         restore_hash = podfile_restore_hash()
-        if lldbinit_content.include?("<pb_md5:#{base_path}:#{restore_hash}")
+        if lldbinit_content.include?("# <pb_md5:#{base_path}:#{restore_hash}")
           puts "\n\n🎉 already in sync!\n".green
           return 0
         end
@@ -138,8 +138,8 @@ module PodBuilder
         end
 
         restore_hash = podfile_restore_hash()
-        source_map_lines.insert(0, "<pb_md5:#{base_path}:#{restore_hash}>")
-        source_map_lines.insert(0, "<pb:#{base_path}>")
+        source_map_lines.insert(0, "# <pb_md5:#{base_path}:#{restore_hash}>")
+        source_map_lines.insert(0, "# <pb:#{base_path}>")
 
         lldbinit_lines += source_map_lines
       
