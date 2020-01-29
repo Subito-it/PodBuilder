@@ -136,7 +136,7 @@ module PodBuilder
         return pods
       end
 
-      def self.expected_common_dependencies(pods_to_build, buildable_items)
+      def self.expected_common_dependencies(pods_to_build, buildable_items, options)
         warned_expected_pod_list = []
         expected_pod_list = []
         errors = []
@@ -161,6 +161,10 @@ module PodBuilder
                   errors.push("Can't build #{pod_to_build.name} because it has common dependencies (#{dependency}) with #{buildable_pod.name}.\n\nUse `pod_builder build #{expected_list}` instead or use `pod_builder build -a #{pod_to_build.name}` to automatically resolve missing dependencies\n\n")
                   errors.uniq!
                   warned_expected_pod_list.push(expected_list)
+
+                  if options.has_key?(:auto_resolve_dependencies)
+                    puts "`#{pod_to_build.name}` has the following dependencies:\n`#{pod_to_build.dependency_names.join("`, `")}`\nWhich are in common with `#{buildable_pod.name}` and requires it to be recompiled\n\n".yellow
+                  end
                 end
               end
             end
@@ -170,7 +174,7 @@ module PodBuilder
         return expected_pod_list, errors
       end
 
-      def self.expected_parent_dependencies(pods_to_build, buildable_items)
+      def self.expected_parent_dependencies(pods_to_build, buildable_items, options)
         expected_pod_list = []
         errors = []
 
@@ -279,7 +283,7 @@ module PodBuilder
             pods_to_build += other_subspecs(pods_to_build, buildable_items)
             tmp_buildable_items = buildable_items - pods_to_build
 
-            expected_pods, errors = fn.call(pods_to_build, tmp_buildable_items)
+            expected_pods, errors = fn.call(pods_to_build, tmp_buildable_items, options)
             if expected_pods.count > 0
               if !options.has_key?(:auto_resolve_dependencies) && expected_pods.count > 0
                 raise "\n\n#{errors.join("\n")}".red
