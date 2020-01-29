@@ -13,6 +13,8 @@ module PodBuilder
           return -1
         end
 
+        raise "\n\nPlease rename your Xcode installation path removing spaces, current `#{`xcode-select -p`.strip()}`\n" if `xcode-select -p`.strip().include?(" ")
+
         Podfile.sanity_check()
         check_not_building_subspecs(argument_pods)
 
