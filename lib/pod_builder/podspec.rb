@@ -34,6 +34,10 @@ module PodBuilder
     private_constant :PodspecItem
     
     def self.generate(all_buildable_items, analyzer)  
+      unless all_buildable_items.count > 0
+        return
+      end
+      
       puts "Generating PodBuilder's local podspec".yellow
                   
       podspec_items = podspec_items_from(all_buildable_items)

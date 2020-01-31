@@ -75,7 +75,7 @@ module PodBuilder
     end
 
     def self.write_restorable(updated_pods, podfile_items, analyzer)
-      unless Configuration.restore_enabled
+      unless Configuration.restore_enabled && (podfile_items.count + updated_pods.count) > 0
         return
       end
       
