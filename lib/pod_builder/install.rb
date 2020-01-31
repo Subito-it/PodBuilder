@@ -17,6 +17,27 @@ class Pod::Specification::Linter::Analyzer
   end
 end
 
+Pod::Downloader.singleton_class.send(:alias_method, :swz_download, :download)
+
+module Pod::Downloader
+  def self.download(
+    request,
+    target,
+    can_cache: true,
+    cache_path: Pod::Config.instance.cache_root + 'Pods'
+  )
+    result = swz_download(request, target)
+
+    if overrides = PodBuilder::Configuration.spec_overrides[result.spec.name]
+      overrides.each do |k, v|
+        result.spec.attributes_hash[k] = v
+      end
+    end
+    
+    result
+  end
+end
+
 module PodBuilder
   class Install
     def self.podfile(podfile_content, podfile_items, build_configuration)
