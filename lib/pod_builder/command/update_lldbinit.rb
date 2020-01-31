@@ -87,7 +87,7 @@ module PodBuilder
         
         replace_paths.uniq!
 
-        source_map_lines = replace_paths.flat_map { |t| ["# <pb:#{base_path}>", "settings append target.source-map '#{t.split(",").first}' '#{t.split(",").last}'"] }
+        source_map_lines = replace_paths.flat_map { |t| ["# <pb:#{base_path}>\n", "settings append target.source-map '#{t.split(",").first}' '#{t.split(",").last}'\n"] }
         rewrite_lldinit(source_map_lines, base_path)
         
         puts "\n\n🎉 done!\n".green
@@ -123,7 +123,7 @@ module PodBuilder
         lldbinit_lines = []
         skipNext = false
         File.read(lldbinit_path).each_line do |line|
-          if line.include?("# <pb:#{base_path}>")
+          if line.include?("# <pb:#{base_path}>") || line.include?("# <pb>")
             skipNext = true
             next
           elsif skipNext
@@ -138,12 +138,15 @@ module PodBuilder
         end
 
         restore_hash = podfile_restore_hash()
-        source_map_lines.insert(0, "# <pb_md5:#{base_path}:#{restore_hash}>")
-        source_map_lines.insert(0, "# <pb:#{base_path}>")
+
+        source_map_lines.insert(0, "# <pb>\n")
+        source_map_lines.insert(1, "settings clear target.source-map\n")
+        source_map_lines.insert(2, "# <pb:#{base_path}>\n")
+        source_map_lines.insert(3, "# <pb_md5:#{base_path}:#{restore_hash}>\n")
 
         lldbinit_lines += source_map_lines
       
-        File.write(lldbinit_path, lldbinit_lines.join("\n"))
+        File.write(lldbinit_path, lldbinit_lines.join())
       end
     end
   end

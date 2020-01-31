@@ -255,7 +255,7 @@ Usage:
         opts.banner = "
 Usage:
         
-    $ pod_builder install_sources PATH
+    $ pod_builder update_lldbinit PATH
 
       Update ~/.lldbinit-Xcode setting target.source-map in order to be able to step into 
       and debug framework's code.
