@@ -100,6 +100,10 @@ When using PodBuilder you loose ability to directly access to the source code of
 
 In some situations you may already have source code for your prebuilt frameworks (e.g. committed in your repo). In this case there is no need to use the `install_sources`, you can run this command passing the folder that contains the source code that you used to generate the prebuilt frameworks. This will update the `~/.lldbinit-Xcode` file which will restore the ability to use the debugger and step into the code of your prebuilt dependencies.
 
+#### `clear_lldbinit` command
+
+Run this command to remove PodBuilder's `~/.lldbinit-Xcode` customizations.
+
 #### `switch` command
 
 Once you prebuild a framework you can change the way it is integrated in your project.

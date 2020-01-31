@@ -40,6 +40,7 @@ Command:
     + restore_all                    Rebuild all pods declared in the Restore-Podfile
     + install_sources                Install sources of pods to debug into prebuilt frameworks
     + update_lldbinit                Update ~/.lldbinit-Xcode setting target.source-map to debug prebuilt frameworks
+    + clear_lldbinit                 Clear ~/.lldbinit-Xcode setting with PodBuilder's customizations
     + switch                         Switch between prebuilt/development/standard pod in the Application-Podfile
     + clean                          Remove prebuild frameworks, dSYMs and source files added by `install_sources` command that are no longer in the PodBuilder-Podfile
     + sync_podfile                   Update your Application-Podfile with all pods declared in the PodBuilder-Podfile
@@ -265,6 +266,21 @@ Usage:
       end,
       :call => [        
         PodBuilder::Command::UpdateLldbInit
+      ]
+    },
+
+    "clear_lldbinit" => {         
+      :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder clear_lldbinit
+
+      Clear ~/.lldbinit-Xcode setting target.source-map PodBuilder's customizations
+"         
+      end,
+      :call => [        
+        PodBuilder::Command::ClearLldbInit
       ]
     },
 
