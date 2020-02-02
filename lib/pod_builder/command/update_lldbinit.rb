@@ -74,7 +74,7 @@ module PodBuilder
 
           if podspec_path = find_podspec_path_for(name, podspec_paths, podspec_contents)
             if !is_development_pod(podspec_path, app_podfile_content)
-              replace_paths.push("#{original_compile_path},#{File.dirname(podspec_path)}")
+              replace_paths.push("#{original_compile_path}/Pods/#{name},#{File.dirname(podspec_path)}")
             else
               puts "#{name} is in development pod, skipping"
             end
