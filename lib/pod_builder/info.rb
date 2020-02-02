@@ -130,6 +130,7 @@ module PodBuilder
       result.merge!({ "version": pod_version })
       result.merge!({ "specs": (data["specs"] || []) })
       result.merge!({ "is_static": (data["is_static"] || false) })
+      result.merge!({ "original_compile_path": (data["original_compile_path"] || "") })
       
       return result
     end

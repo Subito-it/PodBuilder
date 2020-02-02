@@ -115,6 +115,7 @@ module PodBuilder
           subspec_self_deps = subspecs_deps.select { |x| x.start_with?("#{podfile_item.root_name}/") }
           plist_data['specs'] = (specs.map(&:name) + subspec_self_deps).uniq
           plist_data['is_static'] = podfile_item.is_static
+          plist_data['original_compile_path'] = Configuration.build_path
 
           plist.value = CFPropertyList.guess(plist_data)
           plist.save(podbuilder_file, CFPropertyList::List::FORMAT_BINARY)
