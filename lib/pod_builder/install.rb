@@ -56,7 +56,7 @@ module PodBuilder
         end
 
         # It is important that CocoaPods compiles the files under Configuration.build_path in order that DWARF
-        # debug symbols reference to those paths. Doing otherwise breaks the assumptions that make the update_lldbinit
+        # debug info reference to this path. Doing otherwise breaks the assumptions that make the `update_lldbinit`
         # command work
         podfile_content.gsub!(podfile_item.path, destination_path)
         
