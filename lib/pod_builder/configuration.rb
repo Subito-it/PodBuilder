@@ -1,4 +1,5 @@
 require 'json'
+require 'tmpdir'
 
 module PodBuilder  
   class Configuration  
@@ -61,7 +62,7 @@ module PodBuilder
     @license_filename = "Pods-acknowledgements"
     @subspecs_to_split = []
     @development_pods_paths = []
-    @build_base_path = "/tmp/pod_builder_".freeze
+    @build_base_path = "#{Dir.tmpdir()}/pod_builder_".freeze
     @build_path = "#{build_base_path}#{(Time.now.to_f * 1000).to_i}".freeze
     @configuration_filename = "PodBuilder.json".freeze
     @dev_pods_configuration_filename = "PodBuilderDevPodsPaths.json".freeze
