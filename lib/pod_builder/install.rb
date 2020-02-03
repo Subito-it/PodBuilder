@@ -54,6 +54,11 @@ module PodBuilder
         else 
           FileUtils.cp_r("#{PodBuilder::basepath(podfile_item.path)}/.", destination_path)
         end
+
+        # It is important that CocoaPods compiles the files under Configuration.build_path in order that DWARF
+        # debug symbols reference to those paths. Doing otherwise breaks the assumptions that make the update_lldbinit
+        # command work
+        podfile_content.gsub!(podfile_item.path, destination_path)
         
         license_files = Dir.glob("#{destination_path}/**/*acknowledgements.plist").each { |f| File.delete(f) }
       end
@@ -136,7 +141,7 @@ module PodBuilder
           subspec_self_deps = subspecs_deps.select { |x| x.start_with?("#{podfile_item.root_name}/") }
           plist_data['specs'] = (specs.map(&:name) + subspec_self_deps).uniq
           plist_data['is_static'] = podfile_item.is_static
-          plist_data['original_compile_path'] = Configuration.build_path
+          plist_data['original_compile_path'] = Pathname.new(Configuration.build_path).realpath.to_s
 
           plist.value = CFPropertyList.guess(plist_data)
           plist.save(podbuilder_file, CFPropertyList::List::FORMAT_BINARY)
