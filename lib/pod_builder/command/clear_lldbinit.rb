@@ -24,7 +24,9 @@ module PodBuilder
       
         File.write(lldbinit_path, lldbinit_lines.join())
 
-        puts "\n\n🎉 done!\n".green
+        if options.nil? == false
+          puts "\n\n🎉 done!\n".green
+        end
         return 0
       end
     end
