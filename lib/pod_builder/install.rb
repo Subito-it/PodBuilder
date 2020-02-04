@@ -1,7 +1,7 @@
 require 'cfpropertylist'
 
-
-# We swizzle the analyzer to inject spec overrides
+# We swizzle the analyzer to inject spec overrides. This might no longer be needed
+# given that we're swizzling the Pod::Downloader as well
 class Pod::Specification::Linter::Analyzer
   alias_method :swz_analyze, :analyze
 
@@ -18,7 +18,6 @@ class Pod::Specification::Linter::Analyzer
 end
 
 Pod::Downloader.singleton_class.send(:alias_method, :swz_download, :download)
-
 module Pod::Downloader
   def self.download(
     request,
@@ -36,6 +35,47 @@ module Pod::Downloader
     
     result
   end
+end
+
+# The Pod::Target and Pod::Installer::Xcode::PodTargetDependencyInstaller swizzles patch
+# the following issues: 
+# - https://github.com/CocoaPods/Rome/issues/81
+# - https://github.com/leavez/cocoapods-binary/issues/50
+begin
+  require 'cocoapods/installer/xcode/pods_project_generator/pod_target_dependency_installer.rb'
+
+  class Pod::Target
+    attr_accessor :mock_dynamic_framework
+
+    alias_method :swz_build_type, :build_type
+
+    def build_type
+      if mock_dynamic_framework == true
+        if defined?(Pod::BuildType) # CocoaPods 1.9 and later
+          Pod::BuildType.new(linkage: :dynamic, packaging: :framework)
+        elsif defined?(Pod::Target::BuildType) # CocoaPods 1.7, 1.8
+          Pod::Target::BuildType.new(linkage: :dynamic, packaging: :framework)
+        else
+          raise "BuildType not found. Open an issue reporting your CocoaPods version"
+        end
+      else
+        swz_build_type()
+      end
+    end
+  end
+
+  class Pod::Installer::Xcode::PodTargetDependencyInstaller
+    alias_method :swz_wire_resource_bundle_targets, :wire_resource_bundle_targets
+  
+    def wire_resource_bundle_targets(resource_bundle_targets, native_target, pod_target)
+      pod_target.mock_dynamic_framework = pod_target.build_as_static_framework?
+      res = swz_wire_resource_bundle_targets(resource_bundle_targets, native_target, pod_target)
+      pod_target.mock_dynamic_framework = false
+      return res
+    end
+  end  
+rescue
+  # CocoaPods 1.6.2 or earlier
 end
 
 module PodBuilder
