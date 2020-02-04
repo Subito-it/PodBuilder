@@ -74,7 +74,7 @@ begin
       return res
     end
   end  
-rescue
+rescue LoadError
   # CocoaPods 1.6.2 or earlier
 end
 
