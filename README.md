@@ -98,11 +98,14 @@ When using PodBuilder you loose ability to directly access to the source code of
 
 #### `update_lldbinit` command
 
-In some situations you may already have source code for your prebuilt frameworks (e.g. committed in your repo). In this case there is no need to use the `install_sources`, you can run this command passing the folder that contains the source code that you used to generate the prebuilt frameworks. This will update the `~/.lldbinit-Xcode` file which will restore the ability to use the debugger and step into the code of your prebuilt dependencies.
+In some situations you may already have source code for your prebuilt frameworks (e.g. committed in your repo). In this case there is no need to use the `install_sources`, you can run this command passing the folder that contains the source code that you used to generate the prebuilt frameworks. This will update a custom specified `lldbinit` file which will restore the ability to use the debugger and step into the code of your prebuilt dependencies.
+
+The `lldbinit` should not be autoloaded from Xcode (e.g. should not be placed under ~/.lldbinit-Xcode) because it can cause weird issues with debugging. Instead load the file using a shared breakpoint placed at the beginning loading by invoking a 
+
 
 #### `clear_lldbinit` command
 
-Run this command to remove PodBuilder's `~/.lldbinit-Xcode` customizations.
+Run this command to remove PodBuilder's customizations from the specified `lldbinit`.
 
 #### `switch` command
 

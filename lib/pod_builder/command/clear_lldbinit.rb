@@ -5,7 +5,17 @@ module PodBuilder
   module Command
     class ClearLldbInit
       def self.call(options)
-        lldbinit_path = File.expand_path('~/.lldbinit-Xcode')
+
+        argument_pods = ARGV.dup
+        
+        unless argument_pods.count > 0 
+          return -1
+        end
+        unless argument_pods.count == 1
+          raise "\n\nExpecting LLDBINIT_PATH\n\n".red 
+        end
+            
+        lldbinit_path = File.expand_path(argument_pods[0])
         lldbinit_content = File.exists?(lldbinit_path) ? File.read(lldbinit_path) : ""
 
         lldbinit_lines = []

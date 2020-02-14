@@ -12,8 +12,8 @@ module PodBuilder
         unless argument_pods.count > 0 
           return -1
         end
-        unless argument_pods.count == 1
-          raise "\n\nSpecify a single PATH to the folder containing the prebuilt framework's source code\n\n".red 
+        unless argument_pods.count == 2
+          raise "\n\nExpecting LLDBINIT_PATH and a single PATH to the folder containing the prebuilt framework's source code\n\n".red 
         end
             
         base_path = PodBuilder::basepath("")
@@ -21,7 +21,7 @@ module PodBuilder
         podfile_restore_content = File.read(PodBuilder::basepath("Podfile.restore"))
         app_podfile_content = File.read(PodBuilder::project_path("Podfile"))
 
-        lldbinit_path = File.expand_path('~/.lldbinit-Xcode')
+        lldbinit_path = File.expand_path(argument_pods[0])
         lldbinit_content = File.exists?(lldbinit_path) ? File.read(lldbinit_path) : ""
         status_hash = podfiles_status_hash(app_podfile_content, podfile_restore_content)
         if lldbinit_content.include?("# <pb_md5:#{base_path}:#{status_hash}")
@@ -29,7 +29,7 @@ module PodBuilder
           return 0
         end
 
-        source_path = argument_pods[0]
+        source_path = argument_pods[1]
         
         is_absolute = ["~", "/"].include?(source_path[0])
         if !is_absolute
@@ -64,7 +64,7 @@ module PodBuilder
           is_prebuilt = data.fetch("is_prebuilt", true)
 
           if original_compile_path.nil?
-            puts "\n\n#{framework_path} was compiled with an older version of PodBuilder, please rebuild it to update `~/.lldbinit-Xcode`"
+            puts "\n\n#{framework_path} was compiled with an older version of PodBuilder, please rebuild it to update `#{lldbinit_path}`"
             next
           end
           
@@ -86,7 +86,7 @@ module PodBuilder
         replace_paths.uniq!
 
         source_map_lines = replace_paths.flat_map { |t| ["# <pb:#{base_path}>\n", "settings append target.source-map '#{t.split(",").first}' '#{t.split(",").last}'\n"] }
-        rewrite_lldinit(source_map_lines, base_path, app_podfile_content, podfile_restore_content)
+        rewrite_lldinit(lldbinit_path, source_map_lines, base_path, app_podfile_content, podfile_restore_content)
         
         puts "\n\n🎉 done!\n".green
         return 0
@@ -121,11 +121,11 @@ module PodBuilder
         Digest::MD5.hexdigest(podfile_restore_content + app_podfile_content)
       end
 
-      def self.rewrite_lldinit(source_map_lines, base_path, app_podfile_content, podfile_restore_content)
-        puts "Writing ~/.lldbinit-Xcode".yellow
+      def self.rewrite_lldinit(lldbinit_path, source_map_lines, base_path, app_podfile_content, podfile_restore_content)
+        puts "Writing #{lldbinit_path}".yellow
 
-        lldbinit_path = File.expand_path('~/.lldbinit-Xcode')
         FileUtils.touch(lldbinit_path)
+        raise "\n\nDestination file should be a file" unless File.exists?(lldbinit_path)
 
         lldbinit_lines = []
         skipNext = false
@@ -138,7 +138,7 @@ module PodBuilder
             next
           elsif line != "\n"
             if line.include?("settings set target.source-map")
-              raise "\n\n~/.lldbinit-Xcode already includes a manual `settings set target.source-map`. This is unsupported and you'll have to manually remove that entry\n"
+              raise "\n\n#{lldbinit_destination_path} already includes a manual `settings set target.source-map`. This is unsupported and you'll have to manually remove that entry\n"
             end
             lldbinit_lines.push(line)
           end

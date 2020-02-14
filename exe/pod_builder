@@ -255,10 +255,10 @@ Usage:
         opts.banner = "
 Usage:
         
-    $ pod_builder update_lldbinit PATH
+    $ pod_builder update_lldbinit <LLDBINIT_PATH> <PATH>
 
-      Update ~/.lldbinit-Xcode setting target.source-map in order to be able to step into 
-      and debug framework's code.
+      Update LLDBINIT_PATH setting target.source-map in order to be able to step into 
+      and debug prebuilt framework's code.
 
       Specify the PATH of the folder containing the source code of prebuilt frameworks. PATH can be relative to PodBuilder's Framework folder.
 
@@ -274,9 +274,9 @@ Usage:
         opts.banner = "
 Usage:
         
-    $ pod_builder clear_lldbinit
+    $ pod_builder clear_lldbinit <LLDBINIT_PATH>
 
-      Clear ~/.lldbinit-Xcode setting target.source-map PodBuilder's customizations
+      Clear LLDBINIT_PATH setting target.source-map PodBuilder's customizations
 "         
       end,
       :call => [        
