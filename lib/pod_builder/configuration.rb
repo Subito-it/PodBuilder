@@ -9,6 +9,10 @@ module PodBuilder
       "GCC_OPTIMIZATION_LEVEL" => "s",
       "SWIFT_OPTIMIZATION_LEVEL" => "-Osize",
       "SWIFT_COMPILATION_MODE" => "wholemodule",
+      "CODE_SIGN_IDENTITY" => "",
+      "CODE_SIGNING_REQUIRED" => "NO",
+      "CODE_SIGN_ENTITLEMENTS" => "",
+      "CODE_SIGNING_ALLOWED" => "NO"
     }.freeze
     DEFAULT_SPEC_OVERRIDE = {
       "Google-Mobile-Ads-SDK" => {
