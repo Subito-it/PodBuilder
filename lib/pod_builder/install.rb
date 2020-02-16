@@ -86,7 +86,7 @@ module PodBuilder
 
       # Copy the repo to extract license (and potentially other files in the future)
       podfile_items.select { |x| x.is_development_pod }.each do |podfile_item|
-        destination_path = "#{Configuration.build_path}/Pods/#{podfile_item.module_name}"
+        destination_path = "#{Configuration.build_path}/Pods/#{podfile_item.name}"
         FileUtils.mkdir_p(destination_path)
 
         if Pathname.new(podfile_item.path).absolute?
