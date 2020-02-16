@@ -33,7 +33,7 @@ module PodBuilder
       all_podfile_pods = analysis_result.podfile_dependency_cache.podfile_dependencies
 
       external_source_pods = all_podfile_pods.select(&:external_source)
-      checkout_options = external_source_pods.map { |x| [x.name, x.external_source] }.to_h
+      checkout_options = external_source_pods.map { |x| [x.name.split("/").first, x.external_source] }.to_h
 
       # this adds the :commit which might be missing in checkout_options
       # will also overwrite :branch with :commit which is desired
