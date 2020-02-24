@@ -39,6 +39,10 @@ module PodBuilder
         build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
         build_settings['DEBUG_INFORMATION_FORMAT'] = "dwarf-with-dsym"
 
+        if Configuration.build_system == "Legacy"
+          build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = "NO"
+        end
+
         build_settings['SWIFT_VERSION'] = item_build_settings["SWIFT_VERSION"] || item.swift_version || project_swift_version(analyzer)
 
         item_build_settings.each do |k, v|
