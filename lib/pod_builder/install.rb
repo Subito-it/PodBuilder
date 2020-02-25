@@ -98,7 +98,7 @@ module PodBuilder
         # It is important that CocoaPods compiles the files under Configuration.build_path in order that DWARF
         # debug info reference to this path. Doing otherwise breaks the assumptions that make the `update_lldbinit`
         # command work
-        podfile_content.gsub!(podfile_item.path, destination_path)
+        podfile_content.gsub!("'#{podfile_item.path}'", "'#{destination_path}'")
         
         license_files = Dir.glob("#{destination_path}/**/*acknowledgements.plist").each { |f| File.delete(f) }
       end
