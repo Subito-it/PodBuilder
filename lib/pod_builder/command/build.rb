@@ -138,23 +138,36 @@ module PodBuilder
         return pods
       end
 
+      def self.buildable_dependencies(pod, buildable_items)
+        deps = []
+
+        pod.dependency_names.each do |dependency|
+          buildable_pods = buildable_items.select { |t| t.root_name == dependency }
+          if buildable_pods.any? { |t| t.source_files.count > 0 }
+            deps.push(dependency)
+          end
+        end
+
+        return deps
+      end
+
       def self.expected_common_dependencies(pods_to_build, buildable_items, options)
         warned_expected_pod_list = []
         expected_pod_list = []
         errors = []
 
         pods_to_build.each do |pod_to_build|
-          pod_to_build.dependency_names.each do |dependency|
+          buildable_dependencies(pod_to_build, buildable_items).each do |dependency|
             unless buildable_items.detect { |x| x.root_name == dependency || x.name == dependency } != nil
               next
             end
 
             buildable_items.each do |buildable_pod|
-              unless !pod_to_build.dependency_names.include?(buildable_pod.name)
+              unless !buildable_dependencies(pod_to_build, buildable_items).include?(buildable_pod.name)
                 next
               end
 
-              if buildable_pod.dependency_names.include?(dependency) && !buildable_pod.has_subspec(dependency) && !buildable_pod.has_common_spec(dependency) then
+              if buildable_dependencies(buildable_pod, buildable_items).include?(dependency) && !buildable_pod.has_subspec(dependency) && !buildable_pod.has_common_spec(dependency) then
                 expected_pod_list += pods_to_build.map(&:root_name) + [buildable_pod.root_name]
                 expected_pod_list.uniq!
 
@@ -165,7 +178,7 @@ module PodBuilder
                   warned_expected_pod_list.push(expected_list)
 
                   if options.has_key?(:auto_resolve_dependencies)
-                    puts "`#{pod_to_build.name}` has the following dependencies:\n`#{pod_to_build.dependency_names.join("`, `")}`\nWhich are in common with `#{buildable_pod.name}` and requires it to be recompiled\n\n".yellow
+                    puts "`#{pod_to_build.name}` has the following dependencies:\n`#{buildable_dependencies(pod_to_build, buildable_items).join("`, `")}`\nWhich are in common with `#{buildable_pod.name}` and requires it to be recompiled\n\n".yellow
                   end
                 end
               end
