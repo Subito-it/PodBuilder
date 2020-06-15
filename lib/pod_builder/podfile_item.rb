@@ -86,6 +86,27 @@ module PodBuilder
     #
     attr_accessor :source_files
 
+    # @return [String] license
+    #
+    attr_accessor :license
+
+    # @return [String] summary
+    #
+    attr_accessor :summary
+
+    # @return [Hash] source
+    #
+    attr_accessor :source
+
+    # @return [Hash] authors
+    #
+    attr_accessor :authors
+
+    # @return [String] homepage
+    #
+    attr_accessor :homepage
+
+    
     # Initialize a new instance
     #
     # @param [Specification] spec
@@ -152,6 +173,13 @@ module PodBuilder
       
       @build_configuration = spec.root.attributes_hash.dig("pod_target_xcconfig", "prebuild_configuration") || "release"
       @build_configuration.downcase!
+
+      default_license = "MIT"
+      @license = spec.root.attributes_hash.fetch("license", {"type"=>"#{default_license}"})["type"] || default_license
+      @summary = spec.root.attributes_hash.fetch("summary", "A summary for #{@name}")
+      @source = spec.root.attributes_hash.fetch("source", { "git"=>"https://github.com/Subito-it/PodBuilder.git" })
+      @authors = spec.root.attributes_hash.fetch("authors", {"PodBuilder"=>"pod@podbuilder.com"})
+      @homepage = spec.root.attributes_hash.fetch("homepage", "https://github.com/Subito-it/PodBuilder")
     end
 
     def pod_specification(all_poditems, parent_spec = nil)
