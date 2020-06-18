@@ -13,8 +13,8 @@ module PodBuilder
         gitattributes_excludes = ["*.h", "*.hh", "*.m", "*.mm", "*.i", "*.c", "*.cc", "*.cxx", "*.cpp", "*.def", "*.inc", "*.inl", "*.swift", "*.modulemap", "*.strings", "*.png", "*.jpg", "*.gif", "*.html", "*.htm", "*.js", "*.json", "*.xml", "*.txt", "*.md", "*.rb", "*.sh", "*.py", "*.plist", "*.resolved", ".*", "README*", "LICENSE*"]
 
         gitattributes_includes_frameworks = ["**/* filter=lfs diff=lfs merge=lfs !text"]
-        write_attributes(PodBuilder::basepath("Rome"), gitattributes_includes_frameworks, gitattributes_excludes)
-        write_attributes(PodBuilder::basepath("dSYM"), gitattributes_includes_frameworks, gitattributes_excludes)
+        write_attributes(PodBuilder::prebuiltpath, gitattributes_includes_frameworks, gitattributes_excludes)
+        write_attributes(PodBuilder::dsympath, gitattributes_includes_frameworks, gitattributes_excludes)
 
         if Configuration.lfs_include_pods_folder
           gitattributes_includes_pods = ["**/*.framework/**/* filter=lfs diff=lfs merge=lfs !text"]

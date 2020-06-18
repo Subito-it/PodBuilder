@@ -12,7 +12,7 @@ module PodBuilder
         framework_items = Analyze.podfile_items(installer, analyzer).select { |x| !x.is_prebuilt }
         podspec_names = framework_items.map(&:podspec_name)
 
-        base_path = PodBuilder::basepath("Rome")
+        base_path = PodBuilder::prebuiltpath
         framework_files = Dir.glob("#{base_path}/**/*.framework")
         
         framework_files.each do |path|

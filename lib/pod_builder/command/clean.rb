@@ -15,19 +15,19 @@ module PodBuilder
         podspec_names = all_buildable_items.map(&:podspec_name)
         rel_paths = all_buildable_items.map(&:prebuilt_rel_path)
 
-        base_path = PodBuilder::basepath("Rome")
+        base_path = PodBuilder::prebuiltpath
         framework_files = Dir.glob("#{base_path}/**/*.framework")
         puts "Looking for unused frameworks".yellow
         clean(framework_files, base_path, rel_paths)
 
         rel_paths.map! { |x| "#{x}.dSYM"}
 
-        base_path = PodBuilder::basepath("dSYM/iphoneos")
+        base_path = PodBuilder::dsympath("iphoneos")
         dSYM_files_iphone = Dir.glob("#{base_path}/**/*.dSYM")
         puts "Looking for iPhoneOS unused dSYMs".yellow    
         clean(dSYM_files_iphone, base_path, rel_paths)
 
-        base_path = PodBuilder::basepath("dSYM/iphonesimulator")
+        base_path = PodBuilder::dsympath("iphonesimulator")
         dSYM_files_sim = Dir.glob("#{base_path}/**/*.dSYM")
         puts "Looking for iPhone Simulator unused dSYMs".yellow
         clean(dSYM_files_sim, base_path, rel_paths)

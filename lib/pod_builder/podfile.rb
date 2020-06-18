@@ -146,6 +146,11 @@ module PodBuilder
     def self.write_prebuilt(all_buildable_items, analyzer)  
       puts "Updating Application Podfile".yellow
 
+      explicit_deps = []
+      analyzer.podfile.root_target_definitions[0].children.each do |children|
+        explicit_deps += children.dependencies.map(&:name)
+      end
+      explicit_deps.uniq!
       podbuilder_podfile_path = PodBuilder::basepath("Podfile")
       rel_path = Pathname.new(podbuilder_podfile_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
         
@@ -162,7 +167,7 @@ module PodBuilder
 
         if pod_name = pod_definition_in(line, true)
           if podfile_item = all_buildable_items.detect { |x| x.name == pod_name }
-            if Podspec.include?(podfile_item.name)
+            if Podspec.include?(podfile_item.root_name)
               if podfile_item.vendored_framework_path.nil?
                 marker = podfile_item.prebuilt_marker()
 
@@ -174,6 +179,18 @@ module PodBuilder
                 end
               else 
                 prebuilt_lines.push("#{line.detect_indentation}#{podfile_item.prebuilt_entry}\n")
+
+                marker = podfile_item.prebuilt_marker()
+                non_explicit_dependencies = podfile_item.external_dependency_names - explicit_deps
+                non_explicit_dependencies.each do |dep|
+                  dep_item = all_buildable_items.detect { |x| x.name == dep }
+
+                  if Podspec.include?(dep_item.root_name)
+                    prebuilt_lines.push("#{line.detect_indentation}#{dep_item.prebuilt_entry(include_pb_entry = false)}#{marker}\n")
+                  end
+
+                  explicit_deps.push(dep)
+                end
               end
 
               next

@@ -36,7 +36,50 @@ module PodBuilder
   end
   
   def self.basepath(child = "")
+    if child.nil?
+      return nil
+    end
+
     return "#{Configuration.base_path}/#{child}".gsub("//", "/").gsub(/\/$/, '')
+  end
+
+  def self.prebuiltpath(child = "")
+    if child.nil?
+      return nil
+    end
+
+    path = basepath("Rome")
+    if child.length > 0
+      path += "/#{child}"
+    end
+
+    return path
+  end
+
+  def self.buildpath_prebuiltpath(child = "")
+    if child.nil?
+      return nil
+    end
+
+    path = "#{Configuration.build_path}/Rome"
+    if child.length > 0
+      path += "/#{child}"
+    end
+
+    return path
+  end
+
+  def self.dsympath(child = "")
+    if child.nil?
+      return nil
+    end
+
+    path = basepath("dSYM")
+    if child.length > 0
+      path += "/#{child}"
+    end
+
+    return path
   end
   
   def self.project_path(child = "")

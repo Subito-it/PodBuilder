@@ -49,6 +49,10 @@ module PodBuilder
     # @return [Array<String>] The pod's dependency names, if any. Use dependencies() to get the [Array<PodfileItem>]
     #
     attr_reader :dependency_names
+
+    # @return [Array<String>] The pod's external dependency names (excluding subspecs), if any
+    #
+    attr_reader :external_dependency_names
     
     # @return [Bool] True if the pod is shipped as a static framework
     #
@@ -66,9 +70,13 @@ module PodBuilder
     #
     attr_accessor :build_configuration
 
-    # @return [String] The pod's vendored items (frameworks and libraries)
+    # @return [String] The pod's vendored frameworks
     #
-    attr_accessor :vendored_items
+    attr_accessor :vendored_frameworks
+
+    # @return [String] The pod's vendored libraries
+    #
+    attr_accessor :vendored_libraries
 
     # @return [String] Framweworks the pod needs to link to
     #
@@ -141,22 +149,22 @@ module PodBuilder
         @commit = spec.root.source[:commit]
         @is_external = false
       end    
-
-      @vendored_items = recursive_vendored_items(spec, all_specs)
+      
+      @vendored_frameworks = extract_vendored_frameworks(spec, all_specs)
+      @vendored_libraries = extract_vendored_libraries(spec, all_specs)
 
       @frameworks = []
       @weak_frameworks = []
       @libraries = []
-      spec_and_dependencies(spec, all_specs).each do |spec|
-        @frameworks += extract_array(spec, "framework")
-        @frameworks += extract_array(spec, "frameworks")
-        
-        @weak_frameworks += extract_array(spec, "weak_framework")
-        @weak_frameworks += extract_array(spec, "weak_frameworks")  
 
-        @libraries += extract_array(spec, "library")
-        @libraries += extract_array(spec, "libraries")  
-      end
+      @frameworks += extract_array(spec, "framework")
+      @frameworks += extract_array(spec, "frameworks")
+      
+      @weak_frameworks += extract_array(spec, "weak_framework")
+      @weak_frameworks += extract_array(spec, "weak_frameworks")  
+
+      @libraries += extract_array(spec, "library")
+      @libraries += extract_array(spec, "libraries")  
 
       @version = spec.root.version.version
       @available_versions = spec.respond_to?(:spec_source) ? spec.spec_source.versions(@root_name)&.map(&:to_s) : [@version]
@@ -165,6 +173,7 @@ module PodBuilder
       @module_name = spec.root.module_name
 
       @dependency_names = spec.recursive_dep_names(all_specs)
+      @external_dependency_names = @dependency_names.select { |t| !t.start_with?(root_name)  }
 
       @is_static = spec.root.attributes_hash["static_framework"] || false
       @xcconfig = spec.root.attributes_hash["xcconfig"] || {}
@@ -246,14 +255,17 @@ module PodBuilder
 
       # Podspecs aren't always properly written (source_file key is often used instead of header_files)
       # Therefore it can become tricky to understand which pods are already precompiled by boxing a .framework or .a
-      vendored_items_paths = vendored_items.map { |x| File.basename(x) }
-      embedded_as_vendored = vendored_items_paths.include?("#{@module_name}.framework")
-      embedded_as_static_lib = vendored_items_paths.any? { |x| x.match(/#{module_name}.*\\.a/) != nil }
+      embedded_as_vendored = vendored_frameworks.map { |x| File.basename(x) }.include?("#{module_name}.framework")
+      embedded_as_static_lib = vendored_libraries.map { |x| File.basename(x) }.include?("lib#{module_name}.a")
       
       only_headers = (source_files.count > 0 && @source_files.all? { |x| x.end_with?(".h") })
-      no_sources = (@source_files.count == 0 || only_headers) && @vendored_items.count > 0
+      no_sources = (@source_files.count == 0 || only_headers) && (@vendored_frameworks + @vendored_libraries).count > 0
 
-      return embedded_as_static_lib || embedded_as_vendored || only_headers || no_sources
+      if !no_sources && !only_headers
+        return false
+      else
+        return embedded_as_static_lib || embedded_as_vendored
+      end
     end
 
     # @return [Bool] True if it's a subspec
@@ -299,7 +311,7 @@ module PodBuilder
       end
 
       if include_pb_entry && !is_prebuilt
-        plists = Dir.glob(PodBuilder::basepath("Rome/**/#{module_name}.framework/#{Configuration::framework_plist_filename}"))
+        plists = Dir.glob(PodBuilder::prebuiltpath("**/#{module_name}.framework/#{Configuration::framework_plist_filename}"))
         if plists.count > 0
           plist = CFPropertyList::List.new(:file => plists.first)
           data = CFPropertyList.native_types(plist.value)
@@ -332,13 +344,12 @@ module PodBuilder
 
     def prebuilt_entry(include_pb_entry = true)
       relative_path = Pathname.new(Configuration.base_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
+      relative_path += "/Rome"
 
       if Configuration.subspecs_to_split.include?(name)
-        entry = "pod 'PodBuilder/#{podspec_name}', :path => '#{relative_path}'"
-      elsif override_name = Configuration.spec_overrides.dig(name, "module_name")
-        entry = "pod 'PodBuilder/#{override_name}', :path => '#{relative_path}'"
+        entry = "pod '#{podspec_name}', :path => '#{relative_path}'"
       else
-        entry = "pod 'PodBuilder/#{root_name}', :path => '#{relative_path}'"
+        entry = "pod '#{name}', :path => '#{relative_path}'"
       end
 
       if include_pb_entry && !is_prebuilt
@@ -365,45 +376,48 @@ module PodBuilder
     end
 
     def vendored_framework_path
-      if File.exist?(PodBuilder::basepath(vendored_subspec_framework_path))
-        return vendored_subspec_framework_path
-      elsif File.exist?(PodBuilder::basepath(vendored_spec_framework_path))
-        return vendored_spec_framework_path
+      if File.exist?(PodBuilder::prebuiltpath(vendored_subspec_framework_name))
+        return vendored_subspec_framework_name
+      elsif File.exist?(PodBuilder::prebuiltpath(vendored_spec_framework_name))
+        return vendored_spec_framework_name
       end
       
       return nil
     end
     
-    def vendored_subspec_framework_path
-      return "Rome/#{prebuilt_rel_path}"
+    def vendored_subspec_framework_name
+      return "#{prebuilt_rel_path}"
     end
     
-    def vendored_spec_framework_path
-      return "Rome/#{module_name}.framework"
-    end
-
-    def self.vendored_name_framework_path(name)
-      return "Rome/#{name}"
+    def vendored_spec_framework_name
+      return "#{module_name}.framework"
     end
 
     private
 
-    def recursive_vendored_items(spec, all_specs)
+    def extract_vendored_frameworks(spec, all_specs)
+      items = []
+
+      supported_platforms = spec.available_platforms.flatten.map(&:name).map(&:to_s)
+      items += [spec.attributes_hash["vendored_frameworks"]]
+      items += [spec.attributes_hash["vendored_framework"]]
+
+      items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_frameworks"] }
+      items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_framework"] }
+
+      return items.flatten.uniq.compact
+    end
+
+    def extract_vendored_libraries(spec, all_specs)
       items = []
 
       supported_platforms = spec.available_platforms.flatten.map(&:name).map(&:to_s)
 
-      spec_and_dependencies(spec, all_specs).each do |spec|
-        items += [spec.attributes_hash["vendored_frameworks"]]
-        items += [spec.attributes_hash["vendored_framework"]]
-        items += [spec.attributes_hash["vendored_libraries"]]
-        items += [spec.attributes_hash["vendored_library"]]  
+      items += [spec.attributes_hash["vendored_libraries"]]
+      items += [spec.attributes_hash["vendored_library"]]  
 
-        items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_frameworks"] }
-        items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_framework"] }
-        items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_libraries"] }
-        items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_library"] }  
-      end
+      items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_libraries"] }
+      items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_library"] }  
 
       return items.flatten.uniq.compact
     end
@@ -456,19 +470,6 @@ module PodBuilder
       end
 
       return source_files + root_source_files + subspec_source_files
-    end
-
-    def spec_and_dependencies(spec, all_specs)
-      specs = all_specs.select { |x| spec.dependencies.map(&:name).include?(x.name) }
-      specs += all_specs.select { |x| spec.default_subspecs.any? { |y| x.name == "#{spec.name}/#{y}" } }
-      specs += [spec, spec.root].flatten.uniq
-
-      all_remaining_specs = all_specs.reject { |x| specs.map(&:name).include?(x.name) } 
-      if all_remaining_specs.count < all_specs.count
-        specs += specs.reject { |x| x == spec }.map { |x| spec_and_dependencies(x, all_remaining_specs) }
-      end
-      
-      return specs.flatten.compact.uniq
     end
   end
 end

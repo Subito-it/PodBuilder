@@ -160,12 +160,12 @@ module PodBuilder
 
     def self.add_framework_plist_info(podfile_items)
       swift_version = PodBuilder::system_swift_version
-      Dir.glob("#{Configuration.build_path}/Rome/*.framework") do |framework_path|
+      Dir.glob(PodBuilder::buildpath_prebuiltpath("*.framework")) do |framework_path|
         filename_ext = File.basename(framework_path)
         filename = File.basename(framework_path, ".*")
 
         specs = podfile_items.select { |x| x.module_name == filename }
-        specs += podfile_items.select { |x| x.vendored_items.map { |x| File.basename(x) }.include?(filename_ext) }
+        specs += podfile_items.select { |x| x.vendored_frameworks.map { |x| File.basename(x) }.include?(filename_ext) }
         if podfile_item = specs.first
           podbuilder_file = File.join(framework_path, Configuration.framework_plist_filename)
           entry = podfile_item.entry(true, false)
@@ -192,28 +192,28 @@ module PodBuilder
     end
 
     def self.cleanup_frameworks(podfile_items)
-      Dir.glob("#{Configuration.build_path}/Rome/*.framework") do |framework_path|
+      Dir.glob(PodBuilder::buildpath_prebuiltpath("*.framework")) do |framework_path|
         framework_rel_path = rel_path(framework_path, podfile_items)
         dsym_path = framework_rel_path + ".dSYM"
 
-        PodBuilder::safe_rm_rf(PodBuilder::basepath("Rome/#{framework_rel_path}"))
-        PodBuilder::safe_rm_rf(PodBuilder::basepath("dSYM/iphoneos/#{dsym_path}"))
-        PodBuilder::safe_rm_rf(PodBuilder::basepath("dSYM/iphonesimulator/#{dsym_path}"))
+        PodBuilder::safe_rm_rf(PodBuilder::prebuiltpath(framework_rel_path))
+        PodBuilder::safe_rm_rf(PodBuilder::dsympath("iphoneos/#{dsym_path}"))
+        PodBuilder::safe_rm_rf(PodBuilder::dsympath("iphonesimulator/#{dsym_path}"))
       end
     end
 
     def self.copy_frameworks(podfile_items)
-      Dir.glob("#{Configuration.build_path}/Rome/*.framework") do |framework_path|
+      Dir.glob(PodBuilder::buildpath_prebuiltpath("*.framework")) do |framework_path|
         framework_rel_path = rel_path(framework_path, podfile_items)
 
-        destination_path = PodBuilder::basepath("Rome/#{framework_rel_path}")
+        destination_path = PodBuilder::prebuiltpath(framework_rel_path)
         FileUtils.mkdir_p(File.dirname(destination_path))
         FileUtils.cp_r(framework_path, destination_path)
       end
     end
 
     def self.copy_libraries(podfile_items)
-      Dir.glob("#{Configuration.build_path}/Rome/*.a") do |library_path|
+      Dir.glob(PodBuilder::buildpath_prebuiltpath("*.a")) do |library_path|
         library_name = File.basename(library_path)
 
         # Find vendored libraries in the build folder:
@@ -226,11 +226,7 @@ module PodBuilder
             next
           end
           
-          podfile_item.vendored_items.each do |vendored_item|
-            unless vendored_item.end_with?(".a")
-              next
-            end
-            
+          podfile_item.vendored_libraries.each do |vendored_item|
             if result = Dir.glob("#{search_base}**/#{vendored_item}").first
               result_path = result.gsub(search_base, "")
               module_name = result_path.split("/").first
@@ -239,7 +235,7 @@ module PodBuilder
                                 
                 result_path = result_path.split("/").drop(1).join("/")
 
-                destination_path = PodBuilder::basepath("Rome/#{library_rel_path}/#{result_path}")
+                destination_path = PodBuilder::prebuiltpath("#{library_rel_path}/#{result_path}")
                 FileUtils.mkdir_p(File.dirname(destination_path))
                 FileUtils.cp_r(library_path, destination_path, :remove_destination => true)
               end
@@ -247,7 +243,7 @@ module PodBuilder
           end
 
           # A pod might depend upon a static library that is shipped with a prebuilt framework
-          # which is not added to the Rome folder and the PodBuilder.podspec
+          # which is not added to the Rome folder and podspecs
           # 
           # An example is Google-Mobile-Ads-SDK which adds
           # - vendored framework: GooleMobileAds.framework 
@@ -261,7 +257,7 @@ module PodBuilder
                                 
               result_path = result_path.split("/").drop(1).join("/")
 
-              destination_path = PodBuilder::basepath("Rome/#{library_rel_path}/#{result_path}")
+              destination_path = PodBuilder::prebuiltpath("#{library_rel_path}/#{result_path}")
               FileUtils.mkdir_p(File.dirname(destination_path))
               FileUtils.cp_r(library_path, destination_path)        
             end
@@ -274,7 +270,7 @@ module PodBuilder
       Dir.glob("#{Configuration.build_path}/dSYM/*iphoneos/**/*.dSYM") do |dsym_path|
         framework_rel_path = rel_path(dsym_path.gsub(File.extname(dsym_path), ""), podfile_items)
         
-        destination_path = PodBuilder::basepath("dSYM/iphoneos/#{File.dirname(framework_rel_path)}") 
+        destination_path = PodBuilder::dsympath("iphoneos/#{File.dirname(framework_rel_path)}") 
         FileUtils.mkdir_p(destination_path)
         FileUtils.cp_r(dsym_path, destination_path)
       end
@@ -282,7 +278,7 @@ module PodBuilder
       Dir.glob("#{Configuration.build_path}/dSYM/*iphonesimulator/**/*.dSYM") do |dsym_path|
         framework_rel_path = rel_path(dsym_path.gsub(File.extname(dsym_path), ""), podfile_items)
 
-        destination_path = PodBuilder::basepath("dSYM/iphonesimulator/#{File.dirname(framework_rel_path)}") 
+        destination_path = PodBuilder::dsympath("iphonesimulator/#{File.dirname(framework_rel_path)}") 
         FileUtils.mkdir_p(destination_path)
         FileUtils.cp_r(dsym_path, destination_path)
       end

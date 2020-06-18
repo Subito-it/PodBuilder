@@ -1,38 +1,5 @@
 module PodBuilder
   class Podspec
-    class PodspecItem
-      attr_accessor :name
-      attr_accessor :module_name
-      attr_accessor :vendored_frameworks
-      attr_accessor :vendored_items
-      attr_accessor :frameworks
-      attr_accessor :weak_frameworks
-      attr_accessor :libraries
-      attr_accessor :resources
-      attr_accessor :exclude_files
-      attr_accessor :xcconfig
-      attr_accessor :dependencies
-      
-      def initialize
-        @name = ""
-        @module_name = ""
-        @vendored_frameworks = []
-        @vendored_items = []
-        @frameworks = []
-        @weak_frameworks = []
-        @libraries = []
-        @resources = []
-        @exclude_files = []
-        @xcconfig = {}
-        @dependencies = []
-      end
-      
-      def to_s
-        @name
-      end
-    end
-    private_constant :PodspecItem
-    
     def self.generate(all_buildable_items, analyzer)  
       unless all_buildable_items.count > 0
         return
@@ -40,142 +7,145 @@ module PodBuilder
       
       puts "Generating PodBuilder's local podspec".yellow
                   
-      podspec_items = podspec_items_from(all_buildable_items)
-
       platform = analyzer.instance_variable_get("@result").targets.first.platform
-      generate_podspec_from(podspec_items, platform)
+      generate_podspec_from(all_buildable_items, platform)
     end
 
     def self.include?(pod_name)
-      podspec_path = PodBuilder::basepath("PodBuilder.podspec")
-      unless File.exist?(podspec_path)
-        return false
-      end
-
-      if Configuration.subspecs_to_split.include?(pod_name)
-        pod_name = pod_name.gsub("/", "_")
-      else
-        pod_name = pod_name.split("/").first
-      end
-
-      podspec_content = File.read(podspec_path)
-
-      # (_.*) will include prebuild podnames like s.subspec 'Podname_Subspec' do |p|
-      subspec_regex = "s.subspec '#{pod_name}(_.*)?' do |p|" 
-      return (podspec_content.match(/#{subspec_regex}/) != nil)
+      return File.exists?(PodBuilder::prebuiltpath("#{pod_name}.podspec"))
     end
     
     private
 
-    def self.generate_podspec_from(podspec_items, platform)
-      podspecs = []
-      podspec_items.each do |item|
-        vendored_frameworks = item.vendored_frameworks.map { |x| x.vendored_framework_path }.compact
-        vendored_frameworks += item.vendored_items.map { |x| File.basename(x) }.select { |x| File.exist?(PodBuilder::basepath(PodfileItem::vendored_name_framework_path(x))) }.map { |x| "Rome/#{x}" }
-        vendored_frameworks.uniq!
-        vendored_libraries = Dir.glob(PodBuilder::basepath("Rome/#{item.module_name}/**/*.a")).map { |x| x.to_s.gsub(PodBuilder::basepath, "")[1..-1] }
+    def self.generate_subspec_from(item, name, all_buildable_items, additional_deps, additional_vendored_frameworks, exclude_vendored_frameworks)
+      vendored_frameworks = item.vendored_frameworks + additional_vendored_frameworks - exclude_vendored_frameworks
+      existing_vendored_frameworks = vendored_frameworks.select { |t| File.exist?(PodBuilder::prebuiltpath(t) || "") }
+      existing_vendored_frameworks_basename = vendored_frameworks.map { |t| File.basename(t) }.select { |t| File.exist?(PodBuilder::prebuiltpath(t) || "") }
+      vendored_frameworks = (existing_vendored_frameworks + existing_vendored_frameworks_basename).uniq
 
-        non_prebuilt_dependencies = item.dependencies.select { |x| x.vendored_framework_path.nil? }
-        
-        podspec = "  s.subspec '#{item.name.gsub("/", "_")}' do |p|\n"
+      vendored_libraries = item.vendored_libraries
+      existing_vendored_libraries = vendored_libraries.map { |t| "#{item.module_name}/#{t}" }.select { |t| File.exist?(PodBuilder::prebuiltpath(t) || "") }
+      existing_vendored_libraries_basename = vendored_libraries.map { |t| File.basename("#{item.module_name}/#{t}") }.select { |t| File.exist?(PodBuilder::prebuiltpath(t) || "") }
+      vendored_libraries = (existing_vendored_libraries + existing_vendored_libraries_basename).uniq
 
-        if vendored_frameworks.count > 0
-          podspec += "    p.vendored_frameworks = '#{vendored_frameworks.join("','")}'\n"
-        end
-        if vendored_libraries.count > 0
-          podspec += "    p.vendored_libraries = '#{vendored_libraries.join("','")}'\n"
-        end
-        if item.frameworks.count > 0
-          podspec += "    p.frameworks = '#{item.frameworks.join("', '")}'\n"
-        end
-        if item.libraries.count > 0
-          podspec += "    p.libraries = '#{item.libraries.join("', '")}'\n"
-        end
-        if item.resources.count > 0
-          podspec += "    p.resources = '#{item.resources.join("', '")}'\n"
-        end
-        if item.resources.count > 0
-          podspec += "    p.exclude_files = '#{item.exclude_files.join("', '")}'\n"
-        end
-        if item.xcconfig.keys.count > 0
-          podspec += "    p.xcconfig = #{item.xcconfig.to_s}\n"
-        end
-        non_prebuilt_dependencies.each do |non_prebuilt_dependency|
-          podspec += "    p.dependency '#{non_prebuilt_dependency.name}'\n"
-        end
+      # .a are static libraries and should not be included again in the podspec to prevent duplicated symbols (in the app and in the prebuilt framework)
+      vendored_libraries.select! { |t| !t.end_with?(".a") }
 
-        podspec += "  end"
-        
-        podspecs.push(podspec)
+      frameworks = all_buildable_items.select { |t| vendored_frameworks.include?("#{t.module_name}.framework") }.uniq
+      static_frameworks = frameworks.select { |x| x.is_static }
+
+      resources = static_frameworks.map { |x| x.vendored_framework_path.nil? ? nil : "#{x.vendored_framework_path}/*.{nib,bundle,xcasset,strings,png,jpg,tif,tiff,otf,ttf,ttc,plist,json,caf,wav,p12,momd}" }.compact.flatten.uniq
+      exclude_files = static_frameworks.map { |x| x.vendored_framework_path.nil? ? nil : "#{x.vendored_framework_path}/Info.plist" }.compact.flatten.uniq
+      exclude_files += frameworks.map { |x| x.vendored_framework_path.nil? ? nil : "#{x.vendored_framework_path}/#{Configuration.framework_plist_filename}" }.compact.flatten.uniq.sort
+      
+      podspec = "    p.subspec '#{name}' do |s|\n"
+      if vendored_frameworks.count > 0
+        podspec += "        s.vendored_frameworks = '#{vendored_frameworks.uniq.sort.join("','")}'\n"
       end
-      
-      cwd = File.dirname(File.expand_path(__FILE__))
-      podspec_file = File.read("#{cwd}/templates/build_podspec.template")
-      podspec_file.gsub!("%%%podspecs%%%", podspecs.join("\n\n"))
-            
-      podspec_file.sub!("%%%platform_name%%%", platform.name.to_s)
-      podspec_file.sub!("%%%deployment_version%%%", platform.deployment_target.version)
-      
-      File.write(PodBuilder::basepath("PodBuilder.podspec"), podspec_file)
+      if vendored_libraries.count > 0
+        podspec += "        s.vendored_libraries = '#{vendored_libraries.uniq.sort.join("','")}'\n"
+      end
+      if item.frameworks.count > 0
+        podspec += "        s.frameworks = '#{item.frameworks.uniq.sort.join("', '")}'\n"
+      end
+      if item.libraries.count > 0
+        podspec += "        s.libraries = '#{item.libraries.uniq.sort.join("', '")}'\n"
+      end
+      if resources.count > 0
+        podspec += "        s.resources = '#{resources.uniq.sort.join("', '")}'\n"
+      end
+      if exclude_files.count > 0
+        podspec += "        s.exclude_files = '#{exclude_files.uniq.sort.join("', '")}'\n"
+      end
+      if item.xcconfig.keys.count > 0
+        xcconfig = Hash.new
+        item.xcconfig.each do |k, v|
+          unless v != "$(inherited)"
+            xcconfig[k] = item.xcconfig[k]
+            next
+          end
+          unless k == "OTHER_LDFLAGS"
+            next # For the time being limit to OTHER_LDFLAGS key
+          end
+
+          if podspec_values = item.xcconfig[k]
+            podspec_values_arr = podspec_values.split(" ")
+            podspec_values_arr.push(v)
+            v = podspec_values_arr.join(" ")          
+          end
+          
+          xcconfig[k] = item.xcconfig[k]
+        end
+
+        if xcconfig.keys.count > 0 
+          podspec += "        s.xcconfig = #{xcconfig.to_s}\n"
+        end
+      end
+
+      deps = (additional_deps + item.dependency_names.select { |t| !t.start_with?("#{item.root_name}/") }).uniq.sort
+      if deps.count > 0
+        if podspec.count("\n") > 1
+          podspec += "\n"
+        end
+        deps.each do |dependency|
+          podspec += "        s.dependency '#{dependency}'\n"
+        end
+      end
+      podspec += "    end\n"
     end
 
-    def self.podspec_items_from(buildable_items)
-      podspec_items = []
+    def self.generate_podspec_from(all_buildable_items, platform)
+      specs = Dir.glob(PodBuilder::prebuiltpath("*.podspec"))
+      specs.each do |s| 
+        FileUtils.rm(s)
+      end
 
-      buildable_items.each do |pod|
-        spec_exists = File.exist?(PodBuilder::basepath(pod.vendored_spec_framework_path))
-        subspec_exists = File.exist?(PodBuilder::basepath(pod.vendored_subspec_framework_path))
-        
-        unless spec_exists || subspec_exists
-          puts "Skipping `#{pod.name}`, not prebuilt".blue
-          next
-        end
-        
-        pod_name = Configuration.subspecs_to_split.include?(pod.name) ? pod.name : pod.root_name
-        unless podspec_item = podspec_items.detect { |x| x.name == pod_name }
-          podspec_item = PodspecItem.new
-          podspec_items.push(podspec_item)
-          podspec_item.name = pod_name
-          podspec_item.module_name = pod.module_name
-          podspec_item.vendored_items = pod.vendored_items
-        end
-        
-        podspec_item.vendored_frameworks += [pod] + pod.dependencies(buildable_items)
-        
-        podspec_item.frameworks = podspec_item.vendored_frameworks.map { |x| x.frameworks }.flatten.uniq.sort
-        podspec_item.weak_frameworks = podspec_item.vendored_frameworks.map { |x| x.weak_frameworks }.flatten.uniq.sort
-        podspec_item.libraries = podspec_item.vendored_frameworks.map { |x| x.libraries }.flatten.uniq.sort
-        
-        static_vendored_frameworks = podspec_item.vendored_frameworks.select { |x| x.is_static }
-
-        podspec_item.resources = static_vendored_frameworks.map { |x| x.vendored_framework_path.nil? ? nil : "#{x.vendored_framework_path}/*.{nib,bundle,xcasset,strings,png,jpg,tif,tiff,otf,ttf,ttc,plist,json,caf,wav,p12,momd}" }.compact.flatten.uniq
-        podspec_item.exclude_files = static_vendored_frameworks.map { |x| x.vendored_framework_path.nil? ? nil : "#{x.vendored_framework_path}/Info.plist" }.compact.flatten.uniq
-        podspec_item.exclude_files += podspec_item.vendored_frameworks.map { |x| x.vendored_framework_path.nil? ? nil : "#{x.vendored_framework_path}/#{Configuration.framework_plist_filename}" }.compact.flatten.uniq.sort
-
-        # Merge xcconfigs
-        if !pod.xcconfig.empty?
-          pod.xcconfig.each do |k, v|
-            unless v != "$(inherited)"
-              next
-            end
-            unless k == "OTHER_LDFLAGS"
-              next # For the time being limit to OTHER_LDFLAGS key
-            end
-
-            if podspec_values = podspec_item.xcconfig[k]
-              podspec_values_arr = podspec_values.split(" ")
-              podspec_values_arr.push(v)
-              v = podspec_values_arr.join(" ")          
-            end
-            
-            podspec_item.xcconfig[k] = v
+      all_buildable_items.each do |item|  
+        if item.name != item.root_name
+          if all_buildable_items.map(&:name).include?(item.root_name)
+            next # will process root spec, skip subspecs
           end
         end
 
-        podspec_item.dependencies = buildable_items.select { |x| pod.dependency_names.include?(x.name) }
-      end
+        podspec = "Pod::Spec.new do |p|\n"
 
-      return podspec_items
+        podspec += "    p.name             = '#{item.root_name}'\n"
+        podspec += "    p.version          = '#{item.version}'\n"
+        podspec += "    p.summary          = '#{item.summary.gsub("'", "\\'")}'\n"
+        podspec += "    p.homepage         = '#{item.homepage}'\n"
+        podspec += "    p.author           = 'PodBuilder'\n"
+        podspec += "    p.source           = { 'git' => '#{item.source['git']}'}\n"
+        podspec += "    p.license          = { :type => '#{item.license}' }\n"
+
+        podspec += "\n"
+        podspec += "    p.default_subspecs = ['PodBuilder']\n"
+
+        default_podspec = generate_subspec_from(item, 'PodBuilder', all_buildable_items, [], ["#{item.module_name}.framework"], [])
+        if default_podspec.count("\n") < 3
+          next
+        end
+
+        podspec += default_podspec
+
+        subspec_names = item.dependency_names.select { |t| t.start_with?("#{item.root_name}/") }
+        subspec_names += all_buildable_items.map(&:name).select { |t| t.start_with?("#{item.root_name}/") }
+        subspec_names.uniq!
+        subspec_names.sort!
+  
+        subspec_names.each do |subspec|
+          name = subspec.split("/").last
+
+          if subspec_item = all_buildable_items.detect { |t| t.name == subspec }
+            podspec += "\n"
+            podspec += generate_subspec_from(subspec_item, name, all_buildable_items, ["#{item.root_name}/PodBuilder"], [], item.vendored_frameworks + ["#{item.module_name}.framework"]) 
+          end
+        end
+
+        podspec += "end"
+
+        spec_path = PodBuilder::prebuiltpath("#{item.root_name}.podspec")
+        File.write(spec_path, podspec)
+      end
     end
   end
 end

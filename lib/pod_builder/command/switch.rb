@@ -20,83 +20,95 @@ module PodBuilder
         
         check_not_building_subspec(pod_name_to_switch)
 
-        installer, analyzer = Analyze.installer_at(PodBuilder::basepath, false)
-        all_buildable_items = Analyze.podfile_items(installer, analyzer)
+        development_path = ""
+        default_entries = Hash.new
 
-        raise "\n\nPod `#{pod_name_to_switch}` wasn't found in Podfile" unless all_buildable_items.map(&:root_name).include?(pod_name_to_switch)
-        
-        unless options.has_key?(:switch_mode)
-          podfile_item = all_buildable_items.detect { |x| x.root_name == pod_name_to_switch }
-          options[:switch_mode] = request_switch_mode(pod_name_to_switch, podfile_item)
-
-          if options[:switch_mode].nil?
-            return 0
+        case options[:switch_mode]
+        when "development"
+          development_path = find_podspec(pod_name_to_switch)          
+        when "prebuilt"
+          podfile_path = PodBuilder::basepath("Podfile.restore")
+          content = File.read(podfile_path)
+          if !content.include?("pod '#{pod_name_to_switch}")
+            raise "\n\n'#{pod_name_to_switch}' does not seem to be prebuit!"
           end
-        end
-
-        if options[:switch_mode] == "prebuilt"
-          check_prebuilded(pod_name_to_switch)
+        when "default"
+          podfile_path = PodBuilder::basepath("Podfile")
+          content = File.read(podfile_path)
+            
+          current_section = ""
+          content.each_line do |line|
+            stripped_line = line.strip
+            if stripped_line.start_with?("def ") || stripped_line.start_with?("target ")
+              current_section = line.split(" ")[1]
+              next
+            end
+  
+            matches = line.gsub("\"", "'").match(/pod '(.*?)',(.*)/)
+            if matches&.size == 3
+              if matches[1].split("/").first == pod_name_to_switch
+                default_entries[current_section] = line
+              end  
+            end
+          end
+  
+          raise "\n\n'#{pod_name_to_switch}' not found in #{podfile_path}" if default_entries.keys.count == 0
         end
 
         podfile_path = PodBuilder::project_path("Podfile")
-        podfile_content = File.read(podfile_path)
-
-        pod_lines = []
-        podfile_content.each_line do |line|
-          if pod_name = Podfile.pod_definition_in(line, false)
-            if pod_name.start_with?("PodBuilder/")
-              pod_name = pod_name.split("PodBuilder/").last.gsub("_", "/")
-            end
-
-            unless pod_name.split("/").first == pod_name_to_switch
-              pod_lines.push(line)
-              next
-            end
-
-            if pod_name.include?("/")
-              podfile_items = all_buildable_items.select { |x| x.name == pod_name }
-            else
-              podfile_items = all_buildable_items.select { |x| x.root_name == pod_name }
-            end
-
-            unless podfile_items.count > 0
-              raise "\n\nPod `#{pod_name_to_switch}` wasn't found in Podfile\n".red
-            end
-
-            matches = line.match(/(#\s*pb<)(.*?)(>)/)
-            if matches&.size == 4
-              default_pod_name = matches[2]
-            else
-              puts "⚠️ Did not found pb<> entry, assigning default pod name #{pod_name}"
-              default_pod_name = pod_name
-            end
-
-            unless podfile_item = all_buildable_items.detect { |x| x.name == default_pod_name }
-              raise "\n\nPod `#{default_pod_name}` wasn't found in Podfile\n".red
-            end
-            podfile_item = podfile_item.dup
-
-            indentation = line.detect_indentation
-
-            case options[:switch_mode]
-            when "prebuilt"
-              line = indentation + podfile_item.prebuilt_entry + "\n"
-            when "development"
-              podfile_item.path = find_podspec(podfile_item)
-              podfile_item.is_external = true
-
-              line = indentation + podfile_item.entry + "\n"
-            when "default"
-              line = indentation + podfile_item.entry + "\n"
-            else
-              break
-            end
+        content = File.read(podfile_path)
+        
+        lines = []
+        current_section = ""
+        content.each_line do |line|
+          stripped_line = line.strip
+          if stripped_line.start_with?("def ") || stripped_line.start_with?("target ")
+            current_section = line.split(" ")[1]
           end
 
-          pod_lines.push(line)
+          matches = line.gsub("\"", "'").match(/pod '(.*?)',(.*)/)
+          if matches&.size == 3
+            if matches[1].split("/").first == pod_name_to_switch
+              case options[:switch_mode]
+              when "prebuilt"
+                indentation = line.split("pod '").first
+                rel_path = Pathname.new(PodBuilder::prebuiltpath).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
+                prebuilt_line = "#{indentation}pod '#{pod_name_to_switch}', :path => '#{rel_path}'\n"
+                if line.include?("# pb<") && marker = line.split("# pb<").last
+                  prebuilt_line = prebuilt_line.chomp("\n") + " # pb<#{marker}"
+                end
+                lines.append(prebuilt_line)
+                next
+              when "development"
+                indentation = line.split("pod '").first
+                rel_path = Pathname.new(development_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
+                development_line = "#{indentation}pod '#{pod_name_to_switch}', :path => '#{rel_path}'\n"
+                if line.include?("# pb<") && marker = line.split("# pb<").last
+                  development_line = development_line.chomp("\n") + " # pb<#{marker}"
+                end
+
+                lines.append(development_line)
+                next
+              when "default"
+                if default_line = default_entries[current_section]
+                  if line.include?("# pb<") && marker = line.split("# pb<").last
+                    default_line = default_line.chomp("\n") + " # pb<#{marker}"
+                  end
+                  lines.append(default_line)
+                  next
+                elsif
+                  raise "Line for pod '#{pod_name_to_switch}' in section '#{current_section}' not found in PodBuilder's Podfile"
+                end
+              else
+                raise "Unsupported mode '#{options[:switch_mode]}'"
+              end
+            end  
+          end
+
+          lines.append(line)
         end
-        
-        File.write(podfile_path, pod_lines.join)
+
+        File.write(podfile_path, lines.join)
         
         Dir.chdir(PodBuilder::project_path)
         system("pod install")
@@ -106,14 +118,14 @@ module PodBuilder
       
       private     
 
-      def self.find_podspec(podfile_item)
+      def self.find_podspec(podname)
         unless Configuration.development_pods_paths.count > 0
           raise "\n\nPlease add the development pods path(s) in #{Configuration.dev_pods_configuration_filename} as per documentation\n".red
         end
 
         podspec_path = nil
         Configuration.development_pods_paths.each do |path|
-          podspec = Dir.glob(File.expand_path("#{path}/**/#{podfile_item.root_name}*.podspec*"))
+          podspec = Dir.glob(File.expand_path("#{path}/**/#{podname}*.podspec*"))
           podspec.select! { |x| !x.include?("/Local Podspecs/") }
           podspec.select! { |x| Dir.glob(File.join(File.dirname(x), "*")).count > 1 } # exclude podspec folder (which has one file per folder)
           if podspec.count > 0
@@ -123,37 +135,15 @@ module PodBuilder
         end
 
         if podspec_path.nil?
-          raise "\n\nCouln't find `#{podfile_item.root_name}` sources in the following specified development pod paths: #{Configuration.development_pods_paths.join("\n")}\n".red
+          raise "\n\nCouln't find `#{podname}` sources in the following specified development pod paths:\n#{Configuration.development_pods_paths.join("\n")}\n".red
         end
 
         return podspec_path
       end
-      
-      def self.request_switch_mode(pod_name, podfile_item)
-        matches = podfile_item.entry.match(/(pod '.*?',)(.*)('.*')/)
-        unless matches&.size == 4
-          raise "\n\nFailed matching pod name\n".red
-        end
-
-        default_entry = matches[3].strip
-
-        modes = ["prebuilt", "development", "default"]
-        mode_indx = ask("\n\nSwitch #{pod_name} to:\n1) Prebuilt\n2) Development pod\n3) Default (#{default_entry})\n\n") { |x| x.limit = 1, x.validate = /[1-3]/ }
-        
-        return modes[mode_indx.to_i - 1]
-      end
-      
+            
       def self.check_not_building_subspec(pod_to_switch)
         if pod_to_switch.include?("/")
           raise "\n\nCan't switch subspec #{pod_to_switch} refer to podspec name.\n\nUse `pod_builder switch #{pod_to_switch.split("/").first}` instead\n\n".red
-        end
-      end
-
-      private
-
-      def self.check_prebuilded(pod_name)
-        if !Podspec.include?(pod_name)
-          raise "\n\n#{pod_name} is not prebuilt.\n\nRun 'pod_builder build #{pod_name}'\n".red
         end
       end
     end

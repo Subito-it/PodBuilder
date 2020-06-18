@@ -36,7 +36,7 @@ module PodBuilder
         ARGV.clear
         pods_to_update.each { |x| ARGV << x }
 
-        options[:auto_resolve_dependencies] = true
+        # options[:auto_resolve_dependencies] = true
         return PodBuilder::Command::Build.call(options)
       end              
     end
