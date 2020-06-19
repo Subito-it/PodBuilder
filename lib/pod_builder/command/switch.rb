@@ -17,8 +17,8 @@ module PodBuilder
         end
         
         pod_name_to_switch = argument_pods.first
-        pod_name_to_switch = Podfile::resolve_pod_names([pod_name_to_switch])
-        raise "\n\nDid not find pod '#{argument_pods.first}'" if pod_name_to_switch.count == 0
+        pod_name_to_switch = Podfile::resolve_pod_names([pod_name_to_switch]).first
+        raise "\n\nDid not find pod '#{argument_pods.first}'" if pod_name_to_switch.nil?
         
         check_not_building_subspec(pod_name_to_switch)
 
