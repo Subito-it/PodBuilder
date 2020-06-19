@@ -41,6 +41,9 @@ module PodBuilder
 
         if Configuration.build_system == "Legacy"
           build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = "NO"
+          raise "\n\nCan't enable library evolution support with legacy build system!"
+        elsif Configuration.library_evolution_support
+          build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = "YES"
         end
 
         build_settings['SWIFT_VERSION'] = item_build_settings["SWIFT_VERSION"] || item.swift_version || project_swift_version(analyzer)

@@ -22,10 +22,12 @@ module PodBuilder
     DEFAULT_SKIP_PODS = ["GoogleMaps"]
     DEFAULT_FORCE_PREBUILD_PODS = ["Firebase", "GoogleTagManager"]
     DEFAULT_BUILD_SYSTEM = "Latest".freeze # either Latest (New build system) or Legacy (Standard build system)
+    DEFAULT_LIBRARY_EVOLUTION_SUPPORT = false
     MIN_LFS_SIZE_KB = 256.freeze
     
     private_constant :DEFAULT_BUILD_SETTINGS
     private_constant :DEFAULT_BUILD_SYSTEM
+    private_constant :DEFAULT_LIBRARY_EVOLUTION_SUPPORT
     private_constant :MIN_LFS_SIZE_KB
     
     class <<self      
@@ -33,6 +35,7 @@ module PodBuilder
       attr_accessor :build_settings
       attr_accessor :build_settings_overrides
       attr_accessor :build_system
+      attr_accessor :library_evolution_support
       attr_accessor :base_path
       attr_accessor :spec_overrides      
       attr_accessor :skip_licenses
@@ -58,6 +61,7 @@ module PodBuilder
     @build_settings = DEFAULT_BUILD_SETTINGS
     @build_settings_overrides = {}
     @build_system = DEFAULT_BUILD_SYSTEM
+    @library_evolution_support = DEFAULT_LIBRARY_EVOLUTION_SUPPORT
     @base_path = "Frameworks" # Not nice. This value is used only for initial initization. Once config is loaded it will be an absolute path. FIXME
     @spec_overrides = DEFAULT_SPEC_OVERRIDE
     @skip_licenses = []
@@ -135,6 +139,11 @@ module PodBuilder
             Configuration.build_system = value
           end
         end
+        if value = json["library_evolution_support"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.library_evolution_support = value
+          end
+        end
         if value = json["license_filename"]
           if value.is_a?(String) && value.length > 0
             Configuration.license_filename = value
@@ -201,6 +210,7 @@ module PodBuilder
       config["build_settings"] = Configuration.build_settings
       config["build_settings_overrides"] = Configuration.build_settings_overrides
       config["build_system"] = Configuration.build_system
+      config["library_evolution_support"] = Configuration.library_evolution_support
       config["license_filename"] = Configuration.license_filename
       config["subspecs_to_split"] = Configuration.subspecs_to_split
       config["lfs_update_gitattributes"] = Configuration.lfs_update_gitattributes
