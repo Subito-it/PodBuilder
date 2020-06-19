@@ -22,7 +22,7 @@
   },
   "build_settings_overrides": {
   },
-  "build_system": "Legacy",
+  "build_system": "Latest",
   "license_filename": "Pods-acknowledgements",
   "subspecs_to_split": [
 

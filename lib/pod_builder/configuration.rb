@@ -21,7 +21,7 @@ module PodBuilder
     }.freeze
     DEFAULT_SKIP_PODS = ["GoogleMaps"]
     DEFAULT_FORCE_PREBUILD_PODS = ["Firebase", "GoogleTagManager"]
-    DEFAULT_BUILD_SYSTEM = "Legacy".freeze # either Latest (New build system) or Legacy (Standard build system)
+    DEFAULT_BUILD_SYSTEM = "Latest".freeze # either Latest (New build system) or Legacy (Standard build system)
     MIN_LFS_SIZE_KB = 256.freeze
     
     private_constant :DEFAULT_BUILD_SETTINGS
