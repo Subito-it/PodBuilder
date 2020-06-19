@@ -41,7 +41,7 @@ module PodBuilder
 
         if Configuration.build_system == "Legacy"
           build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = "NO"
-          raise "\n\nCan't enable library evolution support with legacy build system!"
+          raise "\n\nCan't enable library evolution support with legacy build system!" if Configuration.library_evolution_support
         elsif Configuration.library_evolution_support
           build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = "YES"
         end
