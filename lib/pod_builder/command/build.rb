@@ -27,6 +27,8 @@ module PodBuilder
 
         if argument_pods.first == "*"
           argument_pods = buildable_items.map(&:root_name)
+        else
+          argument_pods = Podfile::resolve_pod_names(argument_pods)
         end
 
         available_argument_pods = argument_pods.select { |x| all_buildable_items.map(&:root_name).include?(x) }     
