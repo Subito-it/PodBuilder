@@ -246,7 +246,7 @@ Like `build_settings` but per pod. Pod name can also refer to subspec.
 
 #### `build_system`
 
-Specify which build system to use to compile frameworks. Either `Legacy` (standard build system) or `Latest` (new build system). Default value: `Latest`.
+Specify which build system to use to compile frameworks. Either `Legacy` (standard build system) or `Latest` (new build system). Default value: `Legacy`.
 
 #### `library_evolution_support`
 
