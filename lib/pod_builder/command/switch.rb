@@ -75,7 +75,7 @@ module PodBuilder
               when "prebuilt"
                 indentation = line.split("pod '").first
                 rel_path = Pathname.new(PodBuilder::prebuiltpath).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
-                prebuilt_line = "#{indentation}pod '#{pod_name_to_switch}', :path => '#{rel_path}'\n"
+                prebuilt_line = "#{indentation}pod '#{matches[1]}', :path => '#{rel_path}'\n"
                 if line.include?("# pb<") && marker = line.split("# pb<").last
                   prebuilt_line = prebuilt_line.chomp("\n") + " # pb<#{marker}"
                 end
@@ -84,7 +84,7 @@ module PodBuilder
               when "development"
                 indentation = line.split("pod '").first
                 rel_path = Pathname.new(development_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
-                development_line = "#{indentation}pod '#{pod_name_to_switch}', :path => '#{rel_path}'\n"
+                development_line = "#{indentation}pod '#{matches[1]}', :path => '#{rel_path}'\n"
                 if line.include?("# pb<") && marker = line.split("# pb<").last
                   development_line = development_line.chomp("\n") + " # pb<#{marker}"
                 end
@@ -99,7 +99,7 @@ module PodBuilder
                   lines.append(default_line)
                   next
                 elsif
-                  raise "Line for pod '#{pod_name_to_switch}' in section '#{current_section}' not found in PodBuilder's Podfile"
+                  raise "Line for pod '#{matches[1]}' in section '#{current_section}' not found in PodBuilder's Podfile"
                 end
               else
                 raise "Unsupported mode '#{options[:switch_mode]}'"
