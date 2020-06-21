@@ -1,5 +1,3 @@
-require 'pod_builder/cocoapods/specification'
-
 module PodBuilder
   class Analyze
     # @return [Pod::Installer] The Pod::Installer instance created by processing the Podfile

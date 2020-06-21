@@ -1,5 +1,3 @@
-require 'pod_builder/cocoapods/specification'
-
 module PodBuilder
   class PodfileItem
     # @return [String] The git repo
