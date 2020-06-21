@@ -17,12 +17,12 @@ module PodBuilder
     
     private
 
-    def self.generate_subspec_from(item, name, all_buildable_items, additional_deps, additional_vendored_frameworks, exclude_vendored_frameworks)
-      vendored_frameworks = item.vendored_frameworks + additional_vendored_frameworks - exclude_vendored_frameworks
+    def self.generate_spec_keys_for(item, name, all_buildable_items)
+      vendored_frameworks = item.vendored_frameworks + ["#{item.module_name}.framework"]
       existing_vendored_frameworks = vendored_frameworks.select { |t| File.exist?(PodBuilder::prebuiltpath(t) || "") }
       existing_vendored_frameworks_basename = vendored_frameworks.map { |t| File.basename(t) }.select { |t| File.exist?(PodBuilder::prebuiltpath(t) || "") }
       vendored_frameworks = (existing_vendored_frameworks + existing_vendored_frameworks_basename).uniq
-
+      
       vendored_libraries = item.vendored_libraries
       existing_vendored_libraries = vendored_libraries.map { |t| "#{item.module_name}/#{t}" }.select { |t| File.exist?(PodBuilder::prebuiltpath(t) || "") }
       existing_vendored_libraries_basename = vendored_libraries.map { |t| File.basename("#{item.module_name}/#{t}") }.select { |t| File.exist?(PodBuilder::prebuiltpath(t) || "") }
@@ -38,24 +38,33 @@ module PodBuilder
       exclude_files = static_frameworks.map { |x| x.vendored_framework_path.nil? ? nil : "#{x.vendored_framework_path}/Info.plist" }.compact.flatten.uniq
       exclude_files += frameworks.map { |x| x.vendored_framework_path.nil? ? nil : "#{x.vendored_framework_path}/#{Configuration.framework_plist_filename}" }.compact.flatten.uniq.sort
       
-      podspec = "    p.subspec '#{name}' do |s|\n"
-      if vendored_frameworks.count > 0
-        podspec += "        s.vendored_frameworks = '#{vendored_frameworks.uniq.sort.join("','")}'\n"
+      indentation = "    "
+      if name.nil?
+        spec_name = "p"
+        podspec = ""
+      else
+        spec_name = "s"
+        podspec = "    p.subspec '#{name}' do |#{spec_name}|\n"
+        indentation += "    "
       end
+
+      if vendored_frameworks.count > 0
+        podspec += "#{indentation}#{spec_name}.vendored_frameworks = '#{vendored_frameworks.uniq.sort.join("','")}'\n"
+      end      
       if vendored_libraries.count > 0
-        podspec += "        s.vendored_libraries = '#{vendored_libraries.uniq.sort.join("','")}'\n"
+        podspec += "#{indentation}#{spec_name}.vendored_libraries = '#{vendored_libraries.uniq.sort.join("','")}'\n"
       end
       if item.frameworks.count > 0
-        podspec += "        s.frameworks = '#{item.frameworks.uniq.sort.join("', '")}'\n"
+        podspec += "#{indentation}#{spec_name}.frameworks = '#{item.frameworks.uniq.sort.join("', '")}'\n"
       end
       if item.libraries.count > 0
-        podspec += "        s.libraries = '#{item.libraries.uniq.sort.join("', '")}'\n"
+        podspec += "#{indentation}#{spec_name}.libraries = '#{item.libraries.uniq.sort.join("', '")}'\n"
       end
       if resources.count > 0
-        podspec += "        s.resources = '#{resources.uniq.sort.join("', '")}'\n"
+        podspec += "#{indentation}#{spec_name}.resources = '#{resources.uniq.sort.join("', '")}'\n"
       end
       if exclude_files.count > 0
-        podspec += "        s.exclude_files = '#{exclude_files.uniq.sort.join("', '")}'\n"
+        podspec += "#{indentation}#{spec_name}.exclude_files = '#{exclude_files.uniq.sort.join("', '")}'\n"
       end
       if item.xcconfig.keys.count > 0
         xcconfig = Hash.new
@@ -78,20 +87,29 @@ module PodBuilder
         end
 
         if xcconfig.keys.count > 0 
-          podspec += "        s.xcconfig = #{xcconfig.to_s}\n"
+          podspec += "#{indentation}#{spec_name}.xcconfig = #{xcconfig.to_s}\n"
         end
       end
 
-      deps = (additional_deps + item.dependency_names.select { |t| !t.start_with?("#{item.root_name}/") }).uniq.sort
+      deps = item.dependency_names.sort
+      if name.nil?
+        deps.select! { |t| t.split("/").first != item.root_name }
+      end
+
       if deps.count > 0
         if podspec.count("\n") > 1
           podspec += "\n"
         end
         deps.each do |dependency|
-          podspec += "        s.dependency '#{dependency}'\n"
+          podspec += "#{indentation}#{spec_name}.dependency '#{dependency}'\n"
         end
       end
-      podspec += "    end\n"
+      
+      if !name.nil?
+        podspec += "    end\n"  
+      end
+
+      return podspec, vendored_frameworks.count > 0
     end
 
     def self.generate_podspec_from(all_buildable_items, platform)
@@ -118,14 +136,13 @@ module PodBuilder
         podspec += "    p.license          = { :type => '#{item.license}' }\n"
 
         podspec += "\n"
-        podspec += "    p.default_subspecs = ['PodBuilder']\n"
 
-        default_podspec = generate_subspec_from(item, 'PodBuilder', all_buildable_items, [], ["#{item.module_name}.framework"], [])
-        if default_podspec.count("\n") < 3
+        main_keys, valid = generate_spec_keys_for(item, nil, all_buildable_items)
+        if !valid
           next
         end
 
-        podspec += default_podspec
+        podspec += main_keys
 
         subspec_names = item.dependency_names.select { |t| t.start_with?("#{item.root_name}/") }
         subspec_names += all_buildable_items.map(&:name).select { |t| t.start_with?("#{item.root_name}/") }
@@ -137,7 +154,9 @@ module PodBuilder
 
           if subspec_item = all_buildable_items.detect { |t| t.name == subspec }
             podspec += "\n"
-            podspec += generate_subspec_from(subspec_item, name, all_buildable_items, ["#{item.root_name}/PodBuilder"], [], item.vendored_frameworks + ["#{item.module_name}.framework"]) 
+            
+            subspec_keys, valid = generate_spec_keys_for(subspec_item, name, all_buildable_items) 
+            podspec += subspec_keys
           end
         end
 

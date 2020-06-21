@@ -114,6 +114,9 @@ module PodBuilder
     #
     attr_accessor :homepage
 
+    # @return [Array<String>] Default subspecs
+    #
+    attr_accessor :default_subspecs
     
     # Initialize a new instance
     #
@@ -172,7 +175,12 @@ module PodBuilder
       @swift_version = spec.root.swift_version&.to_s
       @module_name = spec.root.module_name
 
-      @dependency_names = spec.recursive_dep_names(all_specs)
+      @default_subspecs = extract_array(spec, "default_subspecs")
+      if default_subspec = spec.attributes_hash["default_subspec"]
+        @default_subspecs.push(default_subspec)
+      end
+
+      @dependency_names = spec.attributes_hash.fetch("dependencies", {}).keys + default_subspecs.map { |t| "#{@root_name}/#{t}" }
       @external_dependency_names = @dependency_names.select { |t| !t.start_with?(root_name)  }
 
       @is_static = spec.root.attributes_hash["static_framework"] || false
@@ -239,6 +247,43 @@ module PodBuilder
 
     def dependencies(available_pods)
       return available_pods.select { |x| @dependency_names.include?(x.name) }
+    end
+
+    def recursive_dependencies(available_pods)
+      names = [name]
+
+      deps = []
+      last_count = -1 
+      while deps.count != last_count do
+        last_count = deps.count
+
+        updated_names = []
+        names.each do |name|
+          if pod = available_pods.detect { |t| t.name == name }
+            deps.push(pod)
+            updated_names += pod.dependency_names
+          end
+        end
+        
+        names = updated_names.uniq
+
+        deps.uniq!  
+      end
+
+      root_names = deps.map(&:root_name).uniq
+
+      # We need to build all other common subspecs to properly build the framework
+      # Ex. 
+      # PodA depends on DepA/subspec1
+      # PodB depends on DepA/subspec2
+      #
+      # When building PodA we need to build both DepA subspecs because they might 
+      # contain different code
+      deps += available_pods.select { |t| root_names.include?(t.root_name) }
+
+      deps.uniq!
+
+      return deps
     end
 
     # @return [Bool] True if it's a pod that doesn't provide source code (is already shipped as a prebuilt pod)

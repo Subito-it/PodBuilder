@@ -75,7 +75,7 @@ module PodBuilder
         licenses = []
         
         podfiles_items.select { |x| x.count > 0 }.each do |podfile_items|
-          podfile_items = add_dependencies(podfile_items, all_buildable_items)
+          podfile_items = podfile_items.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
           podfile_content = Podfile.from_podfile_items(podfile_items, analyzer)
           
           Install.podfile(podfile_content, podfile_items, podfile_items.first.build_configuration)
@@ -94,7 +94,10 @@ module PodBuilder
         Podspec::generate(all_buildable_items, analyzer)
 
         builded_pods = podfiles_items.flatten
-        builded_pods_and_deps = add_dependencies(builded_pods, all_buildable_items).select { |x| !x.is_prebuilt }
+        
+        builded_pods_and_deps = podfiles_items.flatten.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
+        builded_pods_and_deps.select! { |x| !x.is_prebuilt }
+        
         Podfile::write_restorable(builded_pods_and_deps + prebuilt_pods_to_install, all_buildable_items, analyzer)     
         if !options.has_key?(:skip_prebuild_update)   
           Podfile::write_prebuilt(all_buildable_items, analyzer)
@@ -128,30 +131,18 @@ module PodBuilder
         return []
       end
 
-      def self.add_dependencies(pods, buildable_items)
-        pods.dup.each do |pod|
-          build_configuration = pods.first.build_configuration
+      # def self.buildable_dependencies(pod, buildable_items)
+      #   deps = []
 
-          dependencies = pod.dependencies(buildable_items).select { |x| !pods.include?(x) && !pod.has_common_spec(x.name) }
-          dependencies.each { |x| x.build_configuration = build_configuration }
-          pods = dependencies + pods # dependencies should come first
-        end
-        
-        return pods
-      end
+      #   pod.dependency_names.each do |dependency|
+      #     buildable_pods = buildable_items.select { |t| t.root_name == dependency }
+      #     if buildable_pods.any? { |t| t.source_files.count > 0 }
+      #       deps.push(dependency)
+      #     end
+      #   end
 
-      def self.buildable_dependencies(pod, buildable_items)
-        deps = []
-
-        pod.dependency_names.each do |dependency|
-          buildable_pods = buildable_items.select { |t| t.root_name == dependency }
-          if buildable_pods.any? { |t| t.source_files.count > 0 }
-            deps.push(dependency)
-          end
-        end
-
-        return deps
-      end
+      #   return deps
+      # end
 
       # def self.expected_common_dependencies(pods_to_build, buildable_items, options)
       #   warned_expected_pod_list = []

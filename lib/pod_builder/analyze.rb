@@ -40,15 +40,33 @@ module PodBuilder
       checkout_options.merge!(analyzer.sandbox.checkout_sources)
       
       all_specs = analysis_result.specifications
-
-      all_podfile_specs = all_specs.select { |x| all_podfile_pods.map(&:name).include?(x.name) }
-
-      deps_names = all_podfile_specs.map { |x| x.recursive_dep_names(all_specs) }.flatten.uniq
-
-      all_podfile_specs += all_specs.select { |x| deps_names.include?(x.name) }
-      all_podfile_specs.uniq!
       
-      return all_podfile_specs.map { |spec| PodfileItem.new(spec, all_specs, checkout_options) }
+      all_podfile_items = all_specs.map { |spec| PodfileItem.new(spec, all_specs, checkout_options) }
+
+      names = []
+      analyzer.podfile.root_target_definitions[0].children.each do |children|
+        names += children.dependencies.map(&:name)
+      end
+      names = names.uniq.sort
+
+      podfile_pods = []
+      last_count = -1 
+      while podfile_pods.count != last_count do
+        last_count = podfile_pods.count
+
+        updated_names = []
+        names.each do |name|
+          if pod = all_podfile_items.detect { |t| t.name == name }
+            podfile_pods.push(pod)
+            updated_names += pod.dependency_names
+          end
+        end
+        
+        names = updated_names.uniq
+        podfile_pods.uniq!
+      end
+
+      return podfile_pods.sort_by(&:name)
     end
   end
 end
