@@ -1,9 +1,21 @@
+require 'rubygems/specification'
+require 'pod_builder/rome/pre_install.rb'
+require 'pod_builder/rome/post_install.rb'
+
 module PodBuilder
   class Analyze
     # @return [Pod::Installer] The Pod::Installer instance created by processing the Podfile
     #
     def self.installer_at(path, repo_update = false)
       CLAide::Command::PluginManager.load_plugins("cocoapods")
+      
+      # Manually load inline podbuilder-rome plugin
+      pluginspec = Gem::Specification.new("podbuilder-rome", PodBuilder::VERSION)
+      pluginspec.activate
+
+      if !CLAide::Command::PluginManager.loaded_plugins["cocoapods"].map(&:name).include?(pluginspec.name)
+        CLAide::Command::PluginManager.loaded_plugins["cocoapods"].push(pluginspec)
+      end
 
       current_dir = Dir.pwd
       Dir.chdir(path)
