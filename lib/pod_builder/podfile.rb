@@ -151,8 +151,9 @@ module PodBuilder
 
       explicit_deps = []
       analyzer.podfile.root_target_definitions[0].children.each do |children|
-        explicit_deps += children.dependencies.map(&:name)
+        explicit_deps += children.dependencies
       end
+      explicit_deps.map! { |t| all_buildable_items.detect { |x| x.name == t.name } }
       explicit_deps.uniq!
       podbuilder_podfile_path = PodBuilder::basepath("Podfile")
       rel_path = Pathname.new(podbuilder_podfile_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
@@ -184,12 +185,23 @@ module PodBuilder
                 prebuilt_lines.push("#{line.detect_indentation}#{podfile_item.prebuilt_entry}\n")
 
                 marker = podfile_item.prebuilt_marker()
-                non_explicit_dependencies = podfile_item.external_dependency_names - explicit_deps
+                non_explicit_dependencies = podfile_item.recursive_dependencies(all_buildable_items) - explicit_deps
+                non_explicit_dependencies_root_names = non_explicit_dependencies.map(&:root_name).uniq
+                non_explicit_dependencies = non_explicit_dependencies_root_names.map { |x| 
+                  if item = all_buildable_items.detect { |t| x == t.name }
+                    item                    
+                  else
+                    item = all_buildable_items.detect { |t| x == t.root_name }
+                  end
+                }.compact
+               
                 non_explicit_dependencies.each do |dep|
-                  dep_item = all_buildable_items.detect { |x| x.name == dep }
+                  dep_item = all_buildable_items.detect { |x| x.name == dep.name }
 
                   if Podspec.include?(dep_item.root_name)
-                    prebuilt_lines.push("#{line.detect_indentation}#{dep_item.prebuilt_entry(include_pb_entry = false)}#{marker}\n")
+                    pod_name = dep_item.prebuilt_entry(include_pb_entry = false)
+                    pod_name.gsub!(dep.name, dep.root_name)
+                    prebuilt_lines.push("#{line.detect_indentation}#{pod_name}#{marker}\n")
                   end
 
                   explicit_deps.push(dep)
