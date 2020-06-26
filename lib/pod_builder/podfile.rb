@@ -186,7 +186,7 @@ module PodBuilder
 
                 marker = podfile_item.prebuilt_marker()
                 non_explicit_dependencies = podfile_item.recursive_dependencies(all_buildable_items) - explicit_deps
-                non_explicit_dependencies_root_names = non_explicit_dependencies.map(&:root_name).uniq
+                non_explicit_dependencies_root_names = non_explicit_dependencies.map(&:root_name).uniq.filter { |t| t != podfile_item.root_name }
                 non_explicit_dependencies = non_explicit_dependencies_root_names.map { |x| 
                   if item = all_buildable_items.detect { |t| x == t.name }
                     item                    
