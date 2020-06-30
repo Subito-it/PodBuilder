@@ -136,6 +136,8 @@ module PodBuilder
         podspec += "    p.license          = { :type => '#{item.license}' }\n"
 
         podspec += "\n"
+        podspec += "    p.#{platform.safe_string_name.downcase}.deployment_target  = '#{platform.deployment_target.version}'\n"
+        podspec += "\n"
 
         main_keys, valid = generate_spec_keys_for(item, nil, all_buildable_items)
         if !valid
