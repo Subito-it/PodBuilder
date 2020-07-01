@@ -123,15 +123,6 @@ module PodBuilder
     # @param [Hash] checkout_options
     #
     def initialize(spec, all_specs, checkout_options)
-      if overrides = Configuration.spec_overrides[spec.name]
-        overrides.each do |k, v|
-          spec.root.attributes_hash[k] = v
-          if checkout_options.has_key?(spec.name)
-            checkout_options[spec.name][k] = v
-          end
-        end
-      end
-
       @name = spec.name
       @root_name = spec.name.split("/").first
 

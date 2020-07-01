@@ -1,48 +1,27 @@
 require 'cfpropertylist'
 
-# We swizzle the analyzer to inject spec overrides. This might no longer be needed
-# given that we're swizzling the Pod::Downloader as well
-class Pod::Specification::Linter::Analyzer
-  alias_method :swz_analyze, :analyze
-
-  def analyze(*args)
-    spec = consumer.spec
-    if overrides = PodBuilder::Configuration.spec_overrides[spec.name]
-      overrides.each do |k, v|
-        spec.attributes_hash[k] = v
-      end
-    end
-
-    return swz_analyze
-  end
-end
-
-Pod::Downloader.singleton_class.send(:alias_method, :swz_download, :download)
-module Pod::Downloader
-  def self.download(
-    request,
-    target,
-    can_cache: true,
-    cache_path: Pod::Config.instance.cache_root + 'Pods'
-  )
-    result = swz_download(request, target)
-
-    if overrides = PodBuilder::Configuration.spec_overrides[result.spec.name]
-      overrides.each do |k, v|
-        result.spec.attributes_hash[k] = v
-      end
-    end
-    
-    result
-  end
-end
-
 # The Pod::Target and Pod::Installer::Xcode::PodTargetDependencyInstaller swizzles patch
 # the following issues: 
 # - https://github.com/CocoaPods/Rome/issues/81
 # - https://github.com/leavez/cocoapods-binary/issues/50
 begin
   require 'cocoapods/installer/xcode/pods_project_generator/pod_target_dependency_installer.rb'
+
+  class Pod::Specification
+    Pod::Specification.singleton_class.send(:alias_method, :swz_from_hash, :from_hash)
+
+    def self.from_hash(*args)
+      spec = swz_from_hash(*args)
+
+      if overrides = PodBuilder::Configuration.spec_overrides[spec.name]
+        overrides.each do |k, v|
+          spec.attributes_hash[k] = v
+        end
+      end
+
+      return spec
+    end  
+  end 
 
   class Pod::Target
     attr_accessor :mock_dynamic_framework

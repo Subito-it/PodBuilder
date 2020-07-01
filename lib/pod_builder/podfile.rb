@@ -58,7 +58,7 @@ module PodBuilder
           if x.split("/").first == item.root_name
             next nil # remove dependency to parent spec
           end
-          if overridded_module_name = Configuration.spec_overrides.fetch(x, {})["module_name"]
+          if overridded_module_name = Configuration.spec_overrides.fetch(x, {})["module_name"] # this might no longer be needed after
             next overridded_module_name
           end
         }.compact
