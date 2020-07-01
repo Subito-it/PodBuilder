@@ -330,24 +330,16 @@ module PodBuilder
       end
     end
 
-    def self.resolve_pod_names(names)
+    def self.resolve_pod_names(names, all_buildable_items)
       resolved_names = []
 
-      # resolve potentially wrong pod name case
-      podfile_path = PodBuilder::basepath("Podfile")
-      content = File.read(podfile_path)
-        
-      current_section = ""
-      content.each_line do |line|
-        matches = line.gsub("\"", "'").match(/pod '(.*?)',(.*)/)
-        if matches&.size == 3
-          if resolved_name = names.detect { |t| matches[1].split("/").first.downcase == t.downcase }
-            resolved_names.push(matches[1].split("/").first)
-          end
+      names.each do |name|
+        if item = all_buildable_items.detect { |t| t.name.downcase == name.downcase }
+          resolved_names.push(item.name)
         end
       end
 
-      resolved_names.uniq
+      return resolved_names.uniq
     end
 
     private
