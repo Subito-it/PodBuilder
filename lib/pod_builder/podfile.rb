@@ -334,8 +334,8 @@ module PodBuilder
       resolved_names = []
 
       names.each do |name|
-        if item = all_buildable_items.detect { |t| t.name.downcase == name.downcase }
-          resolved_names.push(item.name)
+        if item = all_buildable_items.detect { |t| t.root_name.downcase == name.downcase }
+          resolved_names.push(item.root_name)
         end
       end
 
