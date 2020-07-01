@@ -32,4 +32,5 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'cocoapods', '~> 1.6'
   spec.add_runtime_dependency 'cocoapods-core', '~> 1.6'
   spec.add_runtime_dependency 'CFPropertyList'
+  spec.add_runtime_dependency 'json'
 end
