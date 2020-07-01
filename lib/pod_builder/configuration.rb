@@ -181,6 +181,8 @@ module PodBuilder
         end
         
         Configuration.build_settings.freeze
+
+        sanity_check()
       else
         write
       end
@@ -220,6 +222,14 @@ module PodBuilder
     end
     
     private 
+
+    def self.sanity_check
+      Configuration.skip_pods.each do |pod|
+        if Configuration.force_prebuild_pods.include?(pod)
+          puts "PodBuilder.json contains '#{pod}' both in `force_prebuild_pods` and `skip_pods`. Will force prebuilding.".yellow
+        end
+      end
+    end
     
     def self.config_path
       unless path = podbuilder_path
