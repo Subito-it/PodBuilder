@@ -122,7 +122,7 @@ module PodBuilder
     #
     # @param [Hash] checkout_options
     #
-    def initialize(spec, all_specs, checkout_options)
+    def initialize(spec, all_specs, checkout_options, supported_platforms)
       @name = spec.name
       @root_name = spec.name.split("/").first
 
@@ -169,7 +169,12 @@ module PodBuilder
         @default_subspecs.push(default_subspec)
       end
 
-      @dependency_names = spec.attributes_hash.fetch("dependencies", {}).keys + default_subspecs.map { |t| "#{@root_name}/#{t}" }
+      @dependency_names = spec.attributes_hash.fetch("dependencies", {}).keys + default_subspecs.map { |t| "#{@root_name}/#{t}" } 
+      supported_platforms.each do |platform|        
+        @dependency_names += (spec.attributes_hash.dig(platform, "dependencies") || {}).keys
+      end
+      @dependency_names.uniq!
+
       @external_dependency_names = @dependency_names.select { |t| !t.start_with?(root_name)  }
 
       @is_static = spec.root.attributes_hash["static_framework"] || false

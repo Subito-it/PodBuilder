@@ -51,7 +51,8 @@ module PodBuilder
       
       all_specs = analysis_result.specifications
       
-      all_podfile_items = all_specs.map { |spec| PodfileItem.new(spec, all_specs, checkout_options) }
+      supported_platforms = analyzer.instance_variable_get("@result").targets.map { |t| t.platform.safe_string_name.downcase }
+      all_podfile_items = all_specs.map { |spec| PodfileItem.new(spec, all_specs, checkout_options, supported_platforms) }
 
       names = []
       analyzer.podfile.root_target_definitions[0].children.each do |children|
