@@ -454,7 +454,7 @@ module PodBuilder
           path = matches[6]
 
           is_absolute = ["~", "/"].include?(path[0])
-          unless !pod_name.start_with?("PodBuilder/") && !is_absolute
+          unless !PodBuilder::prebuiltpath.end_with?(path) && !is_absolute
             podfile_lines.push(line)
             next
           end
