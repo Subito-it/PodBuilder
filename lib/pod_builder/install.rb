@@ -9,9 +9,10 @@ begin
 
   class Pod::Specification
     Pod::Specification.singleton_class.send(:alias_method, :swz_from_hash, :from_hash)
+    Pod::Specification.singleton_class.send(:alias_method, :swz_from_string, :from_string)
 
-    def self.from_hash(*args)
-      spec = swz_from_hash(*args)
+    def self.from_string(*args)
+      spec = swz_from_string(*args)
 
       if overrides = PodBuilder::Configuration.spec_overrides[spec.name]
         overrides.each do |k, v|
@@ -19,8 +20,8 @@ begin
         end
       end
 
-      return spec
-    end  
+      spec
+    end
   end 
 
   class Pod::Target
