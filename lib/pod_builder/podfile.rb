@@ -342,6 +342,26 @@ module PodBuilder
       return resolved_names.uniq
     end
 
+    def self.resolve_pod_names(names)
+      resolved_names = []
+
+      # resolve potentially wrong pod name case
+      podfile_path = PodBuilder::basepath("Podfile")
+      content = File.read(podfile_path)
+        
+      current_section = ""
+      content.each_line do |line|
+        matches = line.gsub("\"", "'").match(/pod '(.*?)'/)
+        if matches&.size == 2
+          if resolved_name = names.detect { |t| matches[1].split("/").first.downcase == t.downcase }
+            resolved_names.push(matches[1].split("/").first)
+          end
+        end
+      end
+
+      resolved_names.uniq
+    end
+
     private
 
     def self.indentation_from_file(path)
