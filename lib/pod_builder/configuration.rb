@@ -110,17 +110,17 @@ module PodBuilder
           end
         end
         if value = json["skip_licenses"]
-          if value.is_a?(Array) && value.count > 0
+          if value.is_a?(Array)
             Configuration.skip_licenses = value
           end
         end
         if value = json["skip_pods"]
-          if value.is_a?(Array) && value.count > 0
+          if value.is_a?(Array)
             Configuration.skip_pods = value
           end
         end
         if value = json["force_prebuild_pods"]
-          if value.is_a?(Array) && value.count > 0
+          if value.is_a?(Array)
             Configuration.force_prebuild_pods = value
           end
         end
