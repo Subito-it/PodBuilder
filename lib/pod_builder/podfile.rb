@@ -149,10 +149,7 @@ module PodBuilder
     def self.write_prebuilt(all_buildable_items, analyzer)  
       puts "Updating Application Podfile".yellow
 
-      explicit_deps = []
-      analyzer.podfile.root_target_definitions[0].children.each do |children|
-        explicit_deps += children.dependencies
-      end
+      explicit_deps = analyzer.explicit_pods()
       explicit_deps.map! { |t| all_buildable_items.detect { |x| x.name == t.name } }
       explicit_deps.uniq!
       podbuilder_podfile_path = PodBuilder::basepath("Podfile")

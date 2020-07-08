@@ -54,11 +54,7 @@ module PodBuilder
       supported_platforms = analyzer.instance_variable_get("@result").targets.map { |t| t.platform.safe_string_name.downcase }
       all_podfile_items = all_specs.map { |spec| PodfileItem.new(spec, all_specs, checkout_options, supported_platforms) }
 
-      names = []
-      analyzer.podfile.root_target_definitions[0].children.each do |children|
-        names += children.dependencies.map(&:name)
-      end
-      names = names.uniq.sort
+      names = analyzer.explicit_pods().map(&:name)
 
       podfile_pods = []
       last_count = -1 
