@@ -342,7 +342,7 @@ module PodBuilder
       return resolved_names.uniq
     end
 
-    def self.resolve_pod_names(names)
+    def self.resolve_pod_names_from_podfile(names)
       resolved_names = []
 
       # resolve potentially wrong pod name case
