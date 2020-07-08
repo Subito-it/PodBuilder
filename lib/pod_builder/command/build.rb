@@ -75,8 +75,10 @@ module PodBuilder
         licenses = []
         
         podfiles_items.select { |x| x.count > 0 }.each do |podfile_items|
+          build_configuration = podfile_items.map(&:build_configuration).uniq.first
+          
           podfile_items = podfile_items.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
-          podfile_content = Podfile.from_podfile_items(podfile_items, analyzer)
+          podfile_content = Podfile.from_podfile_items(podfile_items, analyzer, build_configuration)
           
           Install.podfile(podfile_content, podfile_items, podfile_items.first.build_configuration)
 

@@ -6,7 +6,7 @@ module PodBuilder
     PRE_INSTALL_ACTIONS = ["Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}"].freeze
     private_constant :PRE_INSTALL_ACTIONS
 
-    def self.from_podfile_items(items, analyzer)
+    def self.from_podfile_items(items, analyzer, build_configuration)
       raise "no items" unless items.count > 0
 
       sources = analyzer.sources
@@ -20,9 +20,7 @@ module PodBuilder
 
       podfile.sub!("%%%sources%%%", sources.map { |x| "source '#{x.url}'" }.join("\n"))
 
-      build_configurations = items.map(&:build_configuration).uniq
-      raise "Found different build configurations in #{items}" if build_configurations.count != 1
-      podfile.sub!("%%%build_configuration%%%", build_configurations.first.capitalize)
+      podfile.sub!("%%%build_configuration%%%", build_configuration.capitalize)
 
       podfile_build_settings = ""
       
