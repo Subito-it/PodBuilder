@@ -39,7 +39,8 @@ module PodBuilder
         PodBuilder::safe_rm_rf(Configuration.base_path)
 
         Dir.chdir(PodBuilder::project_path)
-        system("pod install;")  
+        bundler_prefix = Configuration.use_bundler ? "bundle exec " : ""
+        system("#{bundler_prefix}pod install;")
 
         license_base = PodBuilder::project_path(Configuration.license_filename)
         FileUtils.rm_f("#{license_base}.plist")

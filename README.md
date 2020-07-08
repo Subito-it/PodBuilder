@@ -296,6 +296,11 @@ Adds a _.gitattributes_ to _Frameworks/Rome_ and _Frameworks/dSYM_ to exclude la
 See [`lfs_update_gitattributes`](#lfs_update_gitattributes).
 
 
+#### `use_bundler`
+
+If you use bundler to pin the version of CocoaPods in your project set this to true.
+
+
 # Behind the scenes
 
 PodBuilder leverages CocoaPods code and [cocoapods-rome plugin](https://github.com/CocoaPods/Rome) to compile pods into frameworks. Every compiled framework will be boxed (by adding it as a `vendored_framework`) as a subspec of a local podspec. When needed additional settings will be automatically ported from the original podspec, like for example xcconfig settings.

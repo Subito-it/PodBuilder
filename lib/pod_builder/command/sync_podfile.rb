@@ -21,7 +21,8 @@ module PodBuilder
         Licenses::write([], all_buildable_items)
 
         if previous_podfile_content != updated_podfile_content
-          system("pod install")
+          bundler_prefix = Configuration.use_bundler ? "bundle exec " : ""
+          system("#{bundler_prefix}pod install;")
         end
         
         return 0

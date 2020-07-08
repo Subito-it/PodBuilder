@@ -224,7 +224,8 @@ module PodBuilder
       puts "Running pod install".yellow
 
       Dir.chdir(PodBuilder::project_path) do
-        system("pod install;")
+        bundler_prefix = Configuration.use_bundler ? "bundle exec " : ""
+        system("#{bundler_prefix}pod install;")
       end
     end
 

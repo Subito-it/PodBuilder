@@ -55,6 +55,7 @@ module PodBuilder
       attr_accessor :restore_enabled
       attr_accessor :framework_plist_filename
       attr_accessor :lock_filename
+      attr_accessor :use_bundler
     end
     
     @allow_building_development_pods = false
@@ -81,6 +82,7 @@ module PodBuilder
     @restore_enabled = true
     @framework_plist_filename = "PodBuilder.plist"
     @lock_filename = "PodBuilder.lock"
+    @use_bundler = false
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
@@ -177,6 +179,11 @@ module PodBuilder
         if value = json["allow_building_development_pods"]
           if [TrueClass, FalseClass].include?(value.class)
             Configuration.allow_building_development_pods = value
+          end
+        end
+        if value = json["use_bundler"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.use_bundler = value
           end
         end
         

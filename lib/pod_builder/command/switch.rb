@@ -113,7 +113,8 @@ module PodBuilder
         File.write(podfile_path, lines.join)
         
         Dir.chdir(PodBuilder::project_path)
-        system("pod install")
+        bundler_prefix = Configuration.use_bundler ? "bundle exec " : ""
+        system("#{bundler_prefix}pod install;")
 
         return 0
       end
