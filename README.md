@@ -48,7 +48,7 @@ Podbuilder comes with a set of commands:
 - `install_sources`: installs sources of pods to debug into prebuild frameworks
 - `switch`: switch between prebuilt, development or standard pod in the Application-Podfile
 - `clean`: removes unused prebuilt frameworks, dSYMs and source files added by install_sources
-- `sync_podfile`: updates the Application with all pods declared in the PodBuilder-Podfile file
+- `sync_podfile`: updates the Application-Podfile with all pods declared in the PodBuilder-Podfile file
 - `info`: outputs json-formatted information reflecting the current status of prebuilt pods
 
 Commands can be run from anywhere in your project's repo that is **required to be under git**. 
