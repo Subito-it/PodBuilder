@@ -12,105 +12,109 @@ module PodBuilder
         unless argument_pods.count > 0 
           return -1
         end
-        unless argument_pods.count == 1
-          raise "\n\nSpecify a single pod to switch\n\n".red 
+
+        pod_names_to_switch = []
+        argument_pods.each do |pod|
+          pod_name_to_switch = pod
+          pod_name_to_switch = Podfile::resolve_pod_names_from_podfile([pod_name_to_switch]).first
+          raise "\n\nDid not find pod '#{pod}'" if pod_name_to_switch.nil?
+          
+          check_not_building_subspec(pod_name_to_switch)  
+
+          pod_names_to_switch.push(pod_name_to_switch)
         end
         
-        pod_name_to_switch = argument_pods.first
-        pod_name_to_switch = Podfile::resolve_pod_names_from_podfile([pod_name_to_switch]).first
-        raise "\n\nDid not find pod '#{argument_pods.first}'" if pod_name_to_switch.nil?
-        
-        check_not_building_subspec(pod_name_to_switch)
+        pod_names_to_switch.each do |pod_name_to_switch|
+          development_path = ""
+          default_entries = Hash.new
 
-        development_path = ""
-        default_entries = Hash.new
-
-        case options[:switch_mode]
-        when "development"
-          development_path = find_podspec(pod_name_to_switch)          
-        when "prebuilt"
-          podfile_path = PodBuilder::basepath("Podfile.restore")
-          content = File.read(podfile_path)
-          if !content.include?("pod '#{pod_name_to_switch}")
-            raise "\n\n'#{pod_name_to_switch}' does not seem to be prebuit!"
+          case options[:switch_mode]
+          when "development"
+            development_path = find_podspec(pod_name_to_switch)          
+          when "prebuilt"
+            podfile_path = PodBuilder::basepath("Podfile.restore")
+            content = File.read(podfile_path)
+            if !content.include?("pod '#{pod_name_to_switch}")
+              raise "\n\n'#{pod_name_to_switch}' does not seem to be prebuit!"
+            end
+          when "default"
+            podfile_path = PodBuilder::basepath("Podfile")
+            content = File.read(podfile_path)
+              
+            current_section = ""
+            content.each_line do |line|
+              stripped_line = line.strip
+              if stripped_line.start_with?("def ") || stripped_line.start_with?("target ")
+                current_section = line.split(" ")[1]
+                next
+              end
+    
+              matches = line.gsub("\"", "'").match(/pod '(.*?)',(.*)/)
+              if matches&.size == 3
+                if matches[1].split("/").first == pod_name_to_switch
+                  default_entries[current_section] = line
+                end  
+              end
+            end
+    
+            raise "\n\n'#{pod_name_to_switch}' not found in #{podfile_path}" if default_entries.keys.count == 0
           end
-        when "default"
-          podfile_path = PodBuilder::basepath("Podfile")
+
+          podfile_path = PodBuilder::project_path("Podfile")
           content = File.read(podfile_path)
-            
+          
+          lines = []
           current_section = ""
           content.each_line do |line|
             stripped_line = line.strip
             if stripped_line.start_with?("def ") || stripped_line.start_with?("target ")
               current_section = line.split(" ")[1]
-              next
             end
-  
+
             matches = line.gsub("\"", "'").match(/pod '(.*?)',(.*)/)
             if matches&.size == 3
               if matches[1].split("/").first == pod_name_to_switch
-                default_entries[current_section] = line
+                case options[:switch_mode]
+                when "prebuilt"
+                  indentation = line.split("pod '").first
+                  rel_path = Pathname.new(PodBuilder::prebuiltpath).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
+                  prebuilt_line = "#{indentation}pod '#{matches[1]}', :path => '#{rel_path}'\n"
+                  if line.include?("# pb<") && marker = line.split("# pb<").last
+                    prebuilt_line = prebuilt_line.chomp("\n") + " # pb<#{marker}"
+                  end
+                  lines.append(prebuilt_line)
+                  next
+                when "development"
+                  indentation = line.split("pod '").first
+                  rel_path = Pathname.new(development_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
+                  development_line = "#{indentation}pod '#{matches[1]}', :path => '#{rel_path}'\n"
+                  if line.include?("# pb<") && marker = line.split("# pb<").last
+                    development_line = development_line.chomp("\n") + " # pb<#{marker}"
+                  end
+
+                  lines.append(development_line)
+                  next
+                when "default"
+                  if default_line = default_entries[current_section]
+                    if line.include?("# pb<") && marker = line.split("# pb<").last
+                      default_line = default_line.chomp("\n") + " # pb<#{marker}"
+                    end
+                    lines.append(default_line)
+                    next
+                  elsif
+                    raise "Line for pod '#{matches[1]}' in section '#{current_section}' not found in PodBuilder's Podfile"
+                  end
+                else
+                  raise "Unsupported mode '#{options[:switch_mode]}'"
+                end
               end  
             end
+
+            lines.append(line)
           end
-  
-          raise "\n\n'#{pod_name_to_switch}' not found in #{podfile_path}" if default_entries.keys.count == 0
+
+          File.write(podfile_path, lines.join)
         end
-
-        podfile_path = PodBuilder::project_path("Podfile")
-        content = File.read(podfile_path)
-        
-        lines = []
-        current_section = ""
-        content.each_line do |line|
-          stripped_line = line.strip
-          if stripped_line.start_with?("def ") || stripped_line.start_with?("target ")
-            current_section = line.split(" ")[1]
-          end
-
-          matches = line.gsub("\"", "'").match(/pod '(.*?)',(.*)/)
-          if matches&.size == 3
-            if matches[1].split("/").first == pod_name_to_switch
-              case options[:switch_mode]
-              when "prebuilt"
-                indentation = line.split("pod '").first
-                rel_path = Pathname.new(PodBuilder::prebuiltpath).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
-                prebuilt_line = "#{indentation}pod '#{matches[1]}', :path => '#{rel_path}'\n"
-                if line.include?("# pb<") && marker = line.split("# pb<").last
-                  prebuilt_line = prebuilt_line.chomp("\n") + " # pb<#{marker}"
-                end
-                lines.append(prebuilt_line)
-                next
-              when "development"
-                indentation = line.split("pod '").first
-                rel_path = Pathname.new(development_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
-                development_line = "#{indentation}pod '#{matches[1]}', :path => '#{rel_path}'\n"
-                if line.include?("# pb<") && marker = line.split("# pb<").last
-                  development_line = development_line.chomp("\n") + " # pb<#{marker}"
-                end
-
-                lines.append(development_line)
-                next
-              when "default"
-                if default_line = default_entries[current_section]
-                  if line.include?("# pb<") && marker = line.split("# pb<").last
-                    default_line = default_line.chomp("\n") + " # pb<#{marker}"
-                  end
-                  lines.append(default_line)
-                  next
-                elsif
-                  raise "Line for pod '#{matches[1]}' in section '#{current_section}' not found in PodBuilder's Podfile"
-                end
-              else
-                raise "Unsupported mode '#{options[:switch_mode]}'"
-              end
-            end  
-          end
-
-          lines.append(line)
-        end
-
-        File.write(podfile_path, lines.join)
         
         Dir.chdir(PodBuilder::project_path)
         bundler_prefix = Configuration.use_bundler ? "bundle exec " : ""
