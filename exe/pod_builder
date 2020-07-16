@@ -289,9 +289,9 @@ Usage:
         opts.banner = "
 Usage:
         
-    $ pod_builder switch PODNAME [OPTIONS]
+    $ pod_builder switch [OPTIONS] PODNAME[s]
 
-      Switch integration between prebuilt/development/default pod version.
+      Switch integration between prebuilt/development/default pod version. Multiple space separated pods can be passed
         
 Options:
 "        
