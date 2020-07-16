@@ -26,7 +26,7 @@ module PodBuilder
         buildable_items = all_buildable_items - prebuilt_items
 
         if argument_pods.first == "*"
-          argument_pods = analyzer.explicit_pods().map(&:name)
+          argument_pods = analyzer.explicit_pods().map(&:root_name).uniq
         else
           argument_pods = Podfile::resolve_pod_names(argument_pods, all_buildable_items)
         end
