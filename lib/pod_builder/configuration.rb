@@ -72,8 +72,8 @@ module PodBuilder
     @license_filename = "Pods-acknowledgements"
     @subspecs_to_split = []
     @development_pods_paths = []
-    @build_base_path = "/tmp/pod_builder_".freeze
-    @build_path = "#{build_base_path}#{(Time.now.to_f * 1000).to_i}".freeze
+    @build_base_path = "/tmp/pod_builder".freeze
+    @build_path = build_base_path
     @configuration_filename = "PodBuilder.json".freeze
     @dev_pods_configuration_filename = "PodBuilderDevPodsPaths.json".freeze
     @lfs_min_file_size = MIN_LFS_SIZE_KB
@@ -212,6 +212,10 @@ module PodBuilder
 
         Configuration.development_pods_paths = json || []
         Configuration.development_pods_paths.freeze
+      end
+
+      if !deterministic_build
+        build_path = "#{build_base_path}#{(Time.now.to_f * 1000).to_i}"
       end
     end
     
