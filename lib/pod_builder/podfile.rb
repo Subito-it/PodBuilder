@@ -37,6 +37,11 @@ module PodBuilder
         build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
         build_settings['DEBUG_INFORMATION_FORMAT'] = "dwarf-with-dsym"
 
+        # Improve compile speed
+        build_settings['COMPILER_INDEX_STORE_ENABLE'] = 'NO'
+        build_settings['SWIFT_INDEX_STORE_ENABLE'] = 'NO'
+        build_settings['MTL_ENABLE_INDEX_STORE'] = 'NO'
+
         if Configuration.build_system == "Legacy"
           build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = "NO"
           raise "\n\nCan't enable library evolution support with legacy build system!" if Configuration.library_evolution_support
