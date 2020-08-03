@@ -16,7 +16,7 @@ module PodBuilder
         end
             
         lldbinit_path = File.expand_path(argument_pods[0])
-        lldbinit_content = File.exists?(lldbinit_path) ? File.read(lldbinit_path) : ""
+        lldbinit_content = File.exist?(lldbinit_path) ? File.read(lldbinit_path) : ""
 
         lldbinit_lines = []
         skipNext = false

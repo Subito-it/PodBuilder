@@ -12,7 +12,7 @@ module PodBuilder
     end
 
     def self.include?(pod_name)
-      return File.exists?(PodBuilder::prebuiltpath("#{pod_name}.podspec"))
+      return File.exist?(PodBuilder::prebuiltpath("#{pod_name}.podspec"))
     end
     
     private

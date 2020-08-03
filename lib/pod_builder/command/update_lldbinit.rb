@@ -22,7 +22,7 @@ module PodBuilder
         app_podfile_content = File.read(PodBuilder::project_path("Podfile"))
 
         lldbinit_path = File.expand_path(argument_pods[0])
-        lldbinit_content = File.exists?(lldbinit_path) ? File.read(lldbinit_path) : ""
+        lldbinit_content = File.exist?(lldbinit_path) ? File.read(lldbinit_path) : ""
         status_hash = podfiles_status_hash(app_podfile_content, podfile_restore_content)
         if lldbinit_content.include?("# <pb_md5:#{base_path}:#{status_hash}")
           puts "\n\n🎉 already in sync!\n".green
@@ -125,7 +125,7 @@ module PodBuilder
         puts "Writing #{lldbinit_path}".yellow
 
         FileUtils.touch(lldbinit_path)
-        raise "\n\nDestination file should be a file" unless File.exists?(lldbinit_path)
+        raise "\n\nDestination file should be a file" unless File.exist?(lldbinit_path)
 
         lldbinit_lines = []
         skipNext = false
