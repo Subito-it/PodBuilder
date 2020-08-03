@@ -101,6 +101,7 @@ module PodBuilder
         if Configuration.deterministic_build
           cleanup_remaining_clang_breadcrums
           add_nib_hashes_framework_plist_info
+          cleanup_unchanged_nibs(podfile_items)
         end
         cleanup_frameworks(podfile_items)        
         copy_frameworks(podfile_items)
@@ -255,6 +256,31 @@ module PodBuilder
       end
     end
 
+    def self.cleanup_unchanged_nibs(podfile_items)
+      Dir.glob(PodBuilder::buildpath_prebuiltpath("*.framework")) do |framework_path|
+        framework_rel_path = rel_path(framework_path, podfile_items)
+
+        framework_name = File.basename(framework_path)
+        destination_path = PodBuilder::prebuiltpath(framework_rel_path)
+
+        if Configuration.deterministic_build
+          previous_hashes = nib_hashes_in_framework_plist_info(destination_path)
+          current_hashes = nib_hashes_in_framework_plist_info(framework_path)
+
+          current_hashes.each do |key, hash|
+            if previous_hashes[key] == hash
+              nib_filename = File.basename(key, ".*") + ".nib"
+              previous_nib = File.join(destination_path, nib_filename)
+              current_nib = File.join(framework_path, nib_filename)
+                
+              PodBuilder::safe_rm_rf(current_nib)
+              FileUtils.cp_r(previous_nib, current_nib)
+            end
+          end
+        end
+      end
+    end
+
     def self.copy_libraries(podfile_items)
       Dir.glob(PodBuilder::buildpath_prebuiltpath("*.a")) do |library_path|
         library_name = File.basename(library_path)
@@ -333,6 +359,19 @@ module PodBuilder
       Dir.chdir(path)
       system("git init")
       Dir.chdir(current_dir)
+    end
+
+    def self.nib_hashes_in_framework_plist_info(framework_path)
+      podbuilder_file = File.join(framework_path, Configuration.framework_plist_filename)
+
+      unless File.exist?(podbuilder_file)
+        return {}
+      end
+
+      plist = CFPropertyList::List.new(:file => podbuilder_file)
+      data = CFPropertyList.native_types(plist.value)
+
+      return data["nib_hashes"] || {}
     end
   end
 end
