@@ -147,14 +147,18 @@ module PodBuilder
     return swift_version
   end
 
-  def self.add_lock_file
-    lockfile_path = File.join(home, Configuration.lock_filename)
+  def self.add_lockfile
+    lockfile_path = Configuration.lockfile_path
 
     if File.exist?(lockfile_path)
       if pid = File.read(lockfile_path)
         begin
           if Process.getpgid(pid)
+            if Configuration.deterministic_build    
+              raise "\n\nAnother PodBuilder pending task is running\n".red    
+            else
               raise "\n\nAnother PodBuilder pending task is running on this project\n".red    
+            end
           end
         rescue
         end
@@ -164,8 +168,9 @@ module PodBuilder
     File.write(lockfile_path, Process.pid, mode: "w")
   end
 
-  def self.remove_lock_file
-    lockfile_path = File.join(home, Configuration.lock_filename)
+  def self.remove_lockfile
+    lockfile_path = Configuration.lockfile_path
+
     if File.exist?(lockfile_path)
       FileUtils.rm(lockfile_path)
     end

@@ -54,7 +54,8 @@ module PodBuilder
       attr_accessor :project_name
       attr_accessor :restore_enabled
       attr_accessor :framework_plist_filename
-      attr_accessor :lock_filename
+      attr_accessor :lockfile_name
+      attr_accessor :lockfile_path
       attr_accessor :use_bundler
       attr_accessor :deterministic_build
     end
@@ -82,7 +83,9 @@ module PodBuilder
     @project_name = ""
     @restore_enabled = true
     @framework_plist_filename = "PodBuilder.plist"
-    @lock_filename = "PodBuilder.lock"
+    @lockfile_name = "PodBuilder.lock"
+    @lockfile_path = "/tmp/#{lockfile_name}"
+
     @use_bundler = false
     @deterministic_build = false
     
@@ -216,6 +219,7 @@ module PodBuilder
 
       if !deterministic_build
         build_path = "#{build_base_path}#{(Time.now.to_f * 1000).to_i}"
+        lockfile_path = File.join(PodBuilder::home, lockfile_name)
       end
     end
     

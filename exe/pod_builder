@@ -357,6 +357,8 @@ Usage:
   else
     PodBuilder::Configuration.load
 
+    PodBuilder::add_lockfile
+
     subcommand[:opts].order!    
     subcommand[:call].each do |k|
       if (ret = k.call(OPTIONS)) && ret == -1
@@ -374,8 +376,6 @@ begin
     raise "\n\nFor safety do not run this as root\n".red
   end
 
-  PodBuilder::add_lock_file
-  valid_lock_file = true
   command_ret = parse_commandline
 rescue Exception => e
   error = e.to_s
@@ -397,9 +397,7 @@ ensure
       PodBuilder::safe_rm_rf(PodBuilder::Configuration.build_path)
     end    
   end
-  if valid_lock_file
-    PodBuilder::remove_lock_file
-  end
+  PodBuilder::remove_lockfile
 
   exit(command_ret)
 end
