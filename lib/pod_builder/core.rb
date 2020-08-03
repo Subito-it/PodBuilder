@@ -20,6 +20,12 @@ module PodBuilder
       return
     end
 
+    unless File.directory?(path)
+      FileUtils.rm(path)
+
+      return 
+    end
+
     current_dir = Dir.pwd
 
     Dir.chdir(path)
