@@ -97,7 +97,10 @@ module PodBuilder
         install
 
         add_framework_plist_info(podfile_items)
-        cleanup_frameworks(podfile_items)
+        if Configuration.deterministic_build
+          cleanup_remaining_clang_breadcrums
+        end
+        cleanup_frameworks(podfile_items)        
         copy_frameworks(podfile_items)
         copy_libraries(podfile_items)
         if build_configuration != "debug"
@@ -179,6 +182,26 @@ module PodBuilder
         PodBuilder::safe_rm_rf(PodBuilder::prebuiltpath(framework_rel_path))
         PodBuilder::safe_rm_rf(PodBuilder::dsympath("iphoneos/#{dsym_path}"))
         PodBuilder::safe_rm_rf(PodBuilder::dsympath("iphonesimulator/#{dsym_path}"))
+      end
+    end
+
+    def self.cleanup_remaining_clang_breadcrums
+      Dir.glob(PodBuilder::buildpath_prebuiltpath("*.framework")) do |framework_path|
+        framework_name = File.basename(framework_path, ".*")
+        binary_path = File.join(framework_path, framework_name)
+        
+        content = File.open(binary_path, "rb").read
+        # Workaround https://bugs.swift.org/browse/SR-13275
+        content.gsub!(/\/Users\/.*?\/Library\/Developer\/Xcode\/DerivedData\/ModuleCache\.noindex\/.*?\.pcm/) { |match| 
+          pcm = "/Users/PodBuilder/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/"
+          pcm_extension = ".pcm"
+          suffix_length = (match.length - pcm.length - pcm_extension.length)
+          raise "Unexpected length" unless suffix_length > 0 && suffix_length < 50
+          suffix = "0" * suffix_length
+          pcm + suffix + pcm_extension
+        }
+
+        File.write(binary_path, content)
       end
     end
 
