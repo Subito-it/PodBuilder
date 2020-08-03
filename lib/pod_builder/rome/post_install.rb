@@ -1,12 +1,12 @@
 require 'fourflusher'
 
 module PodBuilder
-  def self.build_for_iosish_platform(sandbox, build_dir, target, device, simulator, configuration)
+  def self.build_for_iosish_platform(sandbox, build_dir, target, device, simulator, configuration, deterministic_build)
     deployment_target = target.platform_deployment_target
     target_label = target.cocoapods_target_label
 
-    PodBuilder::xcodebuild(sandbox, target_label, device, deployment_target, configuration)
-    PodBuilder::xcodebuild(sandbox, target_label, simulator, deployment_target, configuration)
+    PodBuilder::xcodebuild(sandbox, target_label, device, deployment_target, configuration, deterministic_build)
+    PodBuilder::xcodebuild(sandbox, target_label, simulator, deployment_target, configuration, deterministic_build)
 
     spec_names = target.specs.map { |spec| [spec.root.name, spec.root.module_name] }.uniq
     spec_names.each do |root_name, module_name|
@@ -50,11 +50,56 @@ module PodBuilder
     end
   end
 
-  def self.xcodebuild(sandbox, target, sdk='macosx', deployment_target=nil, configuration)
+  def self.xcodebuild(sandbox, target, sdk='macosx', deployment_target=nil, configuration, deterministic_build)
     args = %W(-project #{sandbox.project_path.realdirpath} -scheme #{target} -configuration #{configuration} -sdk #{sdk})
     platform = PLATFORMS[sdk]
     args += Fourflusher::SimControl.new.destination(:oldest, platform, deployment_target) unless platform.nil?
-    Pod::Executable.execute_command 'xcodebuild', args, true
+
+    env = {}
+
+    execute_command 'xcodebuild', args, true, env
+  end
+
+  # Copy paste implementation from CocoaPods internals to be able to call poopen3 passing environmental variables
+  def self.execute_command(executable, command, raise_on_failure = true, env = {})
+    bin = Pod::Executable.which!(executable)
+
+    command = command.map(&:to_s)
+    full_command = "#{bin} #{command.join(' ')}"
+
+    stdout = Pod::Executable::Indenter.new
+    stderr = Pod::Executable::Indenter.new
+
+    status = popen3(bin, command, stdout, stderr, env)
+    stdout = stdout.join
+    stderr = stderr.join
+    output = stdout + stderr
+    unless status.success?
+      if raise_on_failure
+        raise Informative, "#{full_command}\n\n#{output}"
+      else
+        UI.message("[!] Failed: #{full_command}".red)
+      end
+    end
+
+    output
+  end
+
+  def self.popen3(bin, command, stdout, stderr, env)
+    require 'open3'
+    Open3.popen3(env, bin, *command) do |i, o, e, t|
+      Pod::Executable::reader(o, stdout)
+      Pod::Executable::reader(e, stderr)
+      i.close
+
+      status = t.value
+
+      o.flush
+      e.flush
+      sleep(0.01)
+
+      status
+    end
   end
 
   def self.enable_debug_information(project_path, configuration)
@@ -102,10 +147,10 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
   targets = installer_context.umbrella_targets.select { |t| t.specs.any? }
   targets.each do |target|
     case target.platform_name
-    when :ios then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration)
-    when :osx then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration)
-    when :tvos then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration)
-    when :watchos then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration)
+    when :ios then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.deterministic_build)
+    when :osx then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.deterministic_build)
+    when :tvos then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.deterministic_build)
+    when :watchos then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.deterministic_build)
     else raise "Unknown platform '#{target.platform_name}'" end
   end
 
