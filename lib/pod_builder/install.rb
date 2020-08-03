@@ -1,4 +1,5 @@
 require 'cfpropertylist'
+require 'digest'
 
 # The Pod::Target and Pod::Installer::Xcode::PodTargetDependencyInstaller swizzles patch
 # the following issues: 
@@ -99,6 +100,7 @@ module PodBuilder
         add_framework_plist_info(podfile_items)
         if Configuration.deterministic_build
           cleanup_remaining_clang_breadcrums
+          add_nib_hashes_framework_plist_info
         end
         cleanup_frameworks(podfile_items)        
         copy_frameworks(podfile_items)
@@ -202,6 +204,44 @@ module PodBuilder
         }
 
         File.write(binary_path, content)
+      end
+    end
+
+    def self.add_nib_hashes_framework_plist_info
+      # Unfortunately ibtool (the tool that compiles xibs into nibs) does not produce a deterministic output
+      # Therefore we'll store a hash of the content of the nib in the PodBuilder.plist which will be used to
+      # determine which nibs need to be overwritten (if they already exists) when copying frameworks in copy_frameworks
+
+      Dir.glob(PodBuilder::buildpath_prebuiltpath("*.framework")) do |framework_path|
+        module_name = File.basename(framework_path, ".*")
+
+        podbuilder_file = File.join(framework_path, Configuration.framework_plist_filename)
+        plist = CFPropertyList::List.new(:file => podbuilder_file)
+        plist_data = CFPropertyList.native_types(plist.value)
+
+        source_path = File.join(Configuration.build_path, "Pods", module_name)
+
+        nibs = Hash.new
+
+        raise "Adding deterministic data failed. Source path for #{framework_path} not found!" if !File.directory?(source_path)
+
+        Dir.glob(File.join(framework_path, "*.nib")) do |nib_path|
+          expected_xib_filename = File.basename(nib_path, ".*") + ".xib"
+
+          xibs = Dir.glob(File.join(source_path, "**", expected_xib_filename))
+
+          raise "Did fail finding source xib in '#{source_path}' for '#{nib_path}'" if xibs.count == 0
+          raise "Too many xibs found for '#{nib_path}'. #{xibs}" if xibs.count > 1
+
+          hash = Digest::SHA1.hexdigest(File.open(xibs[0]).read)
+
+          nibs[xibs[0]] = hash
+        end
+
+        plist_data["nib_hashes"] = nibs
+        
+        plist.value = CFPropertyList.guess(plist_data)
+        plist.save(podbuilder_file, CFPropertyList::List::FORMAT_BINARY)
       end
     end
 
