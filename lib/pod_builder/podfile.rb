@@ -33,9 +33,12 @@ module PodBuilder
         
         # These settings need to be set as is to properly build frameworks
         build_settings['SWIFT_COMPILATION_MODE'] = 'wholemodule'
-        build_settings['CLANG_ENABLE_MODULE_DEBUGGING'] = 'NO'
         build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
         build_settings['DEBUG_INFORMATION_FORMAT'] = "dwarf-with-dsym"
+
+        # Don't store .pcm info in binary, see https://forums.swift.org/t/swift-behavior-of-gmodules-and-dsyms/23211/3
+        build_settings['CLANG_ENABLE_MODULE_DEBUGGING'] = 'NO'
+        build_settings['OTHER_SWIFT_FLAGS'] = "-Xfrontend -no-clang-module-breadcrumbs"
 
         # Improve compile speed
         build_settings['COMPILER_INDEX_STORE_ENABLE'] = 'NO'
