@@ -300,6 +300,10 @@ See [`lfs_update_gitattributes`](#lfs_update_gitattributes).
 
 If you use bundler to pin the version of CocoaPods in your project set this to true.
 
+#### `deterministic_build`
+
+If set to true builds framework deterministically, so that prebuilding the framework twice produces exactly the same build outputs.
+
 
 # Behind the scenes
 

@@ -56,6 +56,7 @@ module PodBuilder
       attr_accessor :framework_plist_filename
       attr_accessor :lock_filename
       attr_accessor :use_bundler
+      attr_accessor :deterministic_build
     end
     
     @allow_building_development_pods = false
@@ -83,6 +84,7 @@ module PodBuilder
     @framework_plist_filename = "PodBuilder.plist"
     @lock_filename = "PodBuilder.lock"
     @use_bundler = false
+    @deterministic_build = false
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
@@ -184,6 +186,11 @@ module PodBuilder
         if value = json["use_bundler"]
           if [TrueClass, FalseClass].include?(value.class)
             Configuration.use_bundler = value
+          end
+        end
+        if value = json["deterministic_build"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.deterministic_build = value
           end
         end
         
