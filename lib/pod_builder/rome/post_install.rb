@@ -56,6 +56,9 @@ module PodBuilder
     args += Fourflusher::SimControl.new.destination(:oldest, platform, deployment_target) unless platform.nil?
 
     env = {}
+    if deterministic_build
+      env["ZERO_AR_DATE"] = "1"
+    end
 
     execute_command 'xcodebuild', args, true, env
   end
