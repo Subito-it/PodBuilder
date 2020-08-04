@@ -100,7 +100,7 @@ module PodBuilder
         add_framework_plist_info(podfile_items)
         if Configuration.deterministic_build
           cleanup_remaining_clang_breadcrums
-          add_nib_hashes_framework_plist_info
+          add_nib_hashes_framework_plist_info(podfile_items)
           cleanup_unchanged_nibs(podfile_items)
         end
         cleanup_frameworks(podfile_items)        
@@ -208,35 +208,37 @@ module PodBuilder
       end
     end
 
-    def self.add_nib_hashes_framework_plist_info
+    def self.add_nib_hashes_framework_plist_info(podfile_items)
       # Unfortunately ibtool (the tool that compiles xibs into nibs) does not produce a deterministic output
       # Therefore we'll store a hash of the content of the nib in the PodBuilder.plist which will be used to
       # determine which nibs need to be overwritten (if they already exists) when copying frameworks in copy_frameworks
-
       Dir.glob(PodBuilder::buildpath_prebuiltpath("*.framework")) do |framework_path|
-        module_name = File.basename(framework_path, ".*")
-
         podbuilder_file = File.join(framework_path, Configuration.framework_plist_filename)
         plist = CFPropertyList::List.new(:file => podbuilder_file)
         plist_data = CFPropertyList.native_types(plist.value)
 
-        source_path = File.join(Configuration.build_path, "Pods", module_name)
+        module_name = File.basename(framework_path, ".*")
+        podfile_item = podfile_items.detect { |t| t.module_name == module_name }
 
-        nibs = Hash.new
+        raise "Adding deterministic data failed. Failed finding podfile_item  for #{framework_path}!" if podfile_items.nil?
 
+        source_path = File.join(Configuration.build_path, "Pods", podfile_item.root_name)
         raise "Adding deterministic data failed. Source path for #{framework_path} not found!" if !File.directory?(source_path)
 
+        nibs = Hash.new
         Dir.glob(File.join(framework_path, "*.nib")) do |nib_path|
           expected_xib_filename = File.basename(nib_path, ".*") + ".xib"
 
           xibs = Dir.glob(File.join(source_path, "**", expected_xib_filename))
 
           raise "Did fail finding source xib in '#{source_path}' for '#{nib_path}'" if xibs.count == 0
-          raise "Too many xibs found for '#{nib_path}'. #{xibs}" if xibs.count > 1
-
-          hash = Digest::SHA1.hexdigest(File.open(xibs[0]).read)
-
-          nibs[xibs[0]] = hash
+          
+          # There are cases where there are multiple occurances of xibs with the same name
+          # for example when a Pod has several subspecs each implementing a different UI.
+          xibs.each do |xib|
+            hash = Digest::SHA1.hexdigest(File.open(xib).read)
+            nibs[xib] = hash
+          end
         end
 
         plist_data["nib_hashes"] = nibs
@@ -268,11 +270,15 @@ module PodBuilder
           current_hashes = nib_hashes_in_framework_plist_info(framework_path)
 
           current_hashes.each do |key, hash|
-            if previous_hashes[key] == hash
-              nib_filename = File.basename(key, ".*") + ".nib"
+            nib_filename = File.basename(key, ".*") + ".nib"            
+            xib_matching_filename = previous_hashes.select { |t| File.basename(t, ".*") == File.basename(key, ".*") }
+
+            all_match = xib_matching_filename.all? { |t| Digest::SHA1.hexdigest(File.open(t[0]).read) == t[1] }
+
+            if all_match  
               previous_nib = File.join(destination_path, nib_filename)
               current_nib = File.join(framework_path, nib_filename)
-                
+
               PodBuilder::safe_rm_rf(current_nib)
               FileUtils.cp_r(previous_nib, current_nib)
             end
