@@ -223,7 +223,7 @@ module PodBuilder
         module_name = File.basename(framework_path, ".*")
         podfile_item = podfile_items.detect { |t| t.module_name == module_name }
 
-        raise "Adding deterministic data failed. Failed finding podfile_item for #{framework_path}!" if podfile_item.nil?
+        next if podfile_item.nil? 
 
         source_path = File.join(Configuration.build_path, "Pods", podfile_item.root_name)
         raise "Adding deterministic data failed. Source path for #{framework_path} not found!" if !File.directory?(source_path)
