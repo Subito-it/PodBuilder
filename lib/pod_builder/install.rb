@@ -195,6 +195,9 @@ module PodBuilder
         
         content = File.open(binary_path, "rb").read
         # Workaround https://bugs.swift.org/browse/SR-13275
+        # We simply rewrite the path to a consistent one with the same length as the original
+        # The fact that this path doesn't exists doesn't cause any porblem since these files work
+        # as a cache to improve speed but are not required to perform compilation successfully
         content.gsub!(/\/Users\/.*?\/Library\/Developer\/Xcode\/DerivedData\/ModuleCache\.noindex\/.*?\.pcm/) { |match| 
           pcm = "/Users/PodBuilder/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/"
           pcm_extension = ".pcm"
