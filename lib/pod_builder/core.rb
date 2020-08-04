@@ -31,7 +31,7 @@ module PodBuilder
     Dir.chdir(path)
 
     h = `git rev-parse --show-toplevel`.strip()
-    raise "\n\nNo git repository found, can't delete files!\n".red if h.empty?
+    raise "\n\nNo git repository found in '#{path}', can't delete files!\n".red if h.empty? && !path.start_with?("/tmp/")
 
     FileUtils.rm_rf(path)
 
