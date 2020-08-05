@@ -392,10 +392,6 @@ rescue Exception => e
 ensure
   if command_ret == 0
     PodBuilder::clean_basepath
-    
-    if !OPTIONS.has_key?(:debug)
-      PodBuilder::safe_rm_rf(PodBuilder::Configuration.build_path)
-    end    
   end
   PodBuilder::remove_lockfile
 

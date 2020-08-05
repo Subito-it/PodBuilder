@@ -111,6 +111,10 @@ module PodBuilder
         raise e
       ensure
         FileUtils.rm(lock_file)
+
+        if !OPTIONS.has_key?(:debug)
+          PodBuilder::safe_rm_rf(Configuration.build_path)
+        end  
       end
     end
 
