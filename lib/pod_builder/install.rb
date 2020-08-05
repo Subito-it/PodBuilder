@@ -204,7 +204,7 @@ module PodBuilder
           pcm = "/Users/PodBuilder/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/"
           pcm_extension = ".pcm"
           suffix_length = (match.length - pcm.length - pcm_extension.length)
-          raise "Unexpected length" unless suffix_length > 0 && suffix_length < 50
+          raise "Unexpected length #{suffix_length} in #{framework_path} for '#{match}'" unless suffix_length > 0 && suffix_length < 50
           suffix = "0" * suffix_length
           pcm + suffix + pcm_extension
         }
