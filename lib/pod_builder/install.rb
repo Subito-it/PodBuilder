@@ -106,9 +106,7 @@ module PodBuilder
         cleanup_frameworks(podfile_items)        
         copy_frameworks(podfile_items)
         copy_libraries(podfile_items)
-        if build_configuration != "debug"
-          copy_dsyms(podfile_items)
-        end
+        copy_dsyms(podfile_items)
       rescue Exception => e
         raise e
       ensure
