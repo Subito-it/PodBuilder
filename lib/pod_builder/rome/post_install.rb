@@ -193,7 +193,13 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
 
         module_path = "#{File.join(framework, module_name)}"
         system("xcrun dsymutil '#{module_path}' -no-swiftmodule-timestamp -o '#{destination_dSYM}' 2>/dev/null")
-        system("xcrun strip -x -S '#{module_path}'")
+        if `xcrun codesign -v #{module_path} 2>&1 | grep 'code object is not signed at all' | wc -l`.strip() == "1"
+          system("xcrun strip -x -S '#{module_path}'")
+        else
+          # Running strip on codesigned binaries triggers the following warning:
+          # 'strip: changes being made to the file will invalidate the code signature in: path to binary'          
+          puts "#{module_name} appears to be codesigned, skipping stripping."
+        end
 
         # Sanity check
         binary_uuid = `xcrun dwarfdump --uuid '#{module_path}' | cut -d" " -f2`
