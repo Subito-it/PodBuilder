@@ -22,15 +22,9 @@ module PodBuilder
 
         rel_paths.map! { |x| "#{x}.dSYM"}
 
-        base_path = PodBuilder::dsympath("iphoneos")
-        dSYM_files_iphone = Dir.glob("#{base_path}/**/*.dSYM")
-        puts "Looking for iPhoneOS unused dSYMs".yellow    
-        clean(dSYM_files_iphone, base_path, rel_paths)
-
-        base_path = PodBuilder::dsympath("iphonesimulator")
-        dSYM_files_sim = Dir.glob("#{base_path}/**/*.dSYM")
-        puts "Looking for iPhone Simulator unused dSYMs".yellow
-        clean(dSYM_files_sim, base_path, rel_paths)
+        ["iphoneos", "iphonesimulator", "appletvos", "appletvsimulator"].each do |arch|
+          clean_arch(t)
+        end
 
         puts "Looking for unused sources".yellow
         clean_sources(podspec_names)
@@ -64,6 +58,13 @@ module PodBuilder
       end
 
       private
+
+      def self.clean_arch(arch)
+        base_path = PodBuilder::dsympath(arch)
+        dSYM_files = Dir.glob("#{base_path}/**/*.dSYM")
+        puts "Looking for #{arch} unused dSYMs".yellow
+        clean(dSYM_files, base_path, rel_paths)
+      end
 
       def self.clean(files, base_path, rel_paths)
         files = files.map { |x| [Pathname.new(x).relative_path_from(Pathname.new(base_path)).to_s, x] }.to_h

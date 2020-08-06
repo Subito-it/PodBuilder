@@ -332,9 +332,10 @@ module PodBuilder
         end
 
         existing_dsyms = Dir.glob(PodBuilder::dsympath("**/*.dSYM"))
+        existing_dsyms = Dir.glob(PodBuilder::dsympath("*.dSYM"))
         existing_dsyms.each do |existing_dsym|
-          existing_dsym_name = File.basename(existing_dsym)
-          if !expected_frameworks.include?(existing_dsym_name.gsub(".dSYM", ""))
+          existing_dsyms_filename = File.basename(existing_dsym)
+          if !expected_frameworks.include?(existing_dsyms_filename.gsub(".dSYM", ".framework"))
             puts "Cleanining up `#{existing_dsym_name}`, no longer found among dependencies".blue
             FileUtils.rm_rf(existing_dsym)
           end

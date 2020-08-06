@@ -109,23 +109,10 @@ module PodBuilder
     project = Xcodeproj::Project.open(project_path)
     project.targets.each do |target|
       config = target.build_configurations.find { |config| config.name.eql? configuration }
-      config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
+      config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf'
       config.build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
     end
     project.save
-  end
-
-  def self.copy_dsym_files(dsym_destination, configuration)
-    dsym_destination.rmtree if dsym_destination.directory?
-    platforms = ['iphoneos', 'iphonesimulator']
-    platforms.each do |platform|
-      dsym = Pathname.glob("build/#{configuration}-#{platform}/**/*.dSYM")
-      dsym.each do |dsym|
-        destination = dsym_destination + platform
-        FileUtils.mkdir_p destination
-        FileUtils.cp_r dsym, destination, :remove_destination => true
-      end
-    end
   end
 end
 
@@ -139,7 +126,7 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
   sandbox_root = Pathname(installer_context.sandbox_root)
   sandbox = Pod::Sandbox.new(sandbox_root)
 
-  PodBuilder::enable_debug_information(sandbox.project_path, configuration) if enable_dsym
+  PodBuilder::enable_debug_information(sandbox.project_path, configuration)
 
   build_dir = sandbox_root.parent + 'build'
   destination = sandbox_root.parent + 'Rome'
@@ -190,7 +177,26 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
     FileUtils.cp_r file, destination, :remove_destination => true
   end
 
-  PodBuilder::copy_dsym_files(sandbox_root.parent + 'dSYM', configuration) if enable_dsym
+  if !enable_dsym
+    frameworks = Dir.glob(File.join(destination, "*.framework"))
+
+    dsym_base_path = sandbox_root.parent + 'dSYM'
+
+    # manually generate dSYMs
+    frameworks.each do |framework|
+      module_name = File.basename(framework, ".*")
+      is_static = `file #{File.join(framework, module_name)} | grep 'ar archive' | wc -l`.strip() != "0"
+
+      if !is_static
+        destination_dSYM = File.join(dsym_base_path, "#{module_name}.dSYM")
+        FileUtils.mkdir_p(dsym_base_path)
+
+        module_path = "#{File.join(framework, module_name)}"
+        system("xcrun dsymutil '#{module_path}' -no-swiftmodule-timestamp -o '#{destination_dSYM}' 2>/dev/null")
+        system("xcrun strip -x -S '#{module_path}'")
+      end
+    end
+  end
 
   build_dir.rmtree if build_dir.directory?
 

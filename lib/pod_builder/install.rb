@@ -107,7 +107,7 @@ module PodBuilder
         cleanup_frameworks(podfile_items)        
         copy_frameworks(podfile_items)
         copy_libraries(podfile_items)
-        copy_dsyms(podfile_items)
+        copy_dsyms
       rescue Exception => e
         raise e
       ensure
@@ -186,8 +186,10 @@ module PodBuilder
         dsym_path = framework_rel_path + ".dSYM"
 
         PodBuilder::safe_rm_rf(PodBuilder::prebuiltpath(framework_rel_path))
-        PodBuilder::safe_rm_rf(PodBuilder::dsympath("iphoneos/#{dsym_path}"))
-        PodBuilder::safe_rm_rf(PodBuilder::dsympath("iphonesimulator/#{dsym_path}"))
+
+        ["iphoneos", "iphonesimulator", "appletvos", "appletvsimulator"].each do |platform|
+          PodBuilder::safe_rm_rf(PodBuilder::dsympath("#{platform}/#{dsym_path}"))
+        end
       end
     end
 
@@ -430,22 +432,12 @@ module PodBuilder
       end
     end
 
-    def self.copy_dsyms(podfile_items)
-      Dir.glob("#{Configuration.build_path}/dSYM/*iphoneos/**/*.dSYM") do |dsym_path|
-        framework_rel_path = rel_path(dsym_path.gsub(File.extname(dsym_path), ""), podfile_items)
-        
-        destination_path = PodBuilder::dsympath("iphoneos/#{File.dirname(framework_rel_path)}") 
+    def self.copy_dsyms
+      Dir.glob("#{Configuration.build_path}/dSYM/*.dSYM") do |dsym_path|        
+        destination_path = PodBuilder::dsympath(File.basename(dsym_path))
         FileUtils.mkdir_p(destination_path)
         FileUtils.cp_r(dsym_path, destination_path)
-      end
-
-      Dir.glob("#{Configuration.build_path}/dSYM/*iphonesimulator/**/*.dSYM") do |dsym_path|
-        framework_rel_path = rel_path(dsym_path.gsub(File.extname(dsym_path), ""), podfile_items)
-
-        destination_path = PodBuilder::dsympath("iphonesimulator/#{File.dirname(framework_rel_path)}") 
-        FileUtils.mkdir_p(destination_path)
-        FileUtils.cp_r(dsym_path, destination_path)
-      end
+      end 
     end
 
     def self.init_git(path)
