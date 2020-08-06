@@ -25,7 +25,8 @@ module PodBuilder
         prebuilt_items = all_buildable_items.select { |x| x.is_prebuilt }
         buildable_items = all_buildable_items - prebuilt_items
 
-        if argument_pods.first == "*"
+        build_all = argument_pods.first == "*"
+        if build_all
           argument_pods = analyzer.explicit_pods().map(&:root_name).uniq
         else
           argument_pods = Podfile::resolve_pod_names(argument_pods, all_buildable_items)
@@ -88,7 +89,7 @@ module PodBuilder
           FileUtils.rm_f(PodBuilder::basepath("Podfile.lock"))
         end
 
-        clean_frameworks_folder(all_buildable_items)
+        clean_frameworks_folder(all_buildable_items, build_all)
 
         Licenses::write(licenses, all_buildable_items)
 
@@ -314,7 +315,7 @@ module PodBuilder
         return pods_to_build
       end
 
-      def self.clean_frameworks_folder(buildable_items)
+      def self.clean_frameworks_folder(buildable_items, build_all)
         puts "Cleaning framework folder".yellow
 
         expected_frameworks = buildable_items.map { |x| "#{x.module_name}.framework" }
@@ -342,7 +343,9 @@ module PodBuilder
           migrated = true
         end
 
-        raise "\n\n🚨  You're migrating from PodBuilder 1.x. dSYM require to be regenerated, please run 'pod_builder build_all'" if migrated
+        if !build_all && migrated
+          raise "\n\n🚨  You're migrating from PodBuilder 1.x. dSYM require to be regenerated, please run 'pod_builder build_all'"
+        end
 
         existing_dsyms = Dir.glob(PodBuilder::dsympath("*.dSYM"))
         existing_dsyms.each do |existing_dsym|
