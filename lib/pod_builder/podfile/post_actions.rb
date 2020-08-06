@@ -1,4 +1,3 @@
-require 'colored'
 require 'xcodeproj'
 require 'pod_builder/core'
 
