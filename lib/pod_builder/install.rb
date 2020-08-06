@@ -201,15 +201,22 @@ module PodBuilder
         content = File.open(binary_path, "rb").read
         # Workaround https://bugs.swift.org/browse/SR-13275
         # We simply rewrite the path to a consistent one with the same length as the original
-        # The fact that this path doesn't exists doesn't cause any porblem since these files work
-        # as a cache to improve speed but are not required to perform compilation successfully
+        # While probably not needed since I don't know if pcm info is used when generating dSYM 
+        # debug information we temporarily copy the .pcm to a the rewritten location in case 
+        # it get used by dsymutil when generating dSYMs
         content.gsub!(/\/Users\/.*?\/Library\/Developer\/Xcode\/DerivedData\/ModuleCache\.noindex\/.*?\.pcm/) { |match| 
-          pcm = "/Users/PodBuilder/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/"
+          pcm_path = File.join(Configuration.build_path, "ModuleCache.noindex", File.basename(match, ".*"))
           pcm_extension = ".pcm"
-          suffix_length = (match.length - pcm.length - pcm_extension.length)
+          suffix_length = (match.length - pcm_path.length - pcm_extension.length)
           raise "Unexpected length #{suffix_length} in #{framework_path} for '#{match}'" unless suffix_length > 0 && suffix_length < 50
           suffix = "0" * suffix_length
-          pcm + suffix + pcm_extension
+
+          rewritten_path = pcm_path + suffix + pcm_extension
+
+          FileUtils.mkdir_p(File.dirname(rewritten_path))
+          FileUtils.cp(match, rewritten_path)
+    
+          rewritten_path
         }
 
         File.write(binary_path, content)
