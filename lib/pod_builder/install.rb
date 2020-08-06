@@ -187,7 +187,7 @@ module PodBuilder
 
         PodBuilder::safe_rm_rf(PodBuilder::prebuiltpath(framework_rel_path))
 
-        ["iphoneos", "iphonesimulator", "appletvos", "appletvsimulator"].each do |platform|
+        Configuration.supported_platforms.each do |platform|
           PodBuilder::safe_rm_rf(PodBuilder::dsympath("#{platform}/#{dsym_path}"))
         end
       end

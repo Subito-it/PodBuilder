@@ -24,6 +24,7 @@ module PodBuilder
     DEFAULT_BUILD_SYSTEM = "Legacy".freeze # either Latest (New build system) or Legacy (Standard build system)
     DEFAULT_LIBRARY_EVOLUTION_SUPPORT = false
     MIN_LFS_SIZE_KB = 256.freeze
+    DEFAULT_PLATFORMS = ["iphoneos", "iphonesimulator", "appletvos", "appletvsimulator"].freeze
     
     private_constant :DEFAULT_BUILD_SETTINGS
     private_constant :DEFAULT_BUILD_SYSTEM
@@ -58,6 +59,7 @@ module PodBuilder
       attr_accessor :lockfile_path
       attr_accessor :use_bundler
       attr_accessor :deterministic_build
+      attr_accessor :supported_platforms
     end
     
     @allow_building_development_pods = false
@@ -88,6 +90,8 @@ module PodBuilder
 
     @use_bundler = false
     @deterministic_build = false
+
+    @supported_platforms = DEFAULT_PLATFORMS
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?

@@ -22,7 +22,7 @@ module PodBuilder
 
         rel_paths.map! { |x| "#{x}.dSYM"}
 
-        ["iphoneos", "iphonesimulator", "appletvos", "appletvsimulator"].each do |arch|
+        Configuration.supported_platforms.each do |arch|
           clean_arch(t)
         end
 
