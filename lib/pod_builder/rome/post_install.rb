@@ -194,6 +194,12 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
         module_path = "#{File.join(framework, module_name)}"
         system("xcrun dsymutil '#{module_path}' -no-swiftmodule-timestamp -o '#{destination_dSYM}' 2>/dev/null")
         system("xcrun strip -x -S '#{module_path}'")
+
+        # Sanity check
+        binary_uuid = `xcrun dwarfdump --uuid '#{module_path}' | cut -d" " -f2`
+        dsym_uuid = `xcrun dwarfdump --uuid '#{File.join(destination_dSYM, "Contents", "Resources", "DWARF", module_name)}' | cut -d" " -f2`
+
+        raise "dSYM sanity check failed for '#{framework}', UUID do not match!" unless binary_uuid == dsym_uuid
       end
     end
   end
