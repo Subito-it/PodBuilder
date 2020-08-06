@@ -1,5 +1,6 @@
 require 'cfpropertylist'
 require 'digest'
+require 'colored'
 
 # The Pod::Target and Pod::Installer::Xcode::PodTargetDependencyInstaller swizzles patch
 # the following issues: 
@@ -77,7 +78,7 @@ module PodBuilder
         end
 
         # It is important that CocoaPods compiles the files under Configuration.build_path in order that DWARF
-        # debug info reference to this path. Doing otherwise breaks the assumptions that make the `update_lldbinit`
+        # debug info reference to this path. Doing otherwise breaks the assumptions that makes the `update_lldbinit`
         # command work
         podfile_content.gsub!("'#{podfile_item.path}'", "'#{destination_path}'")
         
@@ -100,8 +101,8 @@ module PodBuilder
         add_framework_plist_info(podfile_items)
         if Configuration.deterministic_build
           cleanup_remaining_clang_breadcrums
-          add_nib_hashes_framework_plist_info(podfile_items)
-          cleanup_unchanged_nibs(podfile_items)
+          add_framework_file_hashes(podfile_items)
+          cleanup_unchanged_framework_files(podfile_items)
         end
         cleanup_frameworks(podfile_items)        
         copy_frameworks(podfile_items)
@@ -213,10 +214,8 @@ module PodBuilder
       end
     end
 
-    def self.add_nib_hashes_framework_plist_info(podfile_items)
-      # Unfortunately ibtool (the tool that compiles xibs into nibs) does not produce a deterministic output
-      # Therefore we'll store a hash of the content of the nib in the PodBuilder.plist which will be used to
-      # determine which nibs need to be overwritten (if they already exists) when copying frameworks in copy_frameworks
+    def self.add_framework_file_hashes(podfile_items)
+      # Unfortunately several file are not compiled deterministically (e.g. .nib, .car files, .bundles that are code signed)
       Dir.glob(PodBuilder::buildpath_prebuiltpath("*.framework")) do |framework_path|
         podbuilder_file = File.join(framework_path, Configuration.framework_plist_filename)
         plist = CFPropertyList::List.new(:file => podbuilder_file)
@@ -230,8 +229,32 @@ module PodBuilder
         source_path = File.join(Configuration.build_path, "Pods", podfile_item.root_name)
         raise "Adding deterministic data failed. Source path for #{framework_path} not found!" if !File.directory?(source_path)
 
+        # Store all file hashes to determine on a second rebuild which files changed. For some files which are not produced deterministically
+        # like for example .car, .nib and .strings files we'll perform an additional iteration to set the proper hash.
+        # The hash value is used to determine if bundles (which are code signed) can be restored from previous execution.
+
+        files = Hash.new
+        Dir.glob(File.join(framework_path, "**", "*")) do |file_path|
+          if File.directory?(file_path) || 
+             file_path.include?("#{module_name}.swiftmodule/") || 
+             file_path.include?("/_CodeSignature/") || 
+             file_path.include?("/module.modulemap") || 
+             File.extname(file_path) == ".nib" || # nibs are handles separately
+             File.basename(file_path) == module_name
+            next
+          end
+
+          hash = Digest::SHA1.hexdigest(File.open(file_path).read)
+          files[file_path] = hash
+        end
+        plist_data["file_hashes"] = files
+
         nibs = Hash.new
-        Dir.glob(File.join(framework_path, "*.nib")) do |nib_path|
+        Dir.glob(File.join(framework_path, "**", "*.nib")) do |nib_path|
+          if nib_path.include?(".nib/")
+            next
+          end
+
           expected_xib_filename = File.basename(nib_path, ".*") + ".xib"
 
           xibs = Dir.glob(File.join(source_path, "**", expected_xib_filename))
@@ -240,13 +263,48 @@ module PodBuilder
           
           # There are cases where there are multiple occurances of xibs with the same name
           # for example when a Pod has several subspecs each implementing a different UI.
+          xib_hashes = []
           xibs.each do |xib|
-            hash = Digest::SHA1.hexdigest(File.open(xib).read)
-            nibs[xib] = hash
+            xib_hashes.push(Digest::SHA1.hexdigest(File.open(xib).read))
+          end
+          nibs[nib_path] = Digest::SHA1.hexdigest(xib_hashes.sort.join(""))
+        end
+        plist_data["file_hashes"].merge!(nibs)
+
+        cars = Hash.new
+        Dir.glob(File.join(framework_path, "**", "*.car")) do |car_path|
+          # .car files contains non deterministic data (probabily timestamp). The non deterministic 
+          # data seems to be even in the  image asset data so I couldn't come up with a better idea 
+          # than extracting original file names and hash the original data.
+          original_filenames = `xcrun --sdk iphoneos assetutil --info #{car_path} 2>/dev/null | grep RenditionName | cut -d'"' -f4`.strip().split("\n")
+          integrity_check_count = `xcrun --sdk iphoneos assetutil --info #{car_path} 2>/dev/null | grep ' },' | wc -l`.strip().to_i - 1
+
+          # integrity check
+          if original_filenames.count != integrity_check_count
+            raise "Unexpected number of items in '#{car_path}'.\nExpected #{integrity_check_count} got #{original_filenames.count}"
+          end  
+          
+          original_filenames.uniq!
+          original_filenames.reject! { |t| t.start_with?("ZZZZPackedAsset-") && t.include?("-gamut") }
+
+          car_hash = []
+          matched_files = Set.new
+          Dir.glob(File.join(source_path, "**", "*.xcassets")) do |xcasset_path|
+            original_filenames.each do |filename|  
+              Dir.glob(File.join(xcasset_path, "**", filename)) do |original_path|
+                car_hash.push(Digest::SHA1.hexdigest(File.open(original_path).read))
+                matched_files.add(File.basename(original_path))
+              end
+            end
+          end
+          cars[car_path] = Digest::SHA1.hexdigest(car_hash.sort.join(""))
+
+          delta_files = original_filenames - matched_files.to_a
+          if delta_files.count > 0
+            raise "Failed to find the following original assets:\n#{delta_files} contained in #{car_path}"
           end
         end
-
-        plist_data["nib_hashes"] = nibs
+        plist_data["file_hashes"].merge!(cars)
         
         plist.value = CFPropertyList.guess(plist_data)
         plist.save(podbuilder_file, CFPropertyList::List::FORMAT_BINARY)
@@ -263,7 +321,9 @@ module PodBuilder
       end
     end
 
-    def self.cleanup_unchanged_nibs(podfile_items)
+    def self.cleanup_unchanged_framework_files(podfile_items)
+      # This method restores .nib, .cars and .bundle folders (which are code signed)
+      # if no changes are detected to the original files
       Dir.glob(PodBuilder::buildpath_prebuiltpath("*.framework")) do |framework_path|
         framework_rel_path = rel_path(framework_path, podfile_items)
 
@@ -271,21 +331,45 @@ module PodBuilder
         destination_path = PodBuilder::prebuiltpath(framework_rel_path)
 
         if Configuration.deterministic_build
-          previous_hashes = nib_hashes_in_framework_plist_info(destination_path)
-          current_hashes = nib_hashes_in_framework_plist_info(framework_path)
+          previous_hashes = file_hashes_in_framework_plist_info(destination_path)
+          current_hashes = file_hashes_in_framework_plist_info(framework_path)
 
-          current_hashes.each do |key, hash|
-            nib_filename = File.basename(key, ".*") + ".nib"            
-            xib_matching_filename = previous_hashes.select { |t| File.basename(t, ".*") == File.basename(key, ".*") }
+          while current_hashes.keys.count > 0
+            key = current_hashes.keys.first
+            key_extension = File.extname(key) 
 
-            all_match = xib_matching_filename.all? { |t| Digest::SHA1.hexdigest(File.open(t[0]).read) == t[1] }
+            relative_path = Pathname.new(key).relative_path_from(framework_path).to_s
+            first_path_component = Pathname(relative_path).each_filename.first
 
-            if all_match  
-              previous_nib = File.join(destination_path, nib_filename)
-              current_nib = File.join(framework_path, nib_filename)
+            resource_source_path = File.join(destination_path, first_path_component)
+            resource_destination_path = File.join(framework_path, first_path_component)
 
-              PodBuilder::safe_rm_rf(current_nib)
-              FileUtils.cp_r(previous_nib, current_nib)
+            restore_resource = false            
+            if first_path_component.end_with?(".bundle")
+              # To restore a bundle all files in the folder need to be unchanged
+              bundle_resources = current_hashes.select { |k, v| 
+                relative_path = Pathname.new(k).relative_path_from(framework_path).to_s
+                relative_path.start_with?(first_path_component) 
+              }
+              previous_bundle_resources = previous_hashes.select { |k, v| 
+                relative_path = Pathname.new(k).relative_path_from(framework_path).to_s
+                relative_path.start_with?(first_path_component) 
+              }
+              all_match  = bundle_resources.all? { |k, v| previous_bundle_resources[k] == v }
+              bundle_resources.each { |k, v| current_hashes.delete(k) }
+
+              restore_resource = (all_match && bundle_resources.count == previous_bundle_resources.count)
+            elsif [".car", ".nib"].include?(key_extension)
+              restore_resource = (current_hashes[key] == previous_hashes[key])
+            end
+
+            current_hashes.delete(key)
+
+            if restore_resource
+              puts "Restoring resource: #{first_path_component}".red
+              
+              PodBuilder::safe_rm_rf(resource_destination_path)
+              FileUtils.cp_r(resource_source_path, resource_destination_path)
             end
           end
         end
@@ -372,7 +456,7 @@ module PodBuilder
       Dir.chdir(current_dir)
     end
 
-    def self.nib_hashes_in_framework_plist_info(framework_path)
+    def self.file_hashes_in_framework_plist_info(framework_path)
       podbuilder_file = File.join(framework_path, Configuration.framework_plist_filename)
 
       unless File.exist?(podbuilder_file)
@@ -382,7 +466,7 @@ module PodBuilder
       plist = CFPropertyList::List.new(:file => podbuilder_file)
       data = CFPropertyList.native_types(plist.value)
 
-      return data["nib_hashes"] || {}
+      return data["file_hashes"] || {}
     end
   end
 end
