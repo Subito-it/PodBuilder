@@ -331,7 +331,19 @@ module PodBuilder
           end
         end
 
-        existing_dsyms = Dir.glob(PodBuilder::dsympath("**/*.dSYM"))
+        # v.1.x migration
+        migrated = false
+        if File.directory?(PodBuilder::dsympath("iphoneos"))
+          FileUtils.rm_rf(PodBuilder::dsympath("iphoneos"))
+          migrated = true
+        end
+        if File.directory?(PodBuilder::dsympath("iphonesimulator"))
+          FileUtils.rm_rf(PodBuilder::dsympath("iphonesimulator"))
+          migrated = true
+        end
+
+        raise "\n\n🚨  You're migrating from PodBuilder 1.x. dSYM require to be regenerated, please run 'pod_builder build_all'" if migrated
+
         existing_dsyms = Dir.glob(PodBuilder::dsympath("*.dSYM"))
         existing_dsyms.each do |existing_dsym|
           existing_dsyms_filename = File.basename(existing_dsym)
