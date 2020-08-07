@@ -280,6 +280,23 @@ module PodBuilder
         end
         plist_data["file_hashes"].merge!(nibs)
 
+        momds = Hash.new
+        Dir.glob(File.join(framework_path, "**", "*.momd")) do |momd_path|
+          expected_xcdatamodl_filename = File.basename(momd_path, ".*") + ".xcdatamodeld"
+
+          model_files = Dir.glob(File.join(source_path, "**", expected_xcdatamodl_filename, "**/*"))
+          model_files.reject! { |t| File.directory?(t) }
+
+          raise "Did fail finding source datamodel in '#{source_path}' for '#{momd_path}'" if model_files.count == 0
+          
+          hashes = []
+          model_files.each do |file|
+            hashes.push(Digest::SHA1.hexdigest(File.open(file).read))
+          end
+          momds[momd_path] = Digest::SHA1.hexdigest(hashes.sort.join(""))
+        end
+        plist_data["file_hashes"].merge!(momds)
+
         cars = Hash.new
         Dir.glob(File.join(framework_path, "**", "*.car")) do |car_path|
           # .car files contains non deterministic data (probabily timestamp). The non deterministic 
@@ -368,7 +385,7 @@ module PodBuilder
               bundle_resources.each { |k, v| current_hashes.delete(k) }
 
               restore_resource = (all_match && bundle_resources.count == previous_bundle_resources.count)
-            elsif [".car", ".nib"].include?(key_extension)
+            elsif [".car", ".nib", ".momd"].include?(key_extension)
               restore_resource = (current_hashes[key] == previous_hashes[key])
             end
 
