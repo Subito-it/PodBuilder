@@ -22,9 +22,10 @@ module PodBuilder
 
         rel_paths.map! { |x| "#{x}.dSYM"}
 
-        Configuration.supported_platforms.each do |arch|
-          clean_arch(t)
-        end
+        base_path = PodBuilder::dsympath(arch)
+        dSYM_files = Dir.glob(File.join(PodBuilder::dsympath, "*.dSYM"))
+        puts "Looking for unused dSYMs".yellow
+        clean(dSYM_files, base_path, rel_paths)
 
         puts "Looking for unused sources".yellow
         clean_sources(podspec_names)
@@ -58,13 +59,6 @@ module PodBuilder
       end
 
       private
-
-      def self.clean_arch(arch)
-        base_path = PodBuilder::dsympath(arch)
-        dSYM_files = Dir.glob("#{base_path}/**/*.dSYM")
-        puts "Looking for #{arch} unused dSYMs".yellow
-        clean(dSYM_files, base_path, rel_paths)
-      end
 
       def self.clean(files, base_path, rel_paths)
         files = files.map { |x| [Pathname.new(x).relative_path_from(Pathname.new(base_path)).to_s, x] }.to_h
