@@ -197,10 +197,10 @@ module PodBuilder
         
         content = File.open(binary_path, "rb").read
         # Workaround https://bugs.swift.org/browse/SR-13275
-        # We simply rewrite the path to a consistent one with the same length as the original
-        # While probably not needed since I don't know if pcm info is used when generating dSYM 
-        # debug information we temporarily copy the .pcm to a the rewritten location in case 
-        # it get used by dsymutil when generating dSYMs
+        # We simply rewrite the path to a consistent one with the same length as the original.
+        # While probably not needed (I don't know if pcm info is used when generating dSYMs) 
+        # we temporarily copy the .pcm to the rewritten location in case it get used by 
+        # dsymutil when generating dSYMs
         content.gsub!(/\/Users\/.*?\/Library\/Developer\/Xcode\/DerivedData\/ModuleCache\.noindex\/.*?\.pcm/) { |match| 
           pcm_path = File.join(Configuration.build_path, "ModuleCache.noindex", File.basename(match, ".*"))
           pcm_extension = ".pcm"
@@ -221,7 +221,15 @@ module PodBuilder
     end
 
     def self.add_framework_file_hashes(podfile_items)
-      # Unfortunately several file are not compiled deterministically (e.g. .nib, .car files, .bundles that are code signed)
+      # Unfortunately several file are not compiled deterministically (e.g. .nib, .car, .momd files,
+      # .bundles which are code signed)
+      # To workaround this we store the hash value of the original files in PodBuilder.plist file
+      # For .nibs we look for the original xibs
+      # For .cars we look for files in the original .xcasset 
+      # For .momds we look for files in the original .xcdatamodeld
+      #
+      # In all cases we support the fact that there might be multiple original files matching the compiled ones.
+      # For all other files we compute a simple hash
       Dir.glob(PodBuilder::buildpath_prebuiltpath("*.framework")) do |framework_path|
         podbuilder_file = File.join(framework_path, Configuration.framework_plist_filename)
         plist = CFPropertyList::List.new(:file => podbuilder_file)
@@ -345,8 +353,8 @@ module PodBuilder
     end
 
     def self.cleanup_unchanged_framework_files(podfile_items)
-      # This method restores .nib, .cars and .bundle folders (which are code signed)
-      # if no changes are detected to the original files
+      # This method restores .nib, .cars, .momd and .bundle folders when no changes
+      # are detected to the original files. See add_framework_file_hashes method
       Dir.glob(PodBuilder::buildpath_prebuiltpath("*.framework")) do |framework_path|
         framework_rel_path = rel_path(framework_path, podfile_items)
 
