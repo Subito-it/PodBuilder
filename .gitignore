@@ -8,3 +8,9 @@
 /tmp/
 Gemfile.lock
 .vscode/
+.DS_Store
+Example/Pods
+Example/Frameworks/Rome
+
+Example/Frameworks/dSYM
+
