@@ -13,17 +13,18 @@ module PodBuilder
         all_buildable_items = Analyze.podfile_items(installer, analyzer)
 
         podspec_names = all_buildable_items.map(&:podspec_name)
-        rel_paths = all_buildable_items.map(&:prebuilt_rel_path)
+        rel_paths = all_buildable_items.map(&:prebuilt_rel_path) + all_buildable_items.map(&:vendored_frameworks).flatten.map { |t| File.basename(t) }
+        rel_paths.uniq!
 
         base_path = PodBuilder::prebuiltpath
         framework_files = Dir.glob("#{base_path}/**/*.framework")
         puts "Looking for unused frameworks".yellow
         clean(framework_files, base_path, rel_paths)
 
-        rel_paths.map! { |x| "#{x}.dSYM"}
+        rel_paths.map! { |x| "#{File.basename(x, ".*")}.dSYM"}
 
-        base_path = PodBuilder::dsympath(arch)
-        dSYM_files = Dir.glob(File.join(PodBuilder::dsympath, "*.dSYM"))
+        base_path = PodBuilder::dsympath
+        dSYM_files = Dir.glob(File.join(base_path, "*.dSYM"))
         puts "Looking for unused dSYMs".yellow
         clean(dSYM_files, base_path, rel_paths)
 
