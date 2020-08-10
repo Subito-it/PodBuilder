@@ -2,12 +2,15 @@ require 'fourflusher'
 require 'colored'
 
 module PodBuilder
-  def self.build_for_iosish_platform(sandbox, build_dir, target, device, simulator, configuration, deterministic_build)
+  def self.build_for_iosish_platform(sandbox, build_dir, target, device, simulator, configuration, deterministic_build, build_for_apple_silicon)
+    raise "Apple silicon hardware still unsupported since it requires to migrate to xcframeworks" if build_for_apple_silicon
+
     deployment_target = target.platform_deployment_target
     target_label = target.cocoapods_target_label
 
-    PodBuilder::xcodebuild(sandbox, target_label, device, deployment_target, configuration, deterministic_build)
-    PodBuilder::xcodebuild(sandbox, target_label, simulator, deployment_target, configuration, deterministic_build)
+    xcodebuild(sandbox, target_label, device, deployment_target, configuration, deterministic_build, [])
+    excluded_archs = build_for_apple_silicon ? [] : ["arm64"]
+    xcodebuild(sandbox, target_label, simulator, deployment_target, configuration, deterministic_build, excluded_archs)
 
     spec_names = target.specs.map { |spec| [spec.root.name, spec.root.module_name] }.uniq
     spec_names.each do |root_name, module_name|
@@ -23,9 +26,13 @@ module PodBuilder
       next unless File.file?(device_lib) && File.file?(simulator_lib)
       
       # Starting with Xcode 12b3 the simulator binary contains an arm64 slice as well which conflict with the one in the device_lib when creating the fat library
-      if `xcrun lipo -info #{simulator_lib}`.include?("arm64")
-        `xcrun lipo -remove arm64 #{simulator_lib} -o #{simulator_lib}`
-      end
+      ## This hack doesn't work because we might need to have 2 separated arm64 slices, one for simulator and one for device each built with different
+      ## compile time directives (e.g #if targetEnvironment(simulator))
+      ## 
+      ## The only workaround is to produce xcframeworks which should support this kind of cases
+      ## if `xcrun lipo -info #{simulator_lib}`.include?("arm64")
+      ##  `xcrun lipo -remove arm64 #{simulator_lib} -o #{simulator_lib}`
+      ## end
 
       lipo_log = `xcrun lipo -create -output #{executable_path} #{device_lib} #{simulator_lib}`
       puts lipo_log unless File.exist?(executable_path)
@@ -51,10 +58,14 @@ module PodBuilder
     end
   end
 
-  def self.xcodebuild(sandbox, target, sdk='macosx', deployment_target=nil, configuration, deterministic_build)
+  def self.xcodebuild(sandbox, target, sdk='macosx', deployment_target=nil, configuration, deterministic_build, exclude_archs)
     args = %W(-project #{sandbox.project_path.realdirpath} -scheme #{target} -configuration #{configuration} -sdk #{sdk})
     platform = PLATFORMS[sdk]
     args += Fourflusher::SimControl.new.destination(:oldest, platform, deployment_target) unless platform.nil?
+
+    if exclude_archs.count > 0
+      args += ["EXCLUDED_ARCHS=#{exclude_archs.join(" ")}"]
+    end
 
     env = {}
     if deterministic_build
@@ -80,7 +91,7 @@ module PodBuilder
     output = stdout + stderr
     unless status.success?
       if raise_on_failure
-        raise Informative, "#{full_command}\n\n#{output}"
+        raise "#{full_command}\n\n#{output}"
       else
         UI.message("[!] Failed: #{full_command}".red)
       end
@@ -138,10 +149,10 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
   targets = installer_context.umbrella_targets.select { |t| t.specs.any? }
   targets.each do |target|
     case target.platform_name
-    when :ios then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.deterministic_build)
-    when :osx then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.deterministic_build)
-    when :tvos then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.deterministic_build)
-    when :watchos then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.deterministic_build)
+    when :ios then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon)
+    when :osx then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon)
+    when :tvos then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon)
+    when :watchos then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon)
     else raise "Unknown platform '#{target.platform_name}'" end
   end
 

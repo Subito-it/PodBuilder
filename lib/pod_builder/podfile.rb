@@ -36,6 +36,8 @@ module PodBuilder
         build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
         build_settings['DEBUG_INFORMATION_FORMAT'] = "dwarf"
 
+        build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = platform.deployment_target.version # Fix compilation warnings on Xcode 12
+
         # Don't store .pcm info in binary, see https://forums.swift.org/t/swift-behavior-of-gmodules-and-dsyms/23211/3
         build_settings['CLANG_ENABLE_MODULE_DEBUGGING'] = 'NO'
         build_settings['OTHER_SWIFT_FLAGS'] = "-Xfrontend -no-clang-module-breadcrumbs"

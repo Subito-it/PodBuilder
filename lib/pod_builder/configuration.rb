@@ -25,6 +25,7 @@ module PodBuilder
     DEFAULT_LIBRARY_EVOLUTION_SUPPORT = false
     MIN_LFS_SIZE_KB = 256.freeze
     DEFAULT_PLATFORMS = ["iphoneos", "iphonesimulator", "appletvos", "appletvsimulator"].freeze
+    DEFAULT_BUILD_FOR_APPLE_SILICON = false
     
     private_constant :DEFAULT_BUILD_SETTINGS
     private_constant :DEFAULT_BUILD_SYSTEM
@@ -60,6 +61,7 @@ module PodBuilder
       attr_accessor :use_bundler
       attr_accessor :deterministic_build
       attr_accessor :supported_platforms
+      attr_accessor :build_for_apple_silicon
     end
     
     @allow_building_development_pods = false
@@ -92,6 +94,7 @@ module PodBuilder
     @deterministic_build = false
 
     @supported_platforms = DEFAULT_PLATFORMS
+    @build_for_apple_silicon = DEFAULT_BUILD_FOR_APPLE_SILICON
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
@@ -198,6 +201,11 @@ module PodBuilder
         if value = json["deterministic_build"]
           if [TrueClass, FalseClass].include?(value.class)
             Configuration.deterministic_build = value
+          end
+        end
+        if value = json["build_for_apple_silicon"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.build_for_apple_silicon = value
           end
         end
         
