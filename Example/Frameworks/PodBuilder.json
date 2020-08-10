@@ -1,9 +1,10 @@
 {
-  "project_name": "",
+  "deterministic_build": true,
+  "project_name": "PodBuilderExample",
   "spec_overrides": {
     "Google-Mobile-Ads-SDK": {
       "module_name": "GoogleMobileAds"
-    },
+    }
   },
   "skip_licenses": [
 
@@ -12,17 +13,23 @@
     "GoogleMaps"
   ],
   "force_prebuild_pods": [
-    "Firebase"
+    "Firebase",
+    "GoogleTagManager"
   ],
   "build_settings": {
     "ENABLE_BITCODE": "NO",
     "GCC_OPTIMIZATION_LEVEL": "s",
     "SWIFT_OPTIMIZATION_LEVEL": "-Osize",
-    "SWIFT_COMPILATION_MODE": "wholemodule"
+    "SWIFT_COMPILATION_MODE": "wholemodule",
+    "CODE_SIGN_IDENTITY": "",
+    "CODE_SIGNING_REQUIRED": "NO",
+    "CODE_SIGN_ENTITLEMENTS": "",
+    "CODE_SIGNING_ALLOWED": "NO"
   },
   "build_settings_overrides": {
   },
   "build_system": "Legacy",
+  "library_evolution_support": false,
   "license_filename": "Pods-acknowledgements",
   "subspecs_to_split": [
 
