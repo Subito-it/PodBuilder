@@ -90,8 +90,8 @@ module PodBuilder
         end
   
         deps = item.dependency_names.sort
-        if name.nil?
-          deps.select! { |t| t.split("/").first != item.root_name }
+        if name == item.root_name
+          deps.reject! { |t| t.split("/").first == item.root_name }
         end
   
         if deps.count > 0
@@ -125,8 +125,6 @@ module PodBuilder
           podspec += subspec_keys
           podspec += "#{indentation}end\n"
         end
-
-        
       end
     
       return podspec, valid
