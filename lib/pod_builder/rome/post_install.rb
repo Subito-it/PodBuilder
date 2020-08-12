@@ -60,8 +60,10 @@ module PodBuilder
 
   def self.xcodebuild(sandbox, target, sdk='macosx', deployment_target=nil, configuration, deterministic_build, exclude_archs)
     args = %W(-project #{sandbox.project_path.realdirpath} -scheme #{target} -configuration #{configuration} -sdk #{sdk})
-    platform = PLATFORMS[sdk]
-    args += Fourflusher::SimControl.new.destination(:oldest, platform, deployment_target) unless platform.nil?
+    supported_platforms = { 'iphonesimulator' => 'iOS', 'appletvsimulator' => 'tvOS', 'watchsimulator' => 'watchOS' }
+    if platform = supported_platforms[sdk]
+      args += Fourflusher::SimControl.new.destination(:oldest, platform, deployment_target) unless platform.nil?
+    end
 
     if exclude_archs.count > 0
       args += ["EXCLUDED_ARCHS=#{exclude_archs.join(" ")}"]
