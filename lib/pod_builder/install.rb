@@ -463,7 +463,7 @@ module PodBuilder
 
     def self.copy_dsyms
       Dir.glob("#{Configuration.build_path}/dSYM/*.dSYM") do |dsym_path|        
-        destination_path = PodBuilder::dsympath(File.basename(dsym_path))
+        destination_path = PodBuilder::dsympath
         FileUtils.mkdir_p(destination_path)
         FileUtils.cp_r(dsym_path, destination_path)
       end 
