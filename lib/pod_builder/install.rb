@@ -95,6 +95,30 @@ module PodBuilder
       begin  
         lock_file = "#{Configuration.build_path}/pod_builder.lock"
         FileUtils.touch(lock_file)
+
+        framework_build_hashes = Hash.new
+        if !OPTIONS.has_key?(:force_rebuild)
+          download # Copy files under #{Configuration.build_path}/Pods so that we can determine build folder hashes
+
+          # Replace prebuilt entries in Podfile for Pods that have no changes in source code which will avoid rebuilding them
+          items = podfile_items.group_by { |t| t.root_name }.map { |k, v| v.first } # Return one podfile_item per root_name
+          items.each do |item|
+            framework_path = File.join(PodBuilder::prebuiltpath, "#{item.module_name}.framework")
+            if last_build_folder_hash = build_folder_hash_in_framework_plist_info(framework_path)
+              if last_build_folder_hash == build_folder_hash(item)
+                puts "No changes detected to '#{item.root_name}', will skip rebuild".blue
+                podfile_items.select { |t| t.root_name == item.root_name }.each do |replace_item|
+                  replace_regex = "pod '#{Regexp.quote(replace_item.name)}', .*"
+                  replace_line_found = podfile_content =~ /#{replace_regex}/i
+                  raise "Failed finding pod entry for '#{replace_item.name}'" unless replace_line_found
+                  podfile_content.gsub!(/#{replace_regex}/, replace_item.prebuilt_entry(true, true))
+                end
+              end
+            end
+          end
+
+          File.write(podfile_path, podfile_content)          
+        end  
   
         install
 
@@ -119,17 +143,32 @@ module PodBuilder
     def self.install
       CLAide::Command::PluginManager.load_plugins("cocoapods")
 
-      current_dir = Dir.pwd
-      
-      Dir.chdir(Configuration.build_path)
+      Dir.chdir(Configuration.build_path) do
+        config = Pod::Config.new()
+        installer = Pod::Installer.new(config.sandbox, config.podfile, config.lockfile)
+        installer.repo_update = false
+        installer.update = false
+        installer.install!    
+      end
+    end
 
-      config = Pod::Config.new()
-      installer = Pod::Installer.new(config.sandbox, config.podfile, config.lockfile)
-      installer.repo_update = false
-      installer.update = false
-      installer.install!  
+    def self.download
+      CLAide::Command::PluginManager.load_plugins("cocoapods")
 
-      Dir.chdir(current_dir)
+      Dir.chdir(Configuration.build_path) do
+        last_title_level = Pod::UserInterface.title_level
+        Pod::UserInterface.title_level = 1
+
+        config = Pod::Config.new()
+        installer = Pod::Installer.new(config.sandbox, config.podfile, config.lockfile)
+        installer.repo_update = false
+        installer.update = false
+        installer.prepare
+        installer.resolve_dependencies
+        installer.download_dependencies
+
+        Pod::UserInterface.title_level = last_title_level
+      end
     end
 
     def self.rel_path(path, podfile_items)
@@ -166,6 +205,7 @@ module PodBuilder
           plist_data['specs'] = (specs.map(&:name) + subspec_self_deps).uniq
           plist_data['is_static'] = podfile_item.is_static
           plist_data['original_compile_path'] = Pathname.new(Configuration.build_path).realpath.to_s
+          plist_data['build_folder_hash'] = build_folder_hash(podfile_item)
 
           plist.value = CFPropertyList.guess(plist_data)
           plist.save(podbuilder_file, CFPropertyList::List::FORMAT_BINARY)
@@ -265,17 +305,31 @@ module PodBuilder
       Dir.chdir(current_dir)
     end
 
-    def self.file_hashes_in_framework_plist_info(framework_path)
+    def self.build_folder_hash_in_framework_plist_info(framework_path)
       podbuilder_file = File.join(framework_path, Configuration.framework_plist_filename)
 
       unless File.exist?(podbuilder_file)
-        return {}
+        return nil
       end
 
       plist = CFPropertyList::List.new(:file => podbuilder_file)
       data = CFPropertyList.native_types(plist.value)
 
-      return data["file_hashes"] || {}
+      return data['build_folder_hash']
+    end
+
+    def self.build_folder_hash(podfile_item)
+      if podfile_item.is_development_pod
+        if Pathname.new(podfile_item.path).absolute?
+          item_path = podfile_item.path
+        else 
+          item_path = PodBuilder::basepath(podfile_item.path)
+        end
+      else
+        item_path = "#{Configuration.build_path}/Pods/#{podfile_item.root_name}"
+      end
+
+      return `find '#{item_path}' -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum | cut -d' ' -f1`.strip()
     end
   end
 end
