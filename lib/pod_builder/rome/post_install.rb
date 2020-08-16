@@ -147,10 +147,10 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
   targets = installer_context.umbrella_targets.select { |t| t.specs.any? }
   targets.each do |target|
     case target.platform_name
-    when :ios then build_for_iosish_platform(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, Configuration.build_for_apple_silicon)
-    when :osx then xcodebuild(sandbox, target.cocoapods_target_label, configuration, Configuration.build_for_apple_silicon)
-    when :tvos then build_for_iosish_platform(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, Configuration.build_for_apple_silicon)
-    when :watchos then build_for_iosish_platform(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, Configuration.build_for_apple_silicon)
+    when :ios then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.build_for_apple_silicon)
+    when :osx then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.build_for_apple_silicon)
+    when :tvos then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.build_for_apple_silicon)
+    when :watchos then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.build_for_apple_silicon)
     else raise "Unknown platform '#{target.platform_name}'" end
   end
 
