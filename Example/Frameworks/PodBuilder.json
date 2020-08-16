@@ -1,5 +1,4 @@
 {
-  "deterministic_build": true,
   "project_name": "PodBuilderExample",
   "spec_overrides": {
     "Google-Mobile-Ads-SDK": {

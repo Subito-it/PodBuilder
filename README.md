@@ -324,10 +324,6 @@ If you use bundler to pin the version of CocoaPods in your project set this to t
 
 If set to true built frameworks will include iPhone simulator slices for Apple silicon based hardware. Default false.
 
-#### `deterministic_build`
-
-If set to true builds framework deterministically, so that prebuilding the framework twice produces exactly the same build outputs. Default false.
-
 
 # Behind the scenes
 
