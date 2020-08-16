@@ -334,25 +334,10 @@ module PodBuilder
           end
         end
 
-        # v.1.x migration
-        migrated = false
-        if File.directory?(PodBuilder::dsympath("iphoneos"))
-          FileUtils.rm_rf(PodBuilder::dsympath("iphoneos"))
-          migrated = true
-        end
-        if File.directory?(PodBuilder::dsympath("iphonesimulator"))
-          FileUtils.rm_rf(PodBuilder::dsympath("iphonesimulator"))
-          migrated = true
-        end
-
-        if !build_all && migrated
-          raise "\n\n🚨  You're migrating from PodBuilder 1.x. dSYM require to be regenerated, please run 'pod_builder build_all'"
-        end
-
-        existing_dsyms = Dir.glob(PodBuilder::dsympath("*.dSYM"))
+        existing_dsyms = Dir.glob(PodBuilder::dsympath("**/*.dSYM"))
         existing_dsyms.each do |existing_dsym|
-          existing_dsyms_filename = File.basename(existing_dsym)
-          if !expected_frameworks.include?(existing_dsyms_filename.gsub(".dSYM", ".framework"))
+          existing_dsym_name = File.basename(existing_dsym)
+          if !expected_frameworks.include?(existing_dsym_name.gsub(".dSYM", ""))
             puts "Cleanining up `#{existing_dsym_name}`, no longer found among dependencies".blue
             FileUtils.rm_rf(existing_dsym)
           end

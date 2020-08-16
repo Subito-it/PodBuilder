@@ -119,10 +119,24 @@ module PodBuilder
     project = Xcodeproj::Project.open(project_path)
     project.targets.each do |target|
       config = target.build_configurations.find { |config| config.name.eql? configuration }
-      config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf'
+      config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
       config.build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
     end
     project.save
+  end
+
+  def self.copy_dsym_files(dsym_destination, configuration)
+    dsym_destination.rmtree if dsym_destination.directory?
+
+    platforms = Configuration.supported_platforms
+    platforms.each do |platform|
+      dsym = Pathname.glob("build/#{configuration}-#{platform}/**/*.dSYM")
+      dsym.each do |dsym|
+        destination = dsym_destination + platform
+        FileUtils.mkdir_p destination
+        FileUtils.cp_r dsym, destination, :remove_destination => true
+      end
+    end
   end
 end
 
@@ -185,7 +199,9 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
     FileUtils.cp_r file, destination, :remove_destination => true
   end
 
-  if !enable_dsym
+  if enable_dsym
+    PodBuilder::copy_dsym_files(sandbox_root.parent + 'dSYM', configuration)
+  else
     frameworks = Dir.glob(File.join(destination, "*.framework"))
 
     dsym_base_path = sandbox_root.parent + 'dSYM'

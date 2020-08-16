@@ -127,7 +127,7 @@ module PodBuilder
         cleanup_frameworks(podfile_items)        
         copy_frameworks(podfile_items)
         copy_libraries(podfile_items)
-        copy_dsyms
+        copy_dsyms(podfile_items)
       rescue Exception => e
         raise e
       ensure
@@ -293,12 +293,16 @@ module PodBuilder
       end
     end
 
-    def self.copy_dsyms
-      Dir.glob("#{Configuration.build_path}/dSYM/*.dSYM") do |dsym_path|        
-        destination_path = PodBuilder::dsympath
-        FileUtils.mkdir_p(destination_path)
-        FileUtils.cp_r(dsym_path, destination_path)
-      end 
+    def self.copy_dsyms(podfile_items)
+      Configuration.supported_platforms.each do |platform|
+        Dir.glob("#{Configuration.build_path}/dSYM/#{platform}/**/*.dSYM") do |dsym_path|
+          framework_rel_path = rel_path(dsym_path.gsub(File.extname(dsym_path), ""), podfile_items)
+          
+          destination_path = PodBuilder::dsympath("#{platform}/#{File.dirname(framework_rel_path)}") 
+          FileUtils.mkdir_p(destination_path)
+          FileUtils.cp_r(dsym_path, destination_path)
+        end  
+      end
     end
 
     def self.init_git(path)

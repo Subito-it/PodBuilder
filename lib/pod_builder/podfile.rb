@@ -34,7 +34,7 @@ module PodBuilder
         # These settings need to be set as is to properly build frameworks
         build_settings['SWIFT_COMPILATION_MODE'] = 'wholemodule'
         build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
-        build_settings['DEBUG_INFORMATION_FORMAT'] = "dwarf"
+        build_settings['DEBUG_INFORMATION_FORMAT'] = "dwarf-with-dsym"
 
         build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = platform.deployment_target.version # Fix compilation warnings on Xcode 12
 
