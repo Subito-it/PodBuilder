@@ -381,14 +381,18 @@ module PodBuilder
       end
     end
 
-    def prebuilt_entry(include_pb_entry = true)
-      relative_path = Pathname.new(Configuration.base_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
-      relative_path += "/Rome"
+    def prebuilt_entry(include_pb_entry = true, absolute_path = false)
+      if absolute_path 
+        pod_path = PodBuilder::prebuiltpath
+      else
+        pod_path = Pathname.new(Configuration.base_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
+        pod_path += "/Rome"
+      end
 
       if Configuration.subspecs_to_split.include?(name)
-        entry = "pod '#{podspec_name}', :path => '#{relative_path}'"
+        entry = "pod '#{podspec_name}', :path => '#{pod_path}'"
       else
-        entry = "pod '#{name}', :path => '#{relative_path}'"
+        entry = "pod '#{name}', :path => '#{pod_path}'"
       end
 
       if include_pb_entry && !is_prebuilt
