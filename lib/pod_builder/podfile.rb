@@ -291,6 +291,8 @@ module PodBuilder
         return nil
       end
 
+      puts "Checking Podfile.restore".yellow
+
       podfile_restore_path = PodBuilder::basepath("Podfile.restore")
       unless File.exist?(podfile_restore_path)
         return

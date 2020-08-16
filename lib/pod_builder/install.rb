@@ -142,6 +142,8 @@ module PodBuilder
     private 
 
     def self.install
+      puts "Building frameworks".yellow
+
       CLAide::Command::PluginManager.load_plugins("cocoapods")
 
       Dir.chdir(Configuration.build_path) do
@@ -154,11 +156,12 @@ module PodBuilder
     end
 
     def self.download
+      puts "Downloading Pods source code".yellow
+
       CLAide::Command::PluginManager.load_plugins("cocoapods")
 
       Dir.chdir(Configuration.build_path) do
-        last_title_level = Pod::UserInterface.title_level
-        Pod::UserInterface.title_level = 1
+        Pod::UserInterface::config.silent = true
 
         config = Pod::Config.new()
         installer = Pod::Installer.new(config.sandbox, config.podfile, config.lockfile)
@@ -168,7 +171,7 @@ module PodBuilder
         installer.resolve_dependencies
         installer.download_dependencies
 
-        Pod::UserInterface.title_level = last_title_level
+        Pod::UserInterface::config.silent = false
       end
     end
 

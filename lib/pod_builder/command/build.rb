@@ -18,6 +18,8 @@ module PodBuilder
         Podfile.sanity_check()
         check_not_building_subspecs(argument_pods)
 
+        puts "Loading Podfile".yellow
+
         install_update_repo = options.fetch(:update_repos, true)
         installer, analyzer = Analyze.installer_at(PodBuilder::basepath, install_update_repo)
 
