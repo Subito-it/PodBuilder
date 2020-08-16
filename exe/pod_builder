@@ -71,6 +71,9 @@ Options:
         opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
           OPTIONS[:update_repos] = false
         end
+        opts.on("-f", "--force", "Rebuild frameworks evan if no code change is detected") do |o|
+          OPTIONS[:force_rebuild] = false
+        end
         opts.on("-w", "--allow-warnings", "Allow warnings") do |o|
           OPTIONS[:allow_warnings] = o
         end
@@ -99,6 +102,9 @@ Options:
 "        
         opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
           OPTIONS[:update_repos] = false
+        end
+        opts.on("-f", "--force", "Rebuild frameworks evan if no code change is detected") do |o|
+          OPTIONS[:force_rebuild] = false
         end
         opts.on("-w", "--allow-warnings", "Allow warnings") do |o|
           OPTIONS[:allow_warnings] = o
