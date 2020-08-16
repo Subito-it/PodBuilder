@@ -182,7 +182,7 @@ module PodBuilder
 
                 podfile_item_dependency_items = all_buildable_items.select { |x| podfile_item.dependency_names.include?(x.name) && x.vendored_framework_path.nil? == false }
                 if podfile_item_dependency_items.count > 0
-                  prebuilt_lines += podfile_item_dependency_items.map { |x| "#{line.detect_indentation}#{x.prebuilt_entry(include_pb_entry = false)}#{marker}\n" }.uniq
+                  prebuilt_lines += podfile_item_dependency_items.map { |x| "#{line.detect_indentation}#{x.prebuilt_entry(false)}#{marker}\n" }.uniq
                 else
                   prebuilt_lines.push(line)
                 end
@@ -204,7 +204,7 @@ module PodBuilder
                   dep_item = all_buildable_items.detect { |x| x.name == dep.name }
 
                   if Podspec.include?(dep_item.root_name)
-                    pod_name = dep_item.prebuilt_entry(include_pb_entry = false)
+                    pod_name = dep_item.prebuilt_entry(false)
                     pod_name.gsub!(dep.name, dep.root_name)
                     prebuilt_lines.push("#{line.detect_indentation}#{pod_name}#{marker}\n")
                   end
