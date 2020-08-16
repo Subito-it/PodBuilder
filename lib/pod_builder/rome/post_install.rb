@@ -69,12 +69,12 @@ module PodBuilder
       args += ["EXCLUDED_ARCHS=#{exclude_archs.join(" ")}"]
     end
 
-    env = {}
-    execute_command 'xcodebuild', args, true, env
+    environmental_variables = {}
+    execute_command 'xcodebuild', args, true, environmental_variables
   end
 
   # Copy paste implementation from CocoaPods internals to be able to call poopen3 passing environmental variables
-  def self.execute_command(executable, command, raise_on_failure = true, env = {})
+  def self.execute_command(executable, command, raise_on_failure = true, environmental_variables = {})
     bin = Pod::Executable.which!(executable)
 
     command = command.map(&:to_s)
@@ -83,7 +83,7 @@ module PodBuilder
     stdout = Pod::Executable::Indenter.new
     stderr = Pod::Executable::Indenter.new
 
-    status = popen3(bin, command, stdout, stderr, env)
+    status = popen3(bin, command, stdout, stderr, environmental_variables)
     stdout = stdout.join
     stderr = stderr.join
     output = stdout + stderr
@@ -98,9 +98,9 @@ module PodBuilder
     output
   end
 
-  def self.popen3(bin, command, stdout, stderr, env)
+  def self.popen3(bin, command, stdout, stderr, environmental_variables)
     require 'open3'
-    Open3.popen3(env, bin, *command) do |i, o, e, t|
+    Open3.popen3(environmental_variables, bin, *command) do |i, o, e, t|
       Pod::Executable::reader(o, stdout)
       Pod::Executable::reader(e, stderr)
       i.close
