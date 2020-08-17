@@ -63,6 +63,8 @@ end
 module PodBuilder
   class Install
     def self.podfile(podfile_content, podfile_items, build_configuration)
+      puts "Preparing build Podfile".yellow
+
       PodBuilder::safe_rm_rf(Configuration.build_path)
       FileUtils.mkdir_p(Configuration.build_path)
 
@@ -151,7 +153,12 @@ module PodBuilder
         installer = Pod::Installer.new(config.sandbox, config.podfile, config.lockfile)
         installer.repo_update = false
         installer.update = false
-        installer.install!    
+        
+        install_start_time = Time.now
+        installer.install! 
+        install_time = Time.now - install_start_time
+
+        puts "Build completed in #{install_time.to_i} seconds".blue
       end
     end
 
