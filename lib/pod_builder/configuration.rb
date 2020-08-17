@@ -59,6 +59,7 @@ module PodBuilder
       attr_accessor :lockfile_name
       attr_accessor :lockfile_path
       attr_accessor :use_bundler
+      attr_accessor :deterministic_build
       attr_accessor :supported_platforms
       attr_accessor :build_for_apple_silicon
     end
@@ -90,6 +91,7 @@ module PodBuilder
     @lockfile_path = "/tmp/#{lockfile_name}"
 
     @use_bundler = false
+    @deterministic_build = false
 
     @supported_platforms = DEFAULT_PLATFORMS
     @build_for_apple_silicon = DEFAULT_BUILD_FOR_APPLE_SILICON
@@ -196,6 +198,11 @@ module PodBuilder
             Configuration.use_bundler = value
           end
         end
+        if value = json["deterministic_build"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.deterministic_build = value
+          end
+        end
         if value = json["build_for_apple_silicon"]
           if [TrueClass, FalseClass].include?(value.class)
             Configuration.build_for_apple_silicon = value
@@ -222,8 +229,10 @@ module PodBuilder
         Configuration.development_pods_paths.freeze
       end
 
-      build_path = "#{build_base_path}#{(Time.now.to_f * 1000).to_i}"
-      lockfile_path = File.join(PodBuilder::home, lockfile_name)
+      if !deterministic_build
+        build_path = "#{build_base_path}#{(Time.now.to_f * 1000).to_i}"
+        lockfile_path = File.join(PodBuilder::home, lockfile_name)
+      end
     end
     
     def self.write

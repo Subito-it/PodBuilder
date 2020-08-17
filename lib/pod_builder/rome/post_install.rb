@@ -2,15 +2,15 @@ require 'fourflusher'
 require 'colored'
 
 module PodBuilder
-  def self.build_for_iosish_platform(sandbox, build_dir, target, device, simulator, configuration, build_for_apple_silicon)
+  def self.build_for_iosish_platform(sandbox, build_dir, target, device, simulator, configuration, deterministic_build, build_for_apple_silicon)
     raise "Apple silicon hardware still unsupported since it requires to migrate to xcframeworks" if build_for_apple_silicon
 
     deployment_target = target.platform_deployment_target
     target_label = target.cocoapods_target_label
 
-    xcodebuild(sandbox, target_label, device, deployment_target, configuration, [])
+    xcodebuild(sandbox, target_label, device, deployment_target, configuration, deterministic_build, [])
     excluded_archs = build_for_apple_silicon ? [] : ["arm64"]
-    xcodebuild(sandbox, target_label, simulator, deployment_target, configuration, excluded_archs)
+    xcodebuild(sandbox, target_label, simulator, deployment_target, configuration, deterministic_build, excluded_archs)
 
     spec_names = target.specs.map { |spec| [spec.root.name, spec.root.module_name] }.uniq
     spec_names.each do |root_name, module_name|
@@ -58,7 +58,7 @@ module PodBuilder
     end
   end
 
-  def self.xcodebuild(sandbox, target, sdk='macosx', deployment_target=nil, configuration, exclude_archs)
+  def self.xcodebuild(sandbox, target, sdk='macosx', deployment_target=nil, configuration, deterministic_build, exclude_archs)
     args = %W(-project #{sandbox.project_path.realdirpath} -scheme #{target} -configuration #{configuration} -sdk #{sdk})
     supported_platforms = { 'iphonesimulator' => 'iOS', 'appletvsimulator' => 'tvOS', 'watchsimulator' => 'watchOS' }
     if platform = supported_platforms[sdk]
@@ -70,6 +70,10 @@ module PodBuilder
     end
 
     environmental_variables = {}
+    if deterministic_build
+      environmental_variables["ZERO_AR_DATE"] = "1"
+    end
+
     execute_command 'xcodebuild', args, true, environmental_variables
   end
 
@@ -159,10 +163,10 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
   targets = installer_context.umbrella_targets.select { |t| t.specs.any? }
   targets.each do |target|
     case target.platform_name
-    when :ios then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.build_for_apple_silicon)
-    when :osx then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.build_for_apple_silicon)
-    when :tvos then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.build_for_apple_silicon)
-    when :watchos then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.build_for_apple_silicon)
+    when :ios then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon)
+    when :osx then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon)
+    when :tvos then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon)
+    when :watchos then PodBuilder::build_for_iosish_platform(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon)
     else raise "Unknown platform '#{target.platform_name}'" end
   end
 

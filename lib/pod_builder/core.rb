@@ -154,7 +154,11 @@ module PodBuilder
       if pid = File.read(lockfile_path)
         begin
           if Process.getpgid(pid)
-            raise "\n\nAnother PodBuilder pending task is running on this project\n".red    
+            if Configuration.deterministic_build    
+              raise "\n\nAnother PodBuilder pending task is running\n".red    
+            else
+              raise "\n\nAnother PodBuilder pending task is running on this project\n".red    
+            end
           end
         rescue
         end
