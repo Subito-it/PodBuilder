@@ -229,10 +229,12 @@ module PodBuilder
     def self.cleanup_frameworks(podfile_items)
       Dir.glob(PodBuilder::buildpath_prebuiltpath("*.framework")) do |framework_path|
         framework_rel_path = rel_path(framework_path, podfile_items)
-        dsym_path = File.basename(framework_rel_path, ".*") + ".dSYM"
+        dsym_path = framework_rel_path + ".dSYM"
 
         PodBuilder::safe_rm_rf(PodBuilder::prebuiltpath(framework_rel_path))
-        PodBuilder::safe_rm_rf(PodBuilder::dsympath(dsym_path))
+        Configuration.supported_platforms.each do |platform|
+          PodBuilder::safe_rm_rf(PodBuilder::dsympath("#{platform}/#{dsym_path}"))
+        end
       end
     end
 

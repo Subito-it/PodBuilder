@@ -21,12 +21,14 @@ module PodBuilder
         puts "Looking for unused frameworks".yellow
         clean(framework_files, base_path, rel_paths)
 
-        rel_paths.map! { |x| "#{File.basename(x, ".*")}.dSYM"}
+        rel_paths.map! { |x| "#{x}.dSYM"}
 
-        base_path = PodBuilder::dsympath
-        dSYM_files = Dir.glob(File.join(base_path, "*.dSYM"))
-        puts "Looking for unused dSYMs".yellow
-        clean(dSYM_files, base_path, rel_paths)
+        Configuration.supported_platforms.each do |platform|
+          base_path = PodBuilder::dsympath(platform)
+          dSYM_files = Dir.glob("#{base_path}/**/*.dSYM")
+          puts "Looking for #{platform} unused dSYMs".yellow    
+          clean(dSYM_files, base_path, rel_paths)  
+        end
 
         puts "Looking for unused sources".yellow
         clean_sources(podspec_names)
