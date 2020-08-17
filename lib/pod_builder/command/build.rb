@@ -91,7 +91,7 @@ module PodBuilder
           FileUtils.rm_f(PodBuilder::basepath("Podfile.lock"))
         end
 
-        clean_frameworks_folder(all_buildable_items, build_all)
+        clean_frameworks_folder(all_buildable_items)
 
         Licenses::write(licenses, all_buildable_items)
 
@@ -317,7 +317,7 @@ module PodBuilder
         return pods_to_build
       end
 
-      def self.clean_frameworks_folder(buildable_items, build_all)
+      def self.clean_frameworks_folder(buildable_items)
         puts "Cleaning framework folder".yellow
 
         expected_frameworks = buildable_items.map { |x| "#{x.module_name}.framework" }
