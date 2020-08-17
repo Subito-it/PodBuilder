@@ -14,9 +14,6 @@ target 'PodBuilderExample' do
 
   # Firebase
   pod 'Firebase'
-  pod 'abseil/strings', :path => 'Frameworks/Rome'
-  pod 'abseil/memory', :path => 'Frameworks/Rome'
-  pod 'abseil/numeric', :path => 'Frameworks/Rome'
   pod 'FirebaseCore', :path => 'Frameworks/Rome' # pb<FirebaseCore>
   pod 'GoogleUtilities', :path => 'Frameworks/Rome' # pb<FirebaseCore>
   pod 'FirebaseCoreDiagnostics', :path => 'Frameworks/Rome' # pb<FirebaseCore>

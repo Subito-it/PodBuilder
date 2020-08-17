@@ -14,3 +14,6 @@ Example/Frameworks/Rome
 
 Example/Frameworks/dSYM
 
+Example/PodBuilderExample.xcodeproj/xcuserdata/*.xcuserdatad
+Example/PodBuilderExample.xcworkspace/xcuserdata
+Example/Pods/Pods.xcodeproj/xcuserdata
