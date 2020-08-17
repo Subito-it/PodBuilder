@@ -8,4 +8,33 @@ use_frameworks!
 platform :ios, '9.0'
 
 target 'PodBuilderExample' do
+	pod 'AFNetworking', '=4.0.1' # pb<AFNetworking> is<false>
+	pod 'Alamofire', '=4.9.1' # pb<Alamofire> is<false> sv<swiftlang-1200.0.25.2>
+	pod 'BoringSSL-GRPC', '=0.0.7' # pb<BoringSSL-GRPC> is<false>
+	pod 'Firebase', '=6.30.0' # pb<Firebase>
+	pod 'FirebaseABTesting', '=4.2.0' # pb<FirebaseABTesting>
+	pod 'FirebaseAnalytics', '=6.7.2'
+	pod 'FirebaseAuth', '=6.8.0' # pb<FirebaseAuth> is<true>
+	pod 'FirebaseCore', '=6.10.0' # pb<FirebaseCore> is<true>
+	pod 'FirebaseCoreDiagnostics', '=1.5.0' # pb<FirebaseCoreDiagnostics> is<true>
+	pod 'FirebaseCrashlytics', '=4.4.0' # pb<FirebaseCrashlytics> is<true>
+	pod 'FirebaseDatabase', '=6.5.0' # pb<FirebaseDatabase> is<true>
+	pod 'FirebaseFirestore', '=1.16.4' # pb<FirebaseFirestore> is<true>
+	pod 'FirebaseInstallations', '=1.6.0' # pb<FirebaseInstallations> is<true>
+	pod 'FirebasePerformance', '=3.3.0'
+	pod 'FirebaseRemoteConfig', '=4.9.0' # pb<FirebaseRemoteConfig>
+	pod 'GTMSessionFetcher/Core', '=1.4.0' # pb<GTMSessionFetcher/Core> is<false>
+	pod 'GoogleAppMeasurement', '=6.7.2'
+	pod 'GoogleDataTransport', '=7.2.0' # pb<GoogleDataTransport> is<true>
+	pod 'GoogleToolboxForMac/Defines', '=2.2.2' # pb<GoogleToolboxForMac/Defines>
+	pod 'GoogleUtilities/AppDelegateSwizzler', '=6.7.2' # pb<GoogleUtilities/AppDelegateSwizzler> is<false>
+	pod 'Loop', '=1.0.0' # pb<Loop> is<false> sv<swiftlang-1200.0.25.2>
+	pod 'PromisesObjC', '=1.2.10' # pb<PromisesObjC> is<false>
+	pod 'Protobuf', '=3.12.0' # pb<Protobuf>
+	pod 'ReactiveSwift', '=6.3.0' # pb<ReactiveSwift> is<false> sv<swiftlang-1200.0.25.2>
+	pod 'abseil/algorithm', '=0.20200225.0' # pb<abseil/algorithm> is<false>
+	pod 'gRPC-C++', '=1.28.2' # pb<gRPC-C++> is<false>
+	pod 'gRPC-Core', '=1.28.2' # pb<gRPC-Core> is<false>
+	pod 'leveldb-library', '=1.22' # pb<leveldb-library> is<false>
+	pod 'nanopb', '=1.30905.0' # pb<nanopb> is<false>
 end
