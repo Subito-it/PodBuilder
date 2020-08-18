@@ -25,14 +25,15 @@ module PodBuilder
 
       next unless File.file?(device_lib) && File.file?(simulator_lib)
       
-      # Starting with Xcode 12b3 the simulator binary contains an arm64 slice as well which conflict with the one in the device_lib when creating the fat library
-      ## This hack doesn't work because we might need to have 2 separated arm64 slices, one for simulator and one for device each built with different
-      ## compile time directives (e.g #if targetEnvironment(simulator))
-      ## 
-      ## The only workaround is to produce xcframeworks which should support this kind of cases
-      ## if `xcrun lipo -info #{simulator_lib}`.include?("arm64")
-      ##  `xcrun lipo -remove arm64 #{simulator_lib} -o #{simulator_lib}`
-      ## end
+      # Starting with Xcode 12b3 the simulator binary contains an arm64 slice as well which conflict with the one in the device_lib
+      # when creating the fat library. A naive workaround is to remove the arm64 from the simulator_lib however this is wrong because 
+      # we might actually need to have 2 separated arm64 slices, one for simulator and one for device each built with different
+      # compile time directives (e.g #if targetEnvironment(simulator))
+      #
+      # For the time being we remove the arm64 slice bacause otherwise the `xcrun lipo -create -output ...` would fail.
+      if `xcrun lipo -info #{simulator_lib}`.include?("arm64")
+       `xcrun lipo -remove arm64 #{simulator_lib} -o #{simulator_lib}`
+      end
 
       lipo_log = `xcrun lipo -create -output #{executable_path} #{device_lib} #{simulator_lib}`
       puts lipo_log unless File.exist?(executable_path)
@@ -178,7 +179,7 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
   frameworks += Pathname.glob("build/*.framework").reject { |f| f.to_s =~ /Pods[^.]+\.framework/ }
 
   resources = []
-
+  
   Pod::UI.puts "Built #{frameworks.count} #{'frameworks'.pluralize(frameworks.count)}"
 
   destination.rmtree if destination.directory?
