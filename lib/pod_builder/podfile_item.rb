@@ -8,6 +8,10 @@ module PodBuilder
     #
     attr_reader :branch
 
+    # @return [String] A checksum for the spec
+    #
+    attr_reader :checksum
+
     # @return [String] Matches @name unless for subspecs were it stores the name of the root pod
     #
     attr_reader :root_name
@@ -125,6 +129,8 @@ module PodBuilder
     def initialize(spec, all_specs, checkout_options, supported_platforms)
       @name = spec.name
       @root_name = spec.name.split("/").first
+
+      @checksum = spec.checksum
 
       checkout_options_keys = [@root_name, @name]
 
