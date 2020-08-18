@@ -66,7 +66,8 @@ module PodBuilder
       args += Fourflusher::SimControl.new.destination(:oldest, platform, deployment_target) unless platform.nil?
     end
 
-    if exclude_archs.count > 0
+    xcodebuild_version = `xcodebuild -version | head -n1 | awk '{print $2}'`.strip().to_f
+    if exclude_archs.count > 0 && xcodebuild_version >= 12.0
       args += ["EXCLUDED_ARCHS=#{exclude_archs.join(" ")}"]
     end
 
