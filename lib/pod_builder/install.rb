@@ -46,6 +46,19 @@ begin
     end
   end
 
+  # Starting from CocoaPods 1.10.0 and later resources are no longer copied inside the .framework
+  # when building static frameworks. While this is correct when using CP normally, for redistributable
+  # frameworks we require resources to be shipped along the binary
+  class Pod::Installer::Xcode::PodsProjectGenerator::PodTargetInstaller
+    alias_method :swz_add_files_to_build_phases, :add_files_to_build_phases
+
+    def add_files_to_build_phases(native_target, test_native_targets, app_native_targets)
+      target.mock_dynamic_framework = target.build_as_static_framework?
+      swz_add_files_to_build_phases(native_target, test_native_targets, app_native_targets)
+      target.mock_dynamic_framework = false
+    end
+  end 
+
   class Pod::Installer::Xcode::PodTargetDependencyInstaller
     alias_method :swz_wire_resource_bundle_targets, :wire_resource_bundle_targets
   
