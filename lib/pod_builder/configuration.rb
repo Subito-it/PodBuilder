@@ -275,6 +275,7 @@ module PodBuilder
     
     def self.podbuilder_path
       paths = Dir.glob("#{PodBuilder::home}/**/.pod_builder")
+      paths.reject! { |t| t.match(/pod-builder-.*\/Example\/Frameworks\/\.pod_builder$/i) }
       raise "\n\nToo many .pod_builder found `#{paths.join("\n")}`\n".red if paths.count > 1
       
       return paths.count > 0 ? File.dirname(paths.first) : nil
