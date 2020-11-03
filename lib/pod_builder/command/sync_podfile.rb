@@ -3,11 +3,11 @@ require 'pod_builder/core'
 module PodBuilder
   module Command
     class SyncPodfile
-      def self.call(options)
+      def self.call
         Configuration.check_inited
         PodBuilder::prepare_basepath
         
-        install_update_repo = options.fetch(:update_repos, true)
+        install_update_repo = OPTIONS.fetch(:update_repos, true)
         installer, analyzer = Analyze.installer_at(PodBuilder::basepath, install_update_repo)
 
         all_buildable_items = Analyze.podfile_items(installer, analyzer)
@@ -25,6 +25,7 @@ module PodBuilder
           system("#{bundler_prefix}pod install;")
         end
         
+        puts "\n\n🎉 done!\n".green
         return 0
       end
     end

@@ -3,6 +3,7 @@ require 'fileutils'
 require 'colored'
 
 require 'pod_builder/podfile'
+require 'pod_builder/podfile_cp'
 require 'pod_builder/podfile_item'
 require 'pod_builder/analyze'
 require 'pod_builder/analyzer'
@@ -15,17 +16,30 @@ require 'pod_builder/licenses'
 require 'core_ext/string'
 
 module PodBuilder  
+  @@xcodeproj_path = nil
+  @@xcodeworkspace_path = nil
+
+  def self.git_rootpath
+    return `git rev-parse --show-toplevel`.strip()
+  end
+
   def self.safe_rm_rf(path)
     unless File.exist?(path)
       return
+    end
+
+    unless File.directory?(path)
+      FileUtils.rm(path)
+
+      return 
     end
 
     current_dir = Dir.pwd
 
     Dir.chdir(path)
 
-    h = `git rev-parse --show-toplevel`.strip()
-    raise "\n\nNo git repository found, can't delete files!\n".red if h.empty?
+    rootpath = git_rootpath()
+    raise "\n\nNo git repository found in '#{path}', can't delete files!\n".red if rootpath.empty? && !path.start_with?(Configuration.build_base_path)
 
     FileUtils.rm_rf(path)
 
@@ -33,6 +47,12 @@ module PodBuilder
       Dir.chdir(current_dir)
     else
       Dir.chdir(basepath)
+    end
+  end
+
+  def self.gitignoredfiles
+    Dir.chdir(git_rootpath) do
+      return `git status --ignored -s | grep "^\!\!" | cut -c4-`.strip().split("\n")
     end
   end
   
@@ -49,7 +69,7 @@ module PodBuilder
       return nil
     end
 
-    path = basepath("Rome")
+    path = basepath("Prebuilt")
     if child.length > 0
       path += "/#{child}"
     end
@@ -62,7 +82,20 @@ module PodBuilder
       return nil
     end
 
-    path = "#{Configuration.build_path}/Rome"
+    path = "#{Configuration.build_path}/Prebuilt"
+    if child.length > 0
+      path += "/#{child}"
+    end
+
+    return path
+  end
+
+  def self.buildpath_dsympath(child = "")
+    if child.nil?
+      return nil
+    end
+
+    path = "#{Configuration.build_path}/dSYM"
     if child.length > 0
       path += "/#{child}"
     end
@@ -90,27 +123,36 @@ module PodBuilder
   end
 
   def self.find_xcodeproj
+    unless @@xcodeproj_path.nil?
+      return @@xcodeproj_path
+    end
     project_name = File.basename(find_xcodeworkspace, ".*")
 
     xcodeprojects = Dir.glob("#{home}/**/#{project_name}.xcodeproj").select { |x| 
       folder_in_home = x.gsub(home, "")
-      !folder_in_home.include?("/Pods/") && !x.include?(PodBuilder::basepath("Sources")) && !x.include?(basepath) 
+      !folder_in_home.include?("/Pods/") && !x.include?(PodBuilder::basepath("Sources")) && !x.include?(PodBuilder::basepath + "/") 
     }
-    raise "xcodeproj not found!".red if xcodeprojects.count == 0
-    raise "Found multiple xcodeproj:\n#{xcodeprojects.join("\n")}".red if xcodeprojects.count > 1
+    raise "\n\nxcodeproj not found!".red if xcodeprojects.count == 0
+    raise "\n\nFound multiple xcodeproj:\n#{xcodeprojects.join("\n")}".red if xcodeprojects.count > 1
 
-    return xcodeprojects.first
+    @@xcodeproj_path = xcodeprojects.first
+    return @@xcodeproj_path
   end
 
   def self.find_xcodeworkspace
+    unless @@xcodeworkspace_path.nil?
+      return @@xcodeworkspace_path
+    end
+
     xcworkspaces = Dir.glob("#{home}/**/#{Configuration.project_name}*.xcworkspace").select { |x| 
       folder_in_home = x.gsub(home, "")
-      !folder_in_home.include?("/Pods/") && !x.include?(PodBuilder::basepath("Sources")) && !x.include?(basepath) && !x.include?(".xcodeproj/")
+      !folder_in_home.include?("/Pods/") && !x.include?(PodBuilder::basepath("Sources")) && !x.include?(PodBuilder::basepath + "/") && !x.include?(".xcodeproj/")
     }
-    raise "xcworkspace not found!".red if xcworkspaces.count == 0
-    raise "Found multiple xcworkspaces:\n#{xcworkspaces.join("\n")}".red if xcworkspaces.count > 1
+    raise "\n\nxcworkspace not found!".red if xcworkspaces.count == 0
+    raise "\n\nFound multiple xcworkspaces:\n#{xcworkspaces.join("\n")}".red if xcworkspaces.count > 1
 
-    return xcworkspaces.first
+    @@xcodeworkspace_path = xcworkspaces.first
+    return @@xcodeworkspace_path
   end
 
   def self.prepare_basepath
@@ -137,18 +179,22 @@ module PodBuilder
 
   def self.system_swift_version
     swift_version = `swiftc --version | grep -o 'swiftlang-.*\s'`.strip()
-    raise "Unsupported swift compiler version, expecting `swiftlang` keyword in `swiftc --version`" if swift_version.length == 0
+    raise "\n\nUnsupported swift compiler version, expecting `swiftlang` keyword in `swiftc --version`".red if swift_version.length == 0
     return swift_version
   end
 
-  def self.add_lock_file
-    lockfile_path = File.join(home, Configuration.lock_filename)
+  def self.add_lockfile
+    lockfile_path = Configuration.lockfile_path
 
     if File.exist?(lockfile_path)
       if pid = File.read(lockfile_path)
         begin
           if Process.getpgid(pid)
+            if Configuration.deterministic_build    
+              raise "\n\nAnother PodBuilder pending task is running\n".red    
+            else
               raise "\n\nAnother PodBuilder pending task is running on this project\n".red    
+            end
           end
         rescue
         end
@@ -158,8 +204,9 @@ module PodBuilder
     File.write(lockfile_path, Process.pid, mode: "w")
   end
 
-  def self.remove_lock_file
-    lockfile_path = File.join(home, Configuration.lock_filename)
+  def self.remove_lockfile
+    lockfile_path = Configuration.lockfile_path
+
     if File.exist?(lockfile_path)
       FileUtils.rm(lockfile_path)
     end
@@ -168,8 +215,8 @@ module PodBuilder
   private 
   
   def self.home
-    h = `git rev-parse --show-toplevel`.strip()
-    raise "\n\nNo git repository found in current folder `#{Dir.pwd}`!\n".red if h.empty?
-    return h
+    rootpath = git_rootpath
+    raise "\n\nNo git repository found in current folder `#{Dir.pwd}`!\n".red if rootpath.empty?
+    return rootpath
   end
 end

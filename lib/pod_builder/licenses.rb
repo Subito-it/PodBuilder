@@ -12,19 +12,19 @@
       
         if current_licenses.count > 0 
           licenses_header = current_licenses.shift
-          raise "Unexpected license found in header" if licenses_header.has_key?("License")
+          raise "\n\nUnexpected license found in header".red if licenses_header.has_key?("License")
         end
         if current_licenses.count > 0 
           license_footer = current_licenses.pop
-          raise "Unexpected license found in footer" if license_footer.has_key?("License")
+          raise "\n\nUnexpected license found in footer".red if license_footer.has_key?("License")
         end
       end
 
       if licenses.count > 0
         licenses_header = licenses.shift
-        raise "Unexpected license found in header" if licenses_header.has_key?("License")
+        raise "\n\nUnexpected license found in header".red if licenses_header.has_key?("License")
         license_footer = licenses.pop
-        raise "Unexpected license found in footer" if license_footer.has_key?("License")
+        raise "\n\nUnexpected license found in footer".red if license_footer.has_key?("License")
 
         lincenses_titles = licenses.map { |x| x["Title"] }
         current_licenses.select! { |x| !lincenses_titles.include?(x["Title"]) }

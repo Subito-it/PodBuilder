@@ -4,7 +4,7 @@ require 'json'
 module PodBuilder
   module Command
     class Info
-      def self.call(options)          
+      def self.call          
         Configuration.check_inited
 
         info = PodBuilder::Info.generate_info()

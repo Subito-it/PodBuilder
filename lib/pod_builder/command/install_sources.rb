@@ -3,14 +3,18 @@ require 'pod_builder/core'
 module PodBuilder
   module Command
     class InstallSources
-      def self.call(options)
+      def self.call
         Configuration.check_inited
+        if Configuration.build_using_repo_paths
+          raise "\n\nSource cannot be installed because lldb shenanigans not supported when 'build_using_repo_paths' is enabled".red
+        end
+
         PodBuilder::prepare_basepath
 
-        install_update_repo = options.fetch(:update_repos, true)
+        install_update_repo = OPTIONS.fetch(:update_repos, true)
         installer, analyzer = Analyze.installer_at(PodBuilder::basepath, install_update_repo)
-        framework_items = Analyze.podfile_items(installer, analyzer).select { |x| !x.is_prebuilt }
-        podspec_names = framework_items.map(&:podspec_name)
+        podfile_items = Analyze.podfile_items(installer, analyzer).select { |x| !x.is_prebuilt }
+        podspec_names = podfile_items.map(&:podspec_name)
 
         base_path = PodBuilder::prebuiltpath
         framework_files = Dir.glob("#{base_path}/**/*.framework")
@@ -18,15 +22,14 @@ module PodBuilder
         framework_files.each do |path|
           rel_path = Pathname.new(path).relative_path_from(Pathname.new(base_path)).to_s
 
-          if framework_spec = framework_items.detect { |x| x.prebuilt_rel_path == rel_path }
-            update_repo(framework_spec)
+          if podfile_spec = podfile_items.detect { |x| "#{x.root_name}/#{x.prebuilt_rel_path}" == rel_path }
+            update_repo(podfile_spec)
           end
         end
 
-        Command::Clean::clean_sources()
+        Clean::install_sources(podfile_items)
 
         ARGV << PodBuilder::basepath("Sources")
-        Command::UpdateLldbInit::call(options)
 
         puts "\n\n🎉 done!\n".green
         return 0
@@ -35,6 +38,10 @@ module PodBuilder
       private
 
       def self.update_repo(spec)
+        if spec.path != nil || spec.podspec_path != nil
+          return
+        end
+
         dest_path = PodBuilder::basepath("Sources")
         FileUtils.mkdir_p(dest_path)
 
@@ -43,25 +50,25 @@ module PodBuilder
 
         repo_dir = File.join(dest_path, spec.podspec_name)
         if !File.directory?(repo_dir)
-          raise "Failed cloning #{spec.name}" if !system("git clone #{spec.repo} #{spec.podspec_name}")
+          raise "\n\nFailed cloning #{spec.name}".red if !system("git clone #{spec.repo} #{spec.podspec_name}")
         end
 
         Dir.chdir(repo_dir)
         puts "Checking out #{spec.podspec_name}".yellow
-        raise "Failed cheking out #{spec.name}" if !system(git_hard_checkout_cmd(spec))
+        raise "\n\nFailed cheking out #{spec.name}".red if !system(git_hard_checkout_cmd(spec))
 
         Dir.chdir(current_dir)
       end
 
       def self.git_hard_checkout_cmd(spec)
         prefix = "git fetch --all --tags --prune; git reset --hard"
-        if @tag
+        if spec.tag
           return "#{prefix} tags/#{spec.tag}"
         end
-        if @commit
+        if spec.commit
           return "#{prefix} #{spec.commit}"
         end
-        if @branch
+        if spec.branch
           return "#{prefix} origin/#{spec.branch}"
         end
   

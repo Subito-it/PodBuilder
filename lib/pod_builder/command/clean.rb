@@ -4,51 +4,59 @@ require 'highline/import'
 module PodBuilder
   module Command
     class Clean
-      def self.call(options)
+      def self.call
         Configuration.check_inited
         PodBuilder::prepare_basepath
 
-        install_update_repo = options.fetch(:update_repos, true)
+        install_update_repo = OPTIONS.fetch(:update_repos, true)
         installer, analyzer = Analyze.installer_at(PodBuilder::basepath, install_update_repo)
         all_buildable_items = Analyze.podfile_items(installer, analyzer)
 
-        podspec_names = all_buildable_items.map(&:podspec_name)
-        rel_paths = all_buildable_items.map(&:prebuilt_rel_path)
-
-        base_path = PodBuilder::prebuiltpath
-        framework_files = Dir.glob("#{base_path}/**/*.framework")
-        puts "Looking for unused frameworks".yellow
-        clean(framework_files, base_path, rel_paths)
-
-        rel_paths.map! { |x| "#{x}.dSYM"}
-
-        base_path = PodBuilder::dsympath("iphoneos")
-        dSYM_files_iphone = Dir.glob("#{base_path}/**/*.dSYM")
-        puts "Looking for iPhoneOS unused dSYMs".yellow    
-        clean(dSYM_files_iphone, base_path, rel_paths)
-
-        base_path = PodBuilder::dsympath("iphonesimulator")
-        dSYM_files_sim = Dir.glob("#{base_path}/**/*.dSYM")
-        puts "Looking for iPhone Simulator unused dSYMs".yellow
-        clean(dSYM_files_sim, base_path, rel_paths)
-
-        puts "Looking for unused sources".yellow
-        clean_sources(podspec_names)
+        prebuilt_items(all_buildable_items)
+        install_sources(all_buildable_items)
 
         puts "\n\n🎉 done!\n".green
         return 0
       end
+      
+      def self.prebuilt_items(buildable_items)
+        puts "Cleaning prebuilt folder".yellow
 
-      def self.clean_sources(podspec_names)        
+        root_names = buildable_items.map(&:root_name).uniq
+        Dir.glob(PodBuilder::prebuiltpath("*")).each do |path|
+          basename = File.basename(path)
+          unless root_names.include?(basename) 
+            puts "Cleanining up `#{basename}`, no longer found among dependencies".blue
+            PodBuilder::safe_rm_rf(path)
+          end
+        end
+
+        puts "Cleaning dSYM folder".yellow
+        module_names = buildable_items.map(&:module_name).uniq
+        Dir.glob(File.join(PodBuilder::dsympath, "**/*.dSYM")).each do |path|
+          dsym_basename = File.basename(path, ".*")
+          dsym_basename.gsub!(/\.framework$/, "")
+          unless module_names.include?(dsym_basename)
+            puts "Cleanining up `#{dsym_basename}`, no longer found among dependencies".blue
+            PodBuilder::safe_rm_rf(path)
+          end
+        end
+
+      end
+
+      def self.install_sources(buildable_items)        
+        puts "Looking for unused sources".yellow
+
+        podspec_names = buildable_items.map(&:root_name).uniq
+
         base_path = PodBuilder::basepath("Sources")
 
-        repo_paths = Dir.glob("#{base_path}/*")
-
         paths_to_delete = []
+        repo_paths = Dir.glob("#{base_path}/*")
         repo_paths.each do |path|
           podspec_name = File.basename(path)
 
-          unless !podspec_names.include?(podspec_name)
+          if podspec_names.include?(podspec_name)
             next
           end
 
@@ -57,38 +65,9 @@ module PodBuilder
 
         paths_to_delete.flatten.each do |path|
           confirm = ask("#{path} unused.\nDelete it? [Y/N] ") { |yn| yn.limit = 1, yn.validate = /[yn]/i }
-          if confirm.downcase == 'y'
+          if confirm.downcase == 'y' || OPTIONS.has_key?(:no_stdin_available)
             PodBuilder::safe_rm_rf(path)
           end
-        end
-      end
-
-      private
-
-      def self.clean(files, base_path, rel_paths)
-        files = files.map { |x| [Pathname.new(x).relative_path_from(Pathname.new(base_path)).to_s, x] }.to_h
-
-        paths_to_delete = []
-        files.each do |rel_path, path|
-          unless !rel_paths.include?(rel_path)
-            next
-          end
-
-          paths_to_delete.push(path)
-        end
-
-        paths_to_delete.each do |path|
-          confirm = ask("\n#{path} unused.\nDelete it? [Y/N] ") { |yn| yn.limit = 1, yn.validate = /[yn]/i }
-          if confirm.downcase == 'y'
-            PodBuilder::safe_rm_rf(path)
-          end
-        end
-
-        Dir.chdir(base_path) do
-          # Before deleting anything be sure we're in a git repo
-          h = `git rev-parse --show-toplevel`.strip()
-          raise "\n\nNo git repository found in current folder `#{Dir.pwd}`!\n".red if h.empty?    
-          system("find . -type d -empty -delete") # delete empty folders
         end
       end
     end

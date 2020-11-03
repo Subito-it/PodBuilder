@@ -8,7 +8,7 @@ if show_version
   exit(0)
 end
 
-if ENV['DEBUGGING']
+if ENV["DEBUGGING"]
   puts "Running in debug, injecting $LOAD_PATH"
   libdir = File.expand_path("#{File.dirname(__FILE__)}/../lib")
   $LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
@@ -36,15 +36,14 @@ Command:
     + deintegrate                    Deintegrate prebuild folders
     + build                          Build a specific pod declared in the PodBuilder-Podfile
     + build_all                      Build all pods declared in the PodBuilder-Podfile
-    + update                         Rebuild frameworks that are outdated
+    + update                         Rebuild items that are outdated
     + restore_all                    Rebuild all pods declared in the Restore-Podfile
-    + install_sources                Install sources of pods to debug into prebuilt frameworks
-    + update_lldbinit                Generate an lldbinit file with setting target.source-map to debug prebuilt frameworks
-    + clear_lldbinit                 Clear an lldbinit file from PodBuilder's customizations
+    + install_sources                Install sources of pods to debug into prebuilt items
+    + generate_lldbinit              Generate an lldbinit file with setting target.source-map to debug prebuilt items
     + switch                         Switch between prebuilt/development/standard pod in the Application-Podfile
-    + clean                          Remove prebuild frameworks, dSYMs and source files added by `install_sources` command that are no longer in the PodBuilder-Podfile
+    + clean                          Remove prebuild items, dSYMs and source files added by `install_sources` command that are no longer in the PodBuilder-Podfile
     + sync_podfile                   Update your Application-Podfile with all pods declared in the PodBuilder-Podfile
-    + info                           Print json-formatted informations about prebuilt frameworks
+    + info                           Print json-formatted informations about prebuilt items
 
 Options:
 "
@@ -71,12 +70,18 @@ Options:
         opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
           OPTIONS[:update_repos] = false
         end
+        opts.on("-f", "--force", "Rebuild items even when no code change is detected") do |o|
+          OPTIONS[:force_rebuild] = true
+        end
         opts.on("-w", "--allow-warnings", "Allow warnings") do |o|
           OPTIONS[:allow_warnings] = o
         end
-        # opts.on("-a", "--auto-resolve-deps", "Resolve pod dependencies automatically") do |o|
-        #   OPTIONS[:auto_resolve_dependencies] = o
-        # end
+        opts.on("-r", "--parent-deps", "Include all pods that depend on the specified <PODNAME...>") do |o|
+          OPTIONS[:resolve_parent_dependencies] = true
+        end
+        opts.on("-s", "--no-stdin", "Never request interaction with sdtin (e.g. in CI environment)") do |o|
+          OPTIONS[:no_stdin_available] = o
+        end
         opts.on("-d", "--debug", "Don't clean build folder") do |o|
           OPTIONS[:debug] = o
         end
@@ -100,8 +105,14 @@ Options:
         opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
           OPTIONS[:update_repos] = false
         end
+        opts.on("-f", "--force", "Rebuild items even when no code change is detected") do |o|
+          OPTIONS[:force_rebuild] = false
+        end
         opts.on("-w", "--allow-warnings", "Allow warnings") do |o|
           OPTIONS[:allow_warnings] = o
+        end
+        opts.on("-s", "--no-stdin", "Never request interaction with sdtin (e.g. in CI environment)") do |o|
+          OPTIONS[:no_stdin_available] = o
         end
         opts.on("-d", "--debug", "Don't clean build folder") do |o|
           OPTIONS[:debug] = o
@@ -119,7 +130,7 @@ Usage:
         
     $ pod_builder update [OPTIONS]
 
-      Rebuild frameworks that are outdated
+      Rebuild items that are outdated
         
 Options:
 "        
@@ -129,7 +140,7 @@ Options:
         opts.on("-w", "--allow-warnings", "Allow warnings") do |o|
           OPTIONS[:allow_warnings] = o
         end
-        opts.on("-r", "--dry", "Determine which frameworks need update") do |o|
+        opts.on("-r", "--dry", "Determine which items need to be updated") do |o|
           OPTIONS[:dry_run] = o
         end
         opts.on("-d", "--debug", "Don't clean build folder") do |o|
@@ -192,14 +203,6 @@ Options:
       ]
     },
 
-    "update_lfs" => {
-      :opts => OptionParser.new do |opts|
-      end,
-      :call => [        
-        PodBuilder::Command::GenerateLFS
-      ]
-    },
-
     "deintegrate" => {           
       :opts => OptionParser.new do |opts|
         opts.banner = "
@@ -224,10 +227,13 @@ Usage:
         
     $ pod_builder clean
 
-      Remove unused framework, dSYM and source folders.
+      Remove unused prebuild data, dSYM and source folders.
         
 Options:
-"           
+"         
+        opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
+          OPTIONS[:update_repos] = false
+        end
       end,
       :call => [        
         PodBuilder::Command::Clean
@@ -241,7 +247,7 @@ Usage:
         
     $ pod_builder install_sources
 
-      Install source of prebuilt pods to be able to step into and debug framework's code.
+      Install source of prebuilt pods to be able to step into and debug prebuilt's code.
 
 "         
       end,
@@ -250,37 +256,24 @@ Usage:
       ]
     },
 
-    "update_lldbinit" => {         
+    "generate_lldbinit" => {         
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
         
-    $ pod_builder update_lldbinit <LLDBINIT_PATH> <PATH>
+    $ pod_builder generate_lldbinit [PATH]
 
-      Update LLDBINIT_PATH setting target.source-map in order to be able to step into 
-      and debug prebuilt framework's code.
+      Update PodBuilder's custom lldbinit by setting the target.source-map which allows to
+      step into and debug prebuilt prebuilt's code. To allow this to work it is required
+      to specify a path containing the source code that generated the prebuilt item.
 
-      Specify the PATH of the folder containing the source code of prebuilt frameworks. PATH can be relative to PodBuilder's Framework folder.
-
-"         
+      You can pass a [PATH] which PodBuilder will use to look for dependencies's source code. 
+      If omitted it will be implied that the project is organized as a monorepo expecting
+      source code dependencies to live in the project repo.
+"
       end,
       :call => [        
         PodBuilder::Command::UpdateLldbInit
-      ]
-    },
-
-    "clear_lldbinit" => {         
-      :opts => OptionParser.new do |opts|
-        opts.banner = "
-Usage:
-        
-    $ pod_builder clear_lldbinit <LLDBINIT_PATH>
-
-      Clear LLDBINIT_PATH setting target.source-map PodBuilder's customizations
-"         
-      end,
-      :call => [        
-        PodBuilder::Command::ClearLldbInit
       ]
     },
 
@@ -289,7 +282,7 @@ Usage:
         opts.banner = "
 Usage:
         
-    $ pod_builder switch [OPTIONS] PODNAME[s]
+    $ pod_builder switch [OPTIONS] <PODNAME...>
 
       Switch integration between prebuilt/development/default pod version. Multiple space separated pods can be passed
         
@@ -303,6 +296,15 @@ Options:
         end
         opts.on("-s", "--default", "Default version specified in PodBuilder-Podfile") do |o|
           OPTIONS[:switch_mode] = "default"
+        end
+        opts.on("-c", "--child-deps", "Include dependencies of the specified <PODNAME...>") do |o|
+          OPTIONS[:resolve_child_dependencies] = true
+        end
+        opts.on("-r", "--parent-deps", "Include all pods that depend on the specified <PODNAME...>") do |o|
+          OPTIONS[:resolve_parent_dependencies] = true
+        end
+        opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update (only when passing --parent-deps") do |o|
+          OPTIONS[:update_repos] = false
         end
       end,
       :call => [        
@@ -321,7 +323,12 @@ Usage:
       You may want to run this command when you add a new pod to the PodBuilder-Podfile 
       and you want to integrate it in the project without rebuilding it.
         
-"      end,
+Options:
+"       
+        opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
+          OPTIONS[:update_repos] = false
+        end
+      end,
       :call => [        
         PodBuilder::Command::SyncPodfile
       ]
@@ -357,9 +364,11 @@ Usage:
   else
     PodBuilder::Configuration.load
 
+    PodBuilder::add_lockfile
+
     subcommand[:opts].order!    
     subcommand[:call].each do |k|
-      if (ret = k.call(OPTIONS)) && ret == -1
+      if (ret = k.call) && ret == -1
         puts subcommand[:opts].help
       end
     end
@@ -370,17 +379,15 @@ end
 
 command_ret = -1
 begin
-  unless ENV['USER'] != "root"
+  unless ENV["USER"] != "root"
     raise "\n\nFor safety do not run this as root\n".red
   end
 
-  PodBuilder::add_lock_file
-  valid_lock_file = true
   command_ret = parse_commandline
 rescue Exception => e
   error = e.to_s
 
-  if error.length < 1000
+  if error.length < 1000 || !File.directory?(PodBuilder::Configuration.build_path)
     puts "#{error.red}\n"
     puts e.backtrace.join("\n\t").red
     puts "\n\nCommand failed!".red
@@ -392,14 +399,8 @@ rescue Exception => e
 ensure
   if command_ret == 0
     PodBuilder::clean_basepath
-    
-    if !OPTIONS.has_key?(:debug)
-      PodBuilder::safe_rm_rf(PodBuilder::Configuration.build_path)
-    end    
   end
-  if valid_lock_file
-    PodBuilder::remove_lock_file
-  end
+  PodBuilder::remove_lockfile
 
   exit(command_ret)
 end

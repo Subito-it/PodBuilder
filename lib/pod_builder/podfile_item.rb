@@ -1,3 +1,6 @@
+# This class is the model that PodBuilder uses for every pod spec. The model is instantiated
+# from Pod::Specification
+
 module PodBuilder
   class PodfileItem
     # @return [String] The git repo
@@ -7,6 +10,10 @@ module PodBuilder
     # @return [String] The git branch
     #
     attr_reader :branch
+
+    # @return [String] A checksum for the spec
+    #
+    attr_reader :checksum
 
     # @return [String] Matches @name unless for subspecs were it stores the name of the root pod
     #
@@ -32,6 +39,10 @@ module PodBuilder
     #
     attr_accessor :path
 
+    # @return [String] Local podspec path, if any
+    #
+    attr_accessor :podspec_path
+
     # @return [String] The pinned commit of the pod, if any
     #
     attr_reader :commit
@@ -52,7 +63,7 @@ module PodBuilder
     #
     attr_reader :external_dependency_names
     
-    # @return [Bool] True if the pod is shipped as a static framework
+    # @return [Bool] True if the pod is shipped as a static binary
     #
     attr_reader :is_static
     
@@ -63,6 +74,10 @@ module PodBuilder
     # @return [Bool] Is external pod
     #
     attr_accessor :is_external
+
+    # @return [String] Header directory name
+    #
+    attr_accessor :header_dir
 
     # @return [String] The pod's build configuration
     #
@@ -115,6 +130,10 @@ module PodBuilder
     # @return [Array<String>] Default subspecs
     #
     attr_accessor :default_subspecs
+
+    # @return [Bool] Defines module
+    #
+    attr_accessor :defines_module
     
     # Initialize a new instance
     #
@@ -126,6 +145,8 @@ module PodBuilder
       @name = spec.name
       @root_name = spec.name.split("/").first
 
+      @checksum = spec.checksum
+
       checkout_options_keys = [@root_name, @name]
 
       if opts_key = checkout_options_keys.detect { |x| checkout_options.has_key?(x) }
@@ -133,6 +154,7 @@ module PodBuilder
         @tag = checkout_options[opts_key][:tag]
         @commit = checkout_options[opts_key][:commit]
         @path = checkout_options[opts_key][:path]
+        @podspec_path = checkout_options[opts_key][:podspec]        
         @branch = checkout_options[opts_key][:branch]
         @is_external = true
       else
@@ -141,6 +163,11 @@ module PodBuilder
         @commit = spec.root.source[:commit]
         @is_external = false
       end    
+
+      @defines_module = nil # nil is not specified
+      if override = spec.attributes_hash.dig("pod_target_xcconfig", "DEFINES_MODULE")
+        @defines_module = (override == "YES")
+      end
       
       @vendored_frameworks = extract_vendored_frameworks(spec, all_specs)
       @vendored_libraries = extract_vendored_libraries(spec, all_specs)
@@ -158,6 +185,8 @@ module PodBuilder
       @libraries += extract_array(spec, "library")
       @libraries += extract_array(spec, "libraries")  
 
+      @header_dir = spec.attributes_hash["header_dir"]
+
       @version = spec.root.version.version
       @available_versions = spec.respond_to?(:spec_source) ? spec.spec_source.versions(@root_name)&.map(&:to_s) : [@version]
       
@@ -166,7 +195,11 @@ module PodBuilder
 
       @default_subspecs = extract_array(spec, "default_subspecs")
       if default_subspec = spec.attributes_hash["default_subspec"]
-        @default_subspecs.push(default_subspec)
+        @default_subspecs.push(default_subspec)        
+      end
+
+      if @name == @root_name && @default_subspecs.empty?
+        @default_subspecs += all_specs.select { |t| t.name.include?("/") && t.name.split("/").first == @root_name }.map { |t| t.name.split("/").last }
       end
 
       @dependency_names = spec.attributes_hash.fetch("dependencies", {}).keys + default_subspecs.map { |t| "#{@root_name}/#{t}" } 
@@ -180,7 +213,18 @@ module PodBuilder
       @is_static = spec.root.attributes_hash["static_framework"] || false
       @xcconfig = spec.root.attributes_hash["xcconfig"] || {}
 
-      @source_files = source_files_from(spec)
+      if spec.attributes_hash.has_key?("script_phases")
+        Configuration.skip_pods += [name, root_name]
+        Configuration.skip_pods.uniq!
+        puts "Will skip '#{root_name}' which defines script_phase in podspec".blue
+      end
+
+      default_subspecs_specs ||= begin
+        subspecs = all_specs.select { |t| t.name.split("/").first == @root_name }
+        subspecs.select { |t| @default_subspecs.include?(t.name.split("/").last) }
+      end
+      root_spec = all_specs.detect { |t| t.name == @root_name } || spec
+      @source_files = source_files_from([spec, root_spec] + default_subspecs_specs)
       
       @build_configuration = spec.root.attributes_hash.dig("pod_target_xcconfig", "prebuild_configuration") || "release"
       @build_configuration.downcase!
@@ -266,14 +310,14 @@ module PodBuilder
 
       root_names = deps.map(&:root_name).uniq
 
-      # We need to build all other common subspecs to properly build the framework
+      # We need to build all other common subspecs to properly build the item
       # Ex. 
       # PodA depends on DepA/subspec1
       # PodB depends on DepA/subspec2
       #
       # When building PodA we need to build both DepA subspecs because they might 
       # contain different code
-      deps += available_pods.select { |t| root_names.include?(t.root_name) }
+      deps += available_pods.select { |t| root_names.include?(t.root_name) && t.root_name != t.name }
 
       deps.uniq!
 
@@ -303,7 +347,7 @@ module PodBuilder
       if !no_sources && !only_headers
         return false
       else
-        return embedded_as_static_lib || embedded_as_vendored
+        return (no_sources || only_headers || embedded_as_static_lib || embedded_as_vendored)
       end
     end
 
@@ -331,6 +375,8 @@ module PodBuilder
       if is_external
         if @path
           e += ", :path => '#{@path}'"  
+        elsif @podspec_path
+          e += ", :podspec => '#{@podspec_path}'"  
         else
           if @repo
             e += ", :git => '#{@repo}'"  
@@ -350,10 +396,9 @@ module PodBuilder
       end
 
       if include_pb_entry && !is_prebuilt
-        plists = Dir.glob(PodBuilder::prebuiltpath("**/#{module_name}.framework/#{Configuration::framework_plist_filename}"))
-        if plists.count > 0
-          plist = CFPropertyList::List.new(:file => plists.first)
-          data = CFPropertyList.native_types(plist.value)
+        prebuilt_info_path = PodBuilder::prebuiltpath("#{root_name}/#{Configuration::prebuilt_info_filename}")
+        if File.exist?(prebuilt_info_path)
+          data = JSON.parse(File.read(prebuilt_info_path))
           swift_version = data["swift_version"]
           is_static = data["is_static"] || false
         
@@ -374,22 +419,22 @@ module PodBuilder
     end
 
     def prebuilt_rel_path
-      if is_subspec && Configuration.subspecs_to_split.include?(name)
-        return "#{name}/#{module_name}.framework"
+      return "#{module_name}.framework"
+    end
+
+    def prebuilt_podspec_path(absolute_path = true)
+      podspec_path = PodBuilder::prebuiltpath("#{@root_name}/#{@root_name}.podspec")
+      if absolute_path 
+        return podspec_path
       else
-        return "#{module_name}.framework"
+        pod_path = Pathname.new(podspec_path).relative_path_from(Pathname.new(PodBuilder::basepath)).to_s
       end
     end
 
-    def prebuilt_entry(include_pb_entry = true)
-      relative_path = Pathname.new(Configuration.base_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
-      relative_path += "/Rome"
+    def prebuilt_entry(include_pb_entry = true, absolute_path = false)
+      podspec_dirname = File.dirname(prebuilt_podspec_path(absolute_path = absolute_path))
 
-      if Configuration.subspecs_to_split.include?(name)
-        entry = "pod '#{podspec_name}', :path => '#{relative_path}'"
-      else
-        entry = "pod '#{name}', :path => '#{relative_path}'"
-      end
+      entry = "pod '#{name}', :path => '#{podspec_dirname}'"
 
       if include_pb_entry && !is_prebuilt
         entry += prebuilt_marker()
@@ -415,9 +460,9 @@ module PodBuilder
     end
 
     def vendored_framework_path
-      if File.exist?(PodBuilder::prebuiltpath(vendored_subspec_framework_name))
+      if File.exist?(PodBuilder::prebuiltpath("#{root_name}/#{vendored_subspec_framework_name}"))
         return vendored_subspec_framework_name
-      elsif File.exist?(PodBuilder::prebuiltpath(vendored_spec_framework_name))
+      elsif File.exist?(PodBuilder::prebuiltpath("#{root_name}/#{vendored_spec_framework_name}"))
         return vendored_spec_framework_name
       end
       
@@ -471,44 +516,33 @@ module PodBuilder
     end
 
     def source_files_from_string(source)
+      # Transform source file entries 
+      # "Networking{Response,Request}*.{h,m}" -> ["NetworkingResponse*.h", "NetworkingResponse*.m", "NetworkingRequest*.h", "NetworkingRequest*.m"]
       files = []
       if source.is_a? String 
-        matches = source.match(/(.*)({(.),?(.)?})/)
-        if matches&.size == 5
-          source = matches[1] + matches[3]
-          if matches[4].length > 0
-            source += "," + matches[1] + matches[4]
+        matches = source.match(/(.*){(.*)}(.*)/)
+        if matches&.size == 4
+          res = matches[2].split(",").map { |t| "#{matches[1]}#{t}#{matches[3]}" }
+          if res.any? { |t| t.include?("{") }
+            return res.map { |t| source_files_from_string(t) }.flatten
           end
+  
+          return res
         end
 
         return source.split(",")
       else
+        if source.any? { |t| t.include?("{") }
+          return source.map { |t| source_files_from_string(t) }.flatten
+        end
+
         return source
       end
     end
 
-    def source_files_from(spec)
-      files = spec.root.attributes_hash.fetch("source_files", [])
-      root_source_files = source_files_from_string(files)
-
-      files = spec.attributes_hash.fetch("source_files", [])
-      source_files = source_files_from_string(files)
-
-      subspec_source_files = []
-      if spec.name == spec.root.name
-        default_podspecs = spec.attributes_hash.fetch("default_subspecs", [])
-        if default_podspecs.is_a? String 
-          default_podspecs = [default_podspecs]
-        end
-        default_podspecs.each do |subspec_name|
-          if subspec = spec.subspecs.detect { |x| x.name == "#{spec.root.name}/#{subspec_name}" }
-            files = subspec.attributes_hash.fetch("source_files", [])
-            subspec_source_files += source_files_from_string(files)
-          end
-        end
-      end
-
-      return source_files + root_source_files + subspec_source_files
+    def source_files_from(specs)
+      files = specs.map { |t| t.attributes_hash.fetch("source_files", []) }.flatten
+      return source_files_from_string(files).uniq
     end
   end
 end

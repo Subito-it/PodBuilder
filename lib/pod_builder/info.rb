@@ -1,4 +1,4 @@
-require 'cfpropertylist'
+require 'json'
 
 module PodBuilder
   class Info
@@ -7,10 +7,8 @@ module PodBuilder
       result = {}
       name = nil
 
-      Dir.glob(PodBuilder::prebuiltpath("**/*.framework")).each do |path|
-        plist_path = File.join(path, Configuration.framework_plist_filename)
-
-        name, prebuilt_info = prebuilt_info(plist_path)
+      Dir.glob(PodBuilder::prebuiltpath("**/#{Configuration.prebuilt_info_filename}")).each do |json_path|         
+        name, prebuilt_info = prebuilt_info(json_path)
         result[name] = prebuilt_info
       end
 
@@ -57,8 +55,12 @@ module PodBuilder
         pod_name = matches[1]
         
         return { "repo": "local" }
+      elsif (matches = line&.match(/pod '(.*)', :podspec => '(.*)'/)) && matches.size == 3
+        pod_name = matches[1]
+        
+        return { "repo": "local" }
       else
-        raise "Failed extracting version from line:\n#{line}\n\n"
+        raise "\n\nFailed extracting version from line:\n#{line}\n\n".red
       end
     end
 
@@ -66,10 +68,9 @@ module PodBuilder
       unless File.exist?(path)
         return {}
       end
-      
-      plist = CFPropertyList::List.new(:file => path)
-      data = CFPropertyList.native_types(plist.value)
-      
+
+      data = JSON.load(File.read(path))
+            
       result = {}
       if swift_version = data["swift_version"]
         result.merge!({ "swift_version": swift_version})
@@ -78,7 +79,6 @@ module PodBuilder
       pod_version = version_info_from_entry(data["entry"])
       pod_name = pod_name_from_entry(data["entry"])
 
-      
       result.merge!({ "version": pod_version })
       result.merge!({ "specs": (data["specs"] || []) })
       result.merge!({ "is_static": (data["is_static"] || false) })

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -13,6 +13,7 @@
 		C347BD5F212FE46900228046 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C347BD5D212FE46900228046 /* Main.storyboard */; };
 		C347BD61212FE46A00228046 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C347BD60212FE46A00228046 /* Assets.xcassets */; };
 		C347BD64212FE46A00228046 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C347BD62212FE46A00228046 /* LaunchScreen.storyboard */; };
+		C3EB3A1A250132E6002FF3B4 /* IRGenExpressionWorkaround.m in Sources */ = {isa = PBXBuildFile; fileRef = C3EB3A19250132E6002FF3B4 /* IRGenExpressionWorkaround.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,9 @@
 		C347BD60212FE46A00228046 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C347BD63212FE46A00228046 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		C347BD65212FE46A00228046 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C3EB3A17250132E5002FF3B4 /* PodBuilderExample-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "PodBuilderExample-Bridging-Header.h"; sourceTree = "<group>"; };
+		C3EB3A18250132E6002FF3B4 /* IRGenExpressionWorkaround.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRGenExpressionWorkaround.h; sourceTree = "<group>"; };
+		C3EB3A19250132E6002FF3B4 /* IRGenExpressionWorkaround.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRGenExpressionWorkaround.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,11 +83,14 @@
 			isa = PBXGroup;
 			children = (
 				C347BD59212FE46900228046 /* AppDelegate.swift */,
+				C3EB3A18250132E6002FF3B4 /* IRGenExpressionWorkaround.h */,
+				C3EB3A19250132E6002FF3B4 /* IRGenExpressionWorkaround.m */,
 				C347BD5B212FE46900228046 /* ViewController.swift */,
 				C347BD5D212FE46900228046 /* Main.storyboard */,
 				C347BD60212FE46A00228046 /* Assets.xcassets */,
 				C347BD62212FE46A00228046 /* LaunchScreen.storyboard */,
 				C347BD65212FE46A00228046 /* Info.plist */,
+				C3EB3A17250132E5002FF3B4 /* PodBuilderExample-Bridging-Header.h */,
 			);
 			path = PodBuilderExample;
 			sourceTree = "<group>";
@@ -122,6 +129,7 @@
 				TargetAttributes = {
 					C347BD55212FE46900228046 = {
 						CreatedOnToolsVersion = 9.4;
+						LastSwiftMigration = 1200;
 					};
 				};
 			};
@@ -163,20 +171,15 @@
 			files = (
 			);
 			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-PodBuilderExample/Pods-PodBuilderExample-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework",
+				"${PODS_ROOT}/Target Support Files/Pods-PodBuilderExample/Pods-PodBuilderExample-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
-			);
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Alamofire.framework",
+				"${PODS_ROOT}/Target Support Files/Pods-PodBuilderExample/Pods-PodBuilderExample-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-PodBuilderExample/Pods-PodBuilderExample-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-PodBuilderExample/Pods-PodBuilderExample-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		9709696C87B33D4C75052133 /* [CP] Check Pods Manifest.lock */ = {
@@ -208,6 +211,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C3EB3A1A250132E6002FF3B4 /* IRGenExpressionWorkaround.m in Sources */,
 				C347BD5C212FE46900228046 /* ViewController.swift in Sources */,
 				C347BD5A212FE46900228046 /* AppDelegate.swift in Sources */,
 			);
@@ -356,6 +360,7 @@
 			baseConfigurationReference = 7C2008F2F5393C42A37869B9 /* Pods-PodBuilderExample.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = HUC4RY3F6U;
 				INFOPLIST_FILE = PodBuilderExample/Info.plist;
@@ -365,6 +370,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.com.subito.PodBuilderExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "PodBuilderExample/PodBuilderExample-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -375,6 +382,7 @@
 			baseConfigurationReference = 53811B6C2E6F875F02029CBE /* Pods-PodBuilderExample.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = HUC4RY3F6U;
 				INFOPLIST_FILE = PodBuilderExample/Info.plist;
@@ -384,6 +392,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.com.subito.PodBuilderExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "PodBuilderExample/PodBuilderExample-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

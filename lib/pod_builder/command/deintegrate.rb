@@ -3,11 +3,11 @@ require 'pod_builder/core'
 module PodBuilder
   module Command
     class Deintegrate
-      def self.call(options)
+      def self.call
         raise "\n\nPodBuilder not initialized!\n".red if !Configuration.exists
 
-        prebuilt_podfile = File.join(Configuration.base_path, "Podfile")
-        restored_podfile = File.join(PodBuilder::project_path, "Podfile")
+        prebuilt_podfile = PodBuilder::basepath("Podfile")
+        restored_podfile = PodBuilder::project_path("Podfile")
 
         FileUtils.cp(prebuilt_podfile, restored_podfile)
 
@@ -32,9 +32,14 @@ module PodBuilder
         end
 
         FileUtils.rm_f(restored_podfile)
-        File.write(restored_podfile, podfile_lines.join)
-        Podfile.update_path_entires(restored_podfile, false)
-        Podfile.update_project_entries(restored_podfile, false)
+
+        podfile_content = podfile_lines.join
+        
+        podfile_content = Podfile.update_path_entries(podfile_content, Deintegrate.method(:podfile_path_transform))
+        podfile_content = Podfile.update_project_entries(podfile_content, Deintegrate.method(:podfile_path_transform))
+        podfile_content = Podfile.update_require_entries(podfile_content, Deintegrate.method(:podfile_path_transform))
+
+        File.write(restored_podfile, podfile_content)
 
         PodBuilder::safe_rm_rf(Configuration.base_path)
 
@@ -53,6 +58,22 @@ module PodBuilder
       end
 
       private
+
+      def self.podfile_path_transform(path)
+        use_absolute_paths = false 
+        podfile_path = PodBuilder::project_path("Podfile")
+        original_basepath = PodBuilder::basepath
+
+        podfile_base_path = Pathname.new(File.dirname(podfile_path))
+  
+        original_path = Pathname.new(File.join(original_basepath, path))
+        replace_path = original_path.relative_path_from(podfile_base_path)
+        if use_absolute_paths
+          replace_path = replace_path.expand_path(podfile_base_path)
+        end
+  
+        return replace_path
+      end    
 
       def self.update_gemfile
         gemfile_path = File.join(PodBuilder::home, "Gemfile")

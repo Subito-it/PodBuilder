@@ -17,18 +17,41 @@ module PodBuilder
     DEFAULT_SPEC_OVERRIDE = {
       "Google-Mobile-Ads-SDK" => {
         "module_name": "GoogleMobileAds"
+      },
+      "glog" => {
+        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" }
+      },
+      "DoubleConversion" => {
+        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" }
+      },
+      "Folly" => {
+        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" }
+      },
+      "Flipper-DoubleConversion" => {
+        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" }
+      },
+      "Flipper-Folly" => {
+        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" }
       }
     }.freeze
-    DEFAULT_SKIP_PODS = ["GoogleMaps"]
-    DEFAULT_FORCE_PREBUILD_PODS = ["Firebase", "GoogleTagManager"]
-    DEFAULT_BUILD_SYSTEM = "Legacy".freeze # either Latest (New build system) or Legacy (Standard build system)
+    DEFAULT_BUILD_SETTINGS_OVERRIDES = {
+      "SBTUITestTunnelClient" => {
+        "ENABLE_BITCODE": "NO"
+      }
+    }.freeze
+    DEFAULT_SKIP_PODS = ["GoogleMaps", "React-RCTFabric", "React-Core", "React-CoreModules"] # Not including React-RCTNetwork might loose some debug warnings
+
+    DEFAULT_FORCE_PREBUILD_PODS = []
+    DEFAULT_BUILD_SYSTEM = "Latest".freeze # either Latest (New build system) or Legacy (Standard build system)
     DEFAULT_LIBRARY_EVOLUTION_SUPPORT = false
-    MIN_LFS_SIZE_KB = 256.freeze
+    DEFAULT_PLATFORMS = ["iphoneos", "iphonesimulator", "appletvos", "appletvsimulator"].freeze
+    DEFAULT_BUILD_FOR_APPLE_SILICON = false
+    DEFAULT_BUILD_USING_REPO_PATHS = false
     
     private_constant :DEFAULT_BUILD_SETTINGS
+    private_constant :DEFAULT_BUILD_SETTINGS_OVERRIDES
     private_constant :DEFAULT_BUILD_SYSTEM
     private_constant :DEFAULT_LIBRARY_EVOLUTION_SUPPORT
-    private_constant :MIN_LFS_SIZE_KB
     
     class <<self      
       attr_accessor :allow_building_development_pods
@@ -42,47 +65,55 @@ module PodBuilder
       attr_accessor :skip_pods
       attr_accessor :force_prebuild_pods
       attr_accessor :license_filename
-      attr_accessor :subspecs_to_split
       attr_accessor :development_pods_paths
       attr_accessor :build_base_path
       attr_accessor :build_path
       attr_accessor :configuration_filename
       attr_accessor :dev_pods_configuration_filename
-      attr_accessor :lfs_min_file_size
-      attr_accessor :lfs_update_gitattributes
-      attr_accessor :lfs_include_pods_folder
       attr_accessor :project_name
       attr_accessor :restore_enabled
-      attr_accessor :framework_plist_filename
-      attr_accessor :lock_filename
+      attr_accessor :prebuilt_info_filename
+      attr_accessor :lockfile_name
+      attr_accessor :lockfile_path
       attr_accessor :use_bundler
+      attr_accessor :deterministic_build
+      attr_accessor :supported_platforms
+      attr_accessor :build_for_apple_silicon
+      attr_accessor :build_using_repo_paths
+      attr_accessor :react_native_project
+      attr_accessor :lldbinit_name
     end
     
     @allow_building_development_pods = false
     @build_settings = DEFAULT_BUILD_SETTINGS
-    @build_settings_overrides = {}
+    @build_settings_overrides = DEFAULT_BUILD_SETTINGS_OVERRIDES
     @build_system = DEFAULT_BUILD_SYSTEM
     @library_evolution_support = DEFAULT_LIBRARY_EVOLUTION_SUPPORT
-    @base_path = "Frameworks" # Not nice. This value is used only for initial initization. Once config is loaded it will be an absolute path. FIXME
+    @base_path = "PodBuilder" # Not nice. This value is used only for initial initization. Once config is loaded it will be an absolute path. FIXME
     @spec_overrides = DEFAULT_SPEC_OVERRIDE
     @skip_licenses = []
     @skip_pods = DEFAULT_SKIP_PODS
     @force_prebuild_pods = DEFAULT_FORCE_PREBUILD_PODS
     @license_filename = "Pods-acknowledgements"
-    @subspecs_to_split = []
     @development_pods_paths = []
-    @build_base_path = "/tmp/pod_builder_".freeze
-    @build_path = "#{build_base_path}#{(Time.now.to_f * 1000).to_i}".freeze
+    @build_base_path = "/tmp/pod_builder".freeze
+    @build_path = build_base_path
     @configuration_filename = "PodBuilder.json".freeze
     @dev_pods_configuration_filename = "PodBuilderDevPodsPaths.json".freeze
-    @lfs_min_file_size = MIN_LFS_SIZE_KB
-    @lfs_update_gitattributes = false
-    @lfs_include_pods_folder = false
     @project_name = ""
     @restore_enabled = true
-    @framework_plist_filename = "PodBuilder.plist"
-    @lock_filename = "PodBuilder.lock"
+    @prebuilt_info_filename = "PodBuilder.json"
+    @lockfile_name = "PodBuilder.lock"
+    @lockfile_path = "/tmp/#{lockfile_name}"
+    @lldbinit_name = "lldbinit".freeze
+
     @use_bundler = false
+    @deterministic_build = false
+
+    @supported_platforms = DEFAULT_PLATFORMS
+    @build_for_apple_silicon = DEFAULT_BUILD_FOR_APPLE_SILICON
+    @build_using_repo_paths = DEFAULT_BUILD_USING_REPO_PATHS
+    @react_native_project = false
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
@@ -151,21 +182,6 @@ module PodBuilder
             Configuration.license_filename = value
           end
         end
-        if value = json["subspecs_to_split"]
-          if value.is_a?(Array) && value.count > 0
-            Configuration.subspecs_to_split = value
-          end
-        end
-        if value = json["lfs_update_gitattributes"]
-          if [TrueClass, FalseClass].include?(value.class)
-            Configuration.lfs_update_gitattributes = value
-          end
-        end
-        if value = json["lfs_include_pods_folder"]
-          if [TrueClass, FalseClass].include?(value.class)
-            Configuration.lfs_include_pods_folder = value
-          end
-        end
         if value = json["project_name"]
           if value.is_a?(String) && value.length > 0
             Configuration.project_name = value
@@ -186,12 +202,30 @@ module PodBuilder
             Configuration.use_bundler = value
           end
         end
+        if value = json["deterministic_build"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.deterministic_build = value
+          end
+        end
+        if value = json["build_for_apple_silicon"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.build_for_apple_silicon = value
+          end
+        end
+        if value = json["build_using_repo_paths"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.build_using_repo_paths = value
+          end
+        end
+        if value = json["react_native_project"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.react_native_project = value
+          end
+        end
         
         Configuration.build_settings.freeze
 
         sanity_check()
-      else
-        write
       end
       
       dev_pods_configuration_path = File.join(Configuration.base_path, Configuration.dev_pods_configuration_filename)
@@ -205,6 +239,11 @@ module PodBuilder
 
         Configuration.development_pods_paths = json || []
         Configuration.development_pods_paths.freeze
+      end
+
+      if !deterministic_build
+        build_path = "#{build_base_path}#{(Time.now.to_f * 1000).to_i}"
+        lockfile_path = File.join(PodBuilder::home, lockfile_name)
       end
     end
     
@@ -221,9 +260,13 @@ module PodBuilder
       config["build_system"] = Configuration.build_system
       config["library_evolution_support"] = Configuration.library_evolution_support
       config["license_filename"] = Configuration.license_filename
-      config["subspecs_to_split"] = Configuration.subspecs_to_split
-      config["lfs_update_gitattributes"] = Configuration.lfs_update_gitattributes
-      config["lfs_include_pods_folder"] = Configuration.lfs_include_pods_folder
+      config["restore_enabled"] = Configuration.restore_enabled
+      config["allow_building_development_pods"] = Configuration.allow_building_development_pods
+      config["use_bundler"] = Configuration.use_bundler
+      config["deterministic_build"] = Configuration.deterministic_build
+      config["build_for_apple_silicon"] = Configuration.build_for_apple_silicon
+      config["build_using_repo_paths"] = Configuration.build_using_repo_paths
+      config["react_native_project"] = Configuration.react_native_project
       
       File.write(config_path, JSON.pretty_generate(config))
     end
@@ -248,6 +291,7 @@ module PodBuilder
     
     def self.podbuilder_path
       paths = Dir.glob("#{PodBuilder::home}/**/.pod_builder")
+      paths.reject! { |t| t.match(/pod-builder-.*\/Example\/#{File.basename(Configuration.base_path)}\/\.pod_builder$/i) }
       raise "\n\nToo many .pod_builder found `#{paths.join("\n")}`\n".red if paths.count > 1
       
       return paths.count > 0 ? File.dirname(paths.first) : nil

@@ -3,12 +3,12 @@ require 'pod_builder/core'
 module PodBuilder
   module Command
     class BuildAll
-      def self.call(options)
+      def self.call
         Configuration.check_inited
         PodBuilder::prepare_basepath
 
         ARGV << "*"
-        return Command::Build::call(options)
+        return Command::Build::call
       end
     end
   end
