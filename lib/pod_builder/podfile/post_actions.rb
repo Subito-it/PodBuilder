@@ -20,8 +20,25 @@ module PodBuilder
       target_names.each do |target|
         check_for_colliding_resources("Pods/Target Support Files/Pods-#{target}/Pods-#{target}-resources.sh", target, targets)
       end
-    end
 
+      if Configuration.build_xcframeworks
+        puts "[PodBuilder] Removing xcframeworks duplicate entries".yellow
+        xcframework_scripts = Dir.glob("Pods/Target Support Files/**/*-xcframeworks.sh")
+        xcframework_scripts.each do |path|
+          remove_duplicate_entries(path)
+        end
+
+        xcfiles = Dir.glob("Pods/Target Support Files/**/*.xcfilelist")
+        xcfiles.each do |file|
+          content = File.read(file).split("\n")
+          uniq_content = content.uniq
+          if content != uniq_content
+            File.write(file, uniq_content.join("\n"))
+          end
+        end
+      end
+    end
+ 
     private
 
     def self.remove_duplicate_entries(path)
@@ -44,7 +61,7 @@ module PodBuilder
           in_section_to_update = false
           processed_entries = []
         end
-        if in_section_to_update
+        if in_section_to_update || stripped_line.start_with?("install_xcframework ")
           if processed_entries.include?(stripped_line)
             if !line.include?("#")
               line = "# #{line}"

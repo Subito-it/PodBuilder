@@ -280,9 +280,13 @@ Like `build_settings` but per pod. Pod name can also refer to subspec.
 
 Specify which build system to use to compile frameworks. Either `Legacy` (standard build system) or `Latest` (new build system). Default value: `Latest`.
 
+#### `build_xcframeworks`
+
+Specify if PodBuilder will build .xcframeworks. Will enable `library_evolution_support`. Default value: false
+
 #### `library_evolution_support`
 
-Specify if Swift frameworks should be compiled with library evolution support (BUILD_LIBRARY_FOR_DISTRIBUTION).
+Specify if Swift frameworks should be compiled with library evolution support (BUILD_LIBRARY_FOR_DISTRIBUTION). Default value: false
 
 #### `license_filename`
 

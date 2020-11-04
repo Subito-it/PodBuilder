@@ -7,7 +7,7 @@ module PodBuilder
     PRE_INSTALL_ACTIONS = ["Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}"].freeze
     private_constant :PRE_INSTALL_ACTIONS
 
-    def self.from_podfile_items(items, analyzer, build_configuration, install_using_frameworks)
+    def self.from_podfile_items(items, analyzer, build_configuration, install_using_frameworks, build_xcframeworks)
       raise "\n\nno items".red unless items.count > 0
 
       sources = analyzer.sources
@@ -19,6 +19,7 @@ module PodBuilder
 
       podfile.sub!("%%%use_frameworks%%%", install_using_frameworks ? "use_frameworks!" : "use_modular_headers!") 
       podfile.sub!("%%%uses_frameworks%%%", install_using_frameworks ? "true" : "false") 
+      podfile.sub!("%%%build_xcframeworks%%%", build_xcframeworks ? "true" : "false") 
 
       podfile.sub!("%%%platform_name%%%", platform.name.to_s)
       podfile.sub!("%%%deployment_version%%%", platform.deployment_target.version)
@@ -59,6 +60,9 @@ module PodBuilder
           build_settings["BUILD_LIBRARY_FOR_DISTRIBUTION"] = "NO"
           raise "\n\nCan't enable library evolution support with legacy build system!".red if Configuration.library_evolution_support
         elsif Configuration.library_evolution_support
+          build_settings["BUILD_LIBRARY_FOR_DISTRIBUTION"] = "YES"
+        end
+        if Configuration.build_xcframeworks
           build_settings["BUILD_LIBRARY_FOR_DISTRIBUTION"] = "YES"
         end
 

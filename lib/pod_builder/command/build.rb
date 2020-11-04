@@ -88,7 +88,7 @@ module PodBuilder
           build_configuration = podfile_items.map(&:build_configuration).uniq.first
           
           podfile_items = podfile_items.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
-          podfile_content = Podfile.from_podfile_items(podfile_items, analyzer, build_configuration, install_using_frameworks)
+          podfile_content = Podfile.from_podfile_items(podfile_items, analyzer, build_configuration, install_using_frameworks, Configuration.build_xcframeworks)
           
           install_result += Install.podfile(podfile_content, podfile_items, podfile_items.first.build_configuration)          
           

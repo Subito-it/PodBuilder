@@ -47,6 +47,7 @@ module PodBuilder
     DEFAULT_PLATFORMS = ["iphoneos", "iphonesimulator", "appletvos", "appletvsimulator"].freeze
     DEFAULT_BUILD_FOR_APPLE_SILICON = false
     DEFAULT_BUILD_USING_REPO_PATHS = false
+    DEFAULT_BUILD_XCFRAMEWORKS = false
     
     private_constant :DEFAULT_BUILD_SETTINGS
     private_constant :DEFAULT_BUILD_SETTINGS_OVERRIDES
@@ -82,6 +83,7 @@ module PodBuilder
       attr_accessor :build_using_repo_paths
       attr_accessor :react_native_project
       attr_accessor :lldbinit_name
+      attr_accessor :build_xcframeworks
     end
     
     @allow_building_development_pods = false
@@ -114,6 +116,8 @@ module PodBuilder
     @build_for_apple_silicon = DEFAULT_BUILD_FOR_APPLE_SILICON
     @build_using_repo_paths = DEFAULT_BUILD_USING_REPO_PATHS
     @react_native_project = false
+
+    @build_xcframeworks = DEFAULT_BUILD_XCFRAMEWORKS
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
@@ -220,6 +224,11 @@ module PodBuilder
         if value = json["react_native_project"]
           if [TrueClass, FalseClass].include?(value.class)
             Configuration.react_native_project = value
+          end
+        end
+        if value = json["build_xcframeworks"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.build_xcframeworks = value
           end
         end
         

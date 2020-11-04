@@ -33,7 +33,7 @@ module PodBuilder
 
         vendored_frameworks = item.vendored_frameworks 
         if item.default_subspecs.count == 0 && install_using_frameworks
-          vendored_frameworks += ["#{item.module_name}.framework"]
+          vendored_frameworks += ["#{item.module_name}.framework", "#{item.module_name}.xcframework"]
         end
 
         existing_vendored_frameworks = vendored_frameworks.select(&if_exists)
