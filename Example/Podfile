@@ -24,12 +24,6 @@ end
 
 pre_install do |installer|
   Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}
-   
-end
-
-
-post_install do |installer|
-  require 'pod_builder/podfile/post_actions'
-  PodBuilder::Podfile::pod_builder_post_process
+  require 'pod_builder/podfile/pre_actions_swizzles'
    
 end

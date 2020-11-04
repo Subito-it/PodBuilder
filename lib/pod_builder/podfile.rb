@@ -2,10 +2,8 @@ require 'json'
 module PodBuilder
   class Podfile
     PODBUILDER_LOCK_ACTION = ["raise \"\\n🚨  Do not launch 'pod install' manually, use `pod_builder` instead!\\n\" if !File.exist?('pod_builder.lock')"].freeze    
-    POST_INSTALL_ACTIONS = ["require 'pod_builder/podfile/post_actions'", "PodBuilder::Podfile::pod_builder_post_process"].freeze
     
-    PRE_INSTALL_ACTIONS = ["Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}"].freeze
-    private_constant :PRE_INSTALL_ACTIONS
+    PRE_INSTALL_ACTIONS = ["Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}", "require 'pod_builder/podfile/pre_actions_swizzles'"].freeze
 
     def self.from_podfile_items(items, analyzer, build_configuration, install_using_frameworks, build_xcframeworks)
       raise "\n\nno items".red unless items.count > 0
@@ -233,7 +231,6 @@ module PodBuilder
       podfile_content = Podfile.update_require_entries(podfile_content, Podfile.method(:podfile_path_transform))
 
       podfile_content = add_pre_install_actions(podfile_content)
-      podfile_content = add_post_install_checks(podfile_content)
 
       project_podfile_path = PodBuilder::project_path("Podfile")
       File.write(project_podfile_path, podfile_content)
@@ -253,7 +250,6 @@ module PodBuilder
       podfile_content = Podfile.update_require_entries(podfile_content, Podfile.method(:podfile_path_transform))
 
       podfile_content = add_pre_install_actions(podfile_content)
-      podfile_content = add_post_install_checks(podfile_content)
 
       project_podfile_path = PodBuilder::project_path("Podfile")
       File.write(project_podfile_path, podfile_content)
@@ -488,10 +484,6 @@ module PodBuilder
 
     def self.add_pre_install_actions(podfile_content)
       return add(PRE_INSTALL_ACTIONS + [" "], "pre_install", podfile_content)
-    end
-
-    def self.add_post_install_checks(podfile_content)
-      return add(POST_INSTALL_ACTIONS + [" "], "post_install", podfile_content)
     end
 
     def self.add(entries, marker, podfile_content)

@@ -187,10 +187,10 @@ module PodBuilder
         lines = File.read(PodBuilder::project_path("Podfile")).split("\n")
         stripped_lines = lines.map { |x| Podfile.strip_line(x) }.select { |x| !x.start_with?("#")}
 
-        expected_stripped = Podfile::POST_INSTALL_ACTIONS.map { |x| Podfile.strip_line(x) }
+        expected_stripped = Podfile::PRE_INSTALL_ACTIONS.map { |x| Podfile.strip_line(x) }
 
         if !expected_stripped.all? { |x| stripped_lines.include?(x) }
-          warn_message = "PodBuilder's post install actions missing from application Podfile!\n"
+          warn_message = "PodBuilder's pre install actions missing from application Podfile!\n"
           if OPTIONS[:allow_warnings]
             puts "\n\n#{warn_message}".yellow
           else
