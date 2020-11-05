@@ -314,10 +314,6 @@ PodBuilder writes a plist and markdown license files of pods specified in the Po
 
 If you use bundler to pin the version of CocoaPods in your project set this to true. Default false.
 
-#### `build_for_apple_silicon`
-
-If set to true built frameworks will include iPhone simulator slices for Apple silicon based hardware. Default false.
-
 
 # Behind the scenes
 

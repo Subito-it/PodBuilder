@@ -3,9 +3,7 @@ require 'colored'
 require 'pathname'
 
 module PodBuilder
-  def self.build_for_iosish_platform_framework(sandbox, build_dir, target, device, simulator, configuration, deterministic_build, build_for_apple_silicon)
-    raise "\n\nApple silicon hardware still unsupported since it requires to migrate to xcframeworks".red if build_for_apple_silicon
-    
+  def self.build_for_iosish_platform_framework(sandbox, build_dir, target, device, simulator, configuration, deterministic_build)    
     dsym_device_folder = File.join(build_dir, "dSYM", device)
     dsym_simulator_folder = File.join(build_dir, "dSYM", simulator)
     FileUtils.mkdir_p(dsym_device_folder)
@@ -16,7 +14,7 @@ module PodBuilder
     
     xcodebuild(sandbox, target_label, device, deployment_target, configuration, deterministic_build, [], {})
     excluded_archs = ["i386"] # Fixes https://github.com/Subito-it/PodBuilder/issues/17
-    excluded_archs += build_for_apple_silicon ? [] : ["arm64"]
+    excluded_archs += ["arm64"] # Exclude apple silicon slice
     xcodebuild(sandbox, target_label, simulator, deployment_target, configuration, deterministic_build, excluded_archs, {})
     
     spec_names = target.specs.map { |spec| [spec.root.name, spec.root.module_name] }.uniq
@@ -65,16 +63,14 @@ module PodBuilder
     end
   end
   
-  def self.build_for_iosish_platform_lib(sandbox, build_dir, target, device, simulator, configuration, deterministic_build, build_for_apple_silicon, prebuilt_root_paths)
-    raise "\n\nApple silicon hardware still unsupported since it requires to migrate to xcframeworks".red if build_for_apple_silicon
-    
+  def self.build_for_iosish_platform_lib(sandbox, build_dir, target, device, simulator, configuration, deterministic_build, prebuilt_root_paths)    
     deployment_target = target.platform_deployment_target
     target_label = target.cocoapods_target_label
     
     spec_names = target.specs.map { |spec| [spec.root.name, spec.root.module_name] }.uniq
     
     xcodebuild(sandbox, target_label, device, deployment_target, configuration, deterministic_build, [], prebuilt_root_paths)
-    excluded_archs = build_for_apple_silicon ? [] : ["arm64"]
+    excluded_archs = ["arm64"] # Exclude Apple silicon slice
     xcodebuild(sandbox, target_label, simulator, deployment_target, configuration, deterministic_build, excluded_archs, prebuilt_root_paths)
     
     spec_names.each do |root_name, module_name|
@@ -346,14 +342,14 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
     Pod::UI.puts "Built #{built_count} #{'item'.pluralize(built_count)}"
   else
     case [target.platform_name, uses_frameworks]
-    when [:ios, true] then PodBuilder::build_for_iosish_platform_framework(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon)
-    when [:osx, true] then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon, {})
-    when [:tvos, true] then PodBuilder::build_for_iosish_platform_framework(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon)
-    when [:watchos, true] then PodBuilder::build_for_iosish_platform_framework(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon)
-    when [:ios, false] then PodBuilder::build_for_iosish_platform_lib(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon, prebuilt_root_paths)
-    when [:osx, false] then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon, prebuilt_root_paths)
-    when [:tvos, false] then PodBuilder::build_for_iosish_platform_lib(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon, prebuilt_root_paths)
-    when [:watchos, false] then PodBuilder::build_for_iosish_platform_lib(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon, prebuilt_root_paths)
+    when [:ios, true] then PodBuilder::build_for_iosish_platform_framework(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.deterministic_build)
+    when [:osx, true] then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.deterministic_build, {})
+    when [:tvos, true] then PodBuilder::build_for_iosish_platform_framework(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.deterministic_build)
+    when [:watchos, true] then PodBuilder::build_for_iosish_platform_framework(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.deterministic_build)
+    when [:ios, false] then PodBuilder::build_for_iosish_platform_lib(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.deterministic_build, prebuilt_root_paths)
+    when [:osx, false] then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.deterministic_build, prebuilt_root_paths)
+    when [:tvos, false] then PodBuilder::build_for_iosish_platform_lib(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.deterministic_build, prebuilt_root_paths)
+    when [:watchos, false] then PodBuilder::build_for_iosish_platform_lib(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.deterministic_build, prebuilt_root_paths)
     else raise "\n\nUnknown platform '#{target.platform_name}'".red end
 
     raise Pod::Informative, 'The build directory was not found in the expected location.' unless build_dir.directory?
