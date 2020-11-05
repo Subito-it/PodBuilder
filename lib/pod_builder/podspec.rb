@@ -33,7 +33,7 @@ module PodBuilder
 
         vendored_frameworks = item.vendored_frameworks 
         if item.default_subspecs.count == 0 && install_using_frameworks
-          vendored_frameworks += ["#{item.module_name}.framework", "#{item.module_name}.xcframework"]
+          vendored_frameworks += ["#{item.module_name}.framework", "#{item.module_name}.xcframework"].select(&if_exists)
         end
 
         existing_vendored_frameworks = vendored_frameworks.select(&if_exists)
@@ -49,13 +49,23 @@ module PodBuilder
           # .a are static libraries and should not be included again in the podspec to prevent duplicated symbols (in the app and in the prebuilt framework)
           vendored_libraries.reject! { |t| t.end_with?(".a") }
 
-          frameworks = all_buildable_items.select { |t| vendored_frameworks.include?("#{t.module_name}.framework") }.uniq
-          static_frameworks = frameworks.select { |x| x.is_static }  
-
-          resources = static_frameworks.map { |x| x.vendored_framework_path.nil? ? nil : "#{x.vendored_framework_path}/*.{nib,bundle,xcasset,strings,png,jpg,tif,tiff,otf,ttf,ttc,plist,json,caf,wav,p12,momd}" }.compact.flatten.uniq
-
-          exclude_files = static_frameworks.map { |x| x.vendored_framework_path.nil? ? nil : "#{x.vendored_framework_path}/Info.plist" }.compact.flatten.uniq
           public_headers = []
+          resources = []
+          exclude_files = []
+          vendored_frameworks.each do |vendored_framework|
+            binary_path = Dir.glob(PodBuilder::prebuiltpath("#{item.root_name}/#{vendored_framework}/**/#{File.basename(vendored_framework, ".*")}")).first
+
+            next if binary_path.nil?
+
+            is_static = `file '#{binary_path}'`.include?("current ar archive")
+            if is_static
+              parent_folder = File.expand_path("#{binary_path}/..")
+              rel_path = Pathname.new(parent_folder).relative_path_from(Pathname.new(PodBuilder::prebuiltpath(item.root_name))).to_s
+              
+              resources.push("#{rel_path}/*.{nib,bundle,xcasset,strings,png,jpg,tif,tiff,otf,ttf,ttc,plist,json,caf,wav,p12,momd}")
+              exclude_files.push("#{rel_path}/Info.plist")
+            end
+          end
         else          
           public_headers = Dir.glob(PodBuilder::prebuiltpath("#{item.root_name}/#{item.root_name}/Headers/**/*.h"))
           vendored_libraries +=  ["#{item.root_name}/lib#{item.root_name}.a"]
