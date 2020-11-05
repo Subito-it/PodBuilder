@@ -52,28 +52,8 @@ module PodBuilder
       all_specs = analysis_result.specifications
       
       supported_platforms = analyzer.instance_variable_get("@result").targets.map { |t| t.platform.safe_string_name.downcase }
-      all_podfile_items = all_specs.map { |spec| PodfileItem.new(spec, all_specs, checkout_options, supported_platforms) }
-
-      names = analyzer.explicit_pods().map(&:name)
-
-      podfile_pods = []
-      last_count = -1 
-      while podfile_pods.count != last_count do
-        last_count = podfile_pods.count
-
-        updated_names = []
-        names.each do |name|
-          if pod = all_podfile_items.detect { |t| t.name == name }
-            podfile_pods.push(pod)
-            updated_names += pod.dependency_names
-          end
-        end
-        
-        names = updated_names.uniq
-        podfile_pods.uniq!
-      end
-
-      return podfile_pods.sort_by(&:name)
+      
+      return all_specs.map { |spec| PodfileItem.new(spec, all_specs, checkout_options, supported_platforms) }.sort_by(&:name)
     end
   end
 end
