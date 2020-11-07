@@ -23,18 +23,27 @@ end
 class Pod::Generator::EmbedFrameworksScript
   alias_method :swz_initialize, :initialize
   
-  def initialize(frameworks_by_config, xcframeworks_by_config)
+  def initialize(*args)
+    raise "Unsupported CocoaPods version" if (args.count == 0 || args.count > 2)
+    
+    frameworks_by_config = args[0]
     frameworks_by_config.keys.each do |key|
       items = frameworks_by_config[key]
       items.uniq! { |t| t.source_path }
       frameworks_by_config[key] = items
     end
-    xcframeworks_by_config.keys.each do |key|
-      items = xcframeworks_by_config[key]
-      items.uniq! { |t| t.path }
-      xcframeworks_by_config[key] = items
+
+    if args.count == 2
+      # CocoaPods 1.10.0 and newer
+      xcframeworks_by_config = args[1]
+      xcframeworks_by_config.keys.each do |key|
+        items = xcframeworks_by_config[key]
+        items.uniq! { |t| t.path }
+        xcframeworks_by_config[key] = items
+      end
     end
-    swz_initialize(frameworks_by_config, xcframeworks_by_config)
+
+    swz_initialize(*args)
   end
 end 
 
