@@ -60,10 +60,6 @@ module PodBuilder
 
         check_not_building_development_pods(pods_to_build)
 
-        # Remove dependencies from pods to build
-        all_dependencies_name = pods_to_build.map(&:dependency_names).flatten.uniq
-        pods_to_build.select! { |x| !all_dependencies_name.include?(x.name) }
-
         pods_to_build_debug = pods_to_build.select { |x| x.build_configuration == "debug" }
         pods_to_build_release = pods_to_build - pods_to_build_debug
 
