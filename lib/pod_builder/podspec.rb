@@ -32,7 +32,7 @@ module PodBuilder
         if_exists = lambda { |t| File.exist?(PodBuilder::prebuiltpath("#{item.root_name}/#{t}") || "") }
 
         vendored_frameworks = item.vendored_frameworks 
-        if item.default_subspecs.count == 0 && install_using_frameworks
+        if item.default_subspecs.reject { |t| "#{item.root_name}/#{t}" == item.name }.count == 0 && install_using_frameworks
           vendored_frameworks += ["#{item.module_name}.framework", "#{item.module_name}.xcframework"].select(&if_exists)
         end
 
@@ -162,6 +162,10 @@ module PodBuilder
         if name == item.root_name
           deps.reject! { |t| t.split("/").first == item.root_name }
         end
+
+        deps.reject! { |t| t == item.name }
+        all_buildable_items_name = all_buildable_items.map(&:name)
+        deps.select! { |t| all_buildable_items_name.include?(t) }
   
         if deps.count > 0
           if podspec.count("\n") > 1
@@ -174,10 +178,12 @@ module PodBuilder
 
         valid = valid || (install_using_frameworks ? vendored_frameworks.count > 0 : vendored_libraries.count > 0)
       end
-      
-      subspec_names = all_buildable_items.map(&:name).select { |t| t.start_with?("#{name}/") }
-      subspec_names_groups = subspec_names.group_by { |t| name + "/" + t.gsub("#{name}/", '').split("/").first }
-      subspec_names = subspec_names_groups.keys.uniq.sort
+
+      subspec_base = name.split("/").first(slash_count).join("/")
+      subspec_items = all_buildable_items.select { |t| t.name.start_with?("#{subspec_base}/") }
+
+      subspec_names = subspec_items.map { |t| t.name.split("/").drop(slash_count).join("/") }
+      subspec_names.map! { |t| "#{subspec_base}/#{t}" }
 
       subspec_names.each do |subspec|
         subspec_item = all_buildable_items.detect { |t| t.name == subspec } || item
@@ -211,6 +217,7 @@ module PodBuilder
         if item.is_prebuilt
           next
         end
+
         if item.name != item.root_name
           if all_buildable_items.map(&:name).include?(item.root_name)
             next # will process root spec, skip subspecs
