@@ -45,8 +45,8 @@ module PodBuilder
     DEFAULT_BUILD_SYSTEM = "Latest".freeze # either Latest (New build system) or Legacy (Standard build system)
     DEFAULT_LIBRARY_EVOLUTION_SUPPORT = false
     DEFAULT_PLATFORMS = ["iphoneos", "iphonesimulator", "appletvos", "appletvsimulator"].freeze
-    DEFAULT_BUILD_FOR_APPLE_SILICON = false
     DEFAULT_BUILD_USING_REPO_PATHS = false
+    DEFAULT_BUILD_XCFRAMEWORKS = false
     
     private_constant :DEFAULT_BUILD_SETTINGS
     private_constant :DEFAULT_BUILD_SETTINGS_OVERRIDES
@@ -78,10 +78,10 @@ module PodBuilder
       attr_accessor :use_bundler
       attr_accessor :deterministic_build
       attr_accessor :supported_platforms
-      attr_accessor :build_for_apple_silicon
       attr_accessor :build_using_repo_paths
       attr_accessor :react_native_project
       attr_accessor :lldbinit_name
+      attr_accessor :build_xcframeworks
     end
     
     @allow_building_development_pods = false
@@ -111,9 +111,10 @@ module PodBuilder
     @deterministic_build = false
 
     @supported_platforms = DEFAULT_PLATFORMS
-    @build_for_apple_silicon = DEFAULT_BUILD_FOR_APPLE_SILICON
     @build_using_repo_paths = DEFAULT_BUILD_USING_REPO_PATHS
     @react_native_project = false
+
+    @build_xcframeworks = DEFAULT_BUILD_XCFRAMEWORKS
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
@@ -207,11 +208,6 @@ module PodBuilder
             Configuration.deterministic_build = value
           end
         end
-        if value = json["build_for_apple_silicon"]
-          if [TrueClass, FalseClass].include?(value.class)
-            Configuration.build_for_apple_silicon = value
-          end
-        end
         if value = json["build_using_repo_paths"]
           if [TrueClass, FalseClass].include?(value.class)
             Configuration.build_using_repo_paths = value
@@ -220,6 +216,11 @@ module PodBuilder
         if value = json["react_native_project"]
           if [TrueClass, FalseClass].include?(value.class)
             Configuration.react_native_project = value
+          end
+        end
+        if value = json["build_xcframeworks"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.build_xcframeworks = value
           end
         end
         
@@ -264,7 +265,6 @@ module PodBuilder
       config["allow_building_development_pods"] = Configuration.allow_building_development_pods
       config["use_bundler"] = Configuration.use_bundler
       config["deterministic_build"] = Configuration.deterministic_build
-      config["build_for_apple_silicon"] = Configuration.build_for_apple_silicon
       config["build_using_repo_paths"] = Configuration.build_using_repo_paths
       config["react_native_project"] = Configuration.react_native_project
       

@@ -3,9 +3,7 @@ require 'colored'
 require 'pathname'
 
 module PodBuilder
-  def self.build_for_iosish_platform_framework(sandbox, build_dir, target, device, simulator, configuration, deterministic_build, build_for_apple_silicon)
-    raise "\n\nApple silicon hardware still unsupported since it requires to migrate to xcframeworks".red if build_for_apple_silicon
-    
+  def self.build_for_iosish_platform_framework(sandbox, build_dir, target, device, simulator, configuration, deterministic_build)    
     dsym_device_folder = File.join(build_dir, "dSYM", device)
     dsym_simulator_folder = File.join(build_dir, "dSYM", simulator)
     FileUtils.mkdir_p(dsym_device_folder)
@@ -16,7 +14,7 @@ module PodBuilder
     
     xcodebuild(sandbox, target_label, device, deployment_target, configuration, deterministic_build, [], {})
     excluded_archs = ["i386"] # Fixes https://github.com/Subito-it/PodBuilder/issues/17
-    excluded_archs += build_for_apple_silicon ? [] : ["arm64"]
+    excluded_archs += ["arm64"] # Exclude apple silicon slice
     xcodebuild(sandbox, target_label, simulator, deployment_target, configuration, deterministic_build, excluded_archs, {})
     
     spec_names = target.specs.map { |spec| [spec.root.name, spec.root.module_name] }.uniq
@@ -65,16 +63,14 @@ module PodBuilder
     end
   end
   
-  def self.build_for_iosish_platform_lib(sandbox, build_dir, target, device, simulator, configuration, deterministic_build, build_for_apple_silicon, prebuilt_root_paths)
-    raise "\n\nApple silicon hardware still unsupported since it requires to migrate to xcframeworks".red if build_for_apple_silicon
-    
+  def self.build_for_iosish_platform_lib(sandbox, build_dir, target, device, simulator, configuration, deterministic_build, prebuilt_root_paths)    
     deployment_target = target.platform_deployment_target
     target_label = target.cocoapods_target_label
     
     spec_names = target.specs.map { |spec| [spec.root.name, spec.root.module_name] }.uniq
     
     xcodebuild(sandbox, target_label, device, deployment_target, configuration, deterministic_build, [], prebuilt_root_paths)
-    excluded_archs = build_for_apple_silicon ? [] : ["arm64"]
+    excluded_archs = ["arm64"] # Exclude Apple silicon slice
     xcodebuild(sandbox, target_label, simulator, deployment_target, configuration, deterministic_build, excluded_archs, prebuilt_root_paths)
     
     spec_names.each do |root_name, module_name|
@@ -273,6 +269,7 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
   if user_options["pre_compile"]
     user_options["pre_compile"].call(installer_context)
   end
+  build_xcframeworks = user_options.fetch('build_xcframeworks', false)
   
   prebuilt_root_paths = JSON.parse(user_options["prebuilt_root_paths"].gsub('=>', ':'))
   
@@ -285,82 +282,139 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
   base_destination = sandbox_root.parent + 'Prebuilt'
   
   build_dir.rmtree if build_dir.directory?
+
   targets = installer_context.umbrella_targets.select { |t| t.specs.any? }
-  targets.each do |target|
-    case [target.platform_name, uses_frameworks]
-    when [:ios, true] then PodBuilder::build_for_iosish_platform_framework(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon)
-    when [:osx, true] then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon, {})
-    when [:tvos, true] then PodBuilder::build_for_iosish_platform_framework(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon)
-    when [:watchos, true] then PodBuilder::build_for_iosish_platform_framework(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon)
-    when [:ios, false] then PodBuilder::build_for_iosish_platform_lib(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon, prebuilt_root_paths)
-    when [:osx, false] then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon, prebuilt_root_paths)
-    when [:tvos, false] then PodBuilder::build_for_iosish_platform_lib(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon, prebuilt_root_paths)
-    when [:watchos, false] then PodBuilder::build_for_iosish_platform_lib(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.deterministic_build, PodBuilder::Configuration.build_for_apple_silicon, prebuilt_root_paths)
+  raise "\n\nUnsupported target count".red unless targets.count == 1
+  target = targets.first
+
+  if build_xcframeworks
+    project_path = sandbox_root.parent + 'Pods/Pods.xcodeproj'
+        
+    case target.platform_name
+    when :ios then platforms = ['iphoneos', 'iphonesimulator']
+    when :osx then platforms = ['macos']
+    when :tvos then platforms = ['appletvos', 'appletvsimulator']
+    when :watchos then platforms = ['watchos', 'watchsimulator']
     else raise "\n\nUnknown platform '#{target.platform_name}'".red end
-  end  
-    
-  raise Pod::Informative, 'The build directory was not found in the expected location.' unless build_dir.directory?
   
-  specs = installer_context.umbrella_targets.map { |t| t.specs.map(&:name) }.flatten.map { |t| t.split("/").first }.uniq
-  built_count = Dir["#{build_dir}/*"].select { |t| specs.include?(File.basename(t)) }.count
-  Pod::UI.puts "Built #{built_count} #{'items'.pluralize(built_count)}, copying..."
-  
-  base_destination.rmtree if base_destination.directory?
-    
-  installer_context.umbrella_targets.each do |umbrella|
-    umbrella.specs.each do |spec|
-      root_name = spec.name.split("/").first
-      
-      if uses_frameworks
-        destination = File.join(base_destination, root_name)        
+    platforms.each do |platform|
+      puts "Building xcframeworks for #{platform}".yellow
+      raise "\n\n#{platform} xcframework archive failed!".red if !system("xcodebuild archive -project #{project_path.to_s} -scheme Pods-DummyTarget -sdk #{platform} -archivePath '#{build_dir}/#{platform}' SKIP_INSTALL=NO > /dev/null")
+    end
+
+    built_items = Dir.glob("#{build_dir}/#{platforms.first}.xcarchive/Products/Library/Frameworks/*").reject { |t| File.basename(t, ".*") == "Pods_DummyTarget" }
+
+    built_items.each do |built_item|      
+      built_item_paths = [built_item]
+      platforms.drop(1).each do |platform|
+        path = "#{build_dir}/#{platform}.xcarchive/Products/Library/Frameworks/#{File.basename(built_item)}"
+        if File.directory?(path)
+          built_item_paths.push(path)
+        else
+          built_item_paths = []
+          break
+        end
+      end
+
+      next if built_item_paths.count == 0
+
+      framework_name = File.basename(built_item_paths.first, ".*")
+      xcframework_path = "#{base_destination}/#{framework_name}/#{framework_name}.xcframework"
+      framework_params = built_item_paths.map { |t| "-framework '#{t}'"}.join(" ")
+      raise "\n\nFailed packing xcframework!".red if !system("xcodebuild -create-xcframework #{framework_params} -output '#{xcframework_path}' > /dev/null")      
+
+      if enable_dsym
+        platforms.each do |platform|
+          dsym_source = "#{build_dir}/#{platform}.xcarchive/dSYMs/"
+          if File.directory?(dsym_source)
+            destination = sandbox_root.parent + "dSYMs"
+            FileUtils.mkdir_p(destination)
+            FileUtils.mv(dsym_source, destination)
+            FileUtils.mv("#{destination}/dSYMs", "#{destination}/#{platform}")
+          end  
+        end
       else
-        destination = File.join(base_destination, root_name, root_name)        
-      end
-      # Make sure the device target overwrites anything in the simulator build, otherwise iTunesConnect
-      # can get upset about Info.plist containing references to the simulator SDK
-      files = Pathname.glob("build/#{root_name}/*").reject { |f| f.to_s =~ /Pods[^.]+\.framework/ }
-      
-      consumer = spec.consumer(umbrella.platform_name)
-      file_accessor = Pod::Sandbox::FileAccessor.new(sandbox.pod_dir(spec.root.name), consumer)
-      files += file_accessor.vendored_libraries
-      files += file_accessor.vendored_frameworks
-      files += file_accessor.resources
-      
-      FileUtils.mkdir_p(destination)        
-      files.each do |file|
-        FileUtils.cp_r(file, destination)
-      end    
-    end
-  end
-  
-  # Depending on the resource it may happen that it is present twice, both in the .framework and in the parent folder
-  Dir.glob("#{base_destination}/*") do |path|
-    unless File.directory?(path)
-      return
-    end
-    
-    files = Dir.glob("#{path}/*")
-    framework_files = Dir.glob("#{path}/*.framework/**/*").map { |t| File.basename(t) }
-    
-    files.each do |file|
-      filename = File.basename(file.gsub(/\.xib$/, ".nib"))
-      if framework_files.include?(filename)
-        FileUtils.rm_rf(file)
+        raise "Not implemented"
       end
     end
-  end
-  
-  if enable_dsym
-    dsym_source = "#{build_dir}/dSYM"
-    if File.directory?(dsym_source)
-      FileUtils.mv(dsym_source, sandbox_root.parent)
-    end
+
+    built_count = built_items.count
+    Pod::UI.puts "Built #{built_count} #{'item'.pluralize(built_count)}"
   else
-    raise "Not implemented"
-  end
-  
-  build_dir.rmtree if build_dir.directory?
+    case [target.platform_name, uses_frameworks]
+    when [:ios, true] then PodBuilder::build_for_iosish_platform_framework(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.deterministic_build)
+    when [:osx, true] then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.deterministic_build, {})
+    when [:tvos, true] then PodBuilder::build_for_iosish_platform_framework(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.deterministic_build)
+    when [:watchos, true] then PodBuilder::build_for_iosish_platform_framework(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.deterministic_build)
+    when [:ios, false] then PodBuilder::build_for_iosish_platform_lib(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.deterministic_build, prebuilt_root_paths)
+    when [:osx, false] then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.deterministic_build, prebuilt_root_paths)
+    when [:tvos, false] then PodBuilder::build_for_iosish_platform_lib(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.deterministic_build, prebuilt_root_paths)
+    when [:watchos, false] then PodBuilder::build_for_iosish_platform_lib(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.deterministic_build, prebuilt_root_paths)
+    else raise "\n\nUnknown platform '#{target.platform_name}'".red end
+
+    raise Pod::Informative, 'The build directory was not found in the expected location.' unless build_dir.directory?
     
+    specs = installer_context.umbrella_targets.map { |t| t.specs.map(&:name) }.flatten.map { |t| t.split("/").first }.uniq
+    built_count = Dir["#{build_dir}/*"].select { |t| specs.include?(File.basename(t)) }.count
+    Pod::UI.puts "Built #{built_count} #{'item'.pluralize(built_count)}, copying..."
+    
+    base_destination.rmtree if base_destination.directory?
+      
+    installer_context.umbrella_targets.each do |umbrella|
+      umbrella.specs.each do |spec|
+        root_name = spec.name.split("/").first
+        
+        if uses_frameworks
+          destination = File.join(base_destination, root_name)        
+        else
+          destination = File.join(base_destination, root_name, root_name)        
+        end
+        # Make sure the device target overwrites anything in the simulator build, otherwise iTunesConnect
+        # can get upset about Info.plist containing references to the simulator SDK
+        files = Pathname.glob("build/#{root_name}/*").reject { |f| f.to_s =~ /Pods[^.]+\.framework/ }
+        
+        consumer = spec.consumer(umbrella.platform_name)
+        file_accessor = Pod::Sandbox::FileAccessor.new(sandbox.pod_dir(spec.root.name), consumer)
+        files += file_accessor.vendored_libraries
+        files += file_accessor.vendored_frameworks
+        files += file_accessor.resources
+        
+        FileUtils.mkdir_p(destination)        
+        files.each do |file|
+          FileUtils.cp_r(file, destination)
+        end    
+      end
+    end
+    
+    # Depending on the resource it may happen that it is present twice, both in the .framework and in the parent folder
+    Dir.glob("#{base_destination}/*") do |path|
+      unless File.directory?(path)
+        return
+      end
+      
+      files = Dir.glob("#{path}/*")
+      framework_files = Dir.glob("#{path}/*.framework/**/*").map { |t| File.basename(t) }
+      
+      files.each do |file|
+        filename = File.basename(file.gsub(/\.xib$/, ".nib"))
+        if framework_files.include?(filename)
+          FileUtils.rm_rf(file)
+        end
+      end
+    end
+    
+    if enable_dsym
+      dsym_source = "#{build_dir}/dSYM"
+      if File.directory?(dsym_source)
+        FileUtils.mv(dsym_source, sandbox_root.parent)
+      end
+    else
+      raise "Not implemented"
+    end    
+  end
+
+  build_dir.rmtree if build_dir.directory?
+      
   if user_options["post_compile"]
     user_options["post_compile"].call(installer_context)
   end

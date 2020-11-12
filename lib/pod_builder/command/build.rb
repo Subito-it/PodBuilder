@@ -60,10 +60,6 @@ module PodBuilder
 
         check_not_building_development_pods(pods_to_build)
 
-        # Remove dependencies from pods to build
-        all_dependencies_name = pods_to_build.map(&:dependency_names).flatten.uniq
-        pods_to_build.select! { |x| !all_dependencies_name.include?(x.name) }
-
         pods_to_build_debug = pods_to_build.select { |x| x.build_configuration == "debug" }
         pods_to_build_release = pods_to_build - pods_to_build_debug
 
@@ -88,7 +84,7 @@ module PodBuilder
           build_configuration = podfile_items.map(&:build_configuration).uniq.first
           
           podfile_items = podfile_items.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
-          podfile_content = Podfile.from_podfile_items(podfile_items, analyzer, build_configuration, install_using_frameworks)
+          podfile_content = Podfile.from_podfile_items(podfile_items, analyzer, build_configuration, install_using_frameworks, Configuration.build_xcframeworks)
           
           install_result += Install.podfile(podfile_content, podfile_items, podfile_items.first.build_configuration)          
           
@@ -187,10 +183,10 @@ module PodBuilder
         lines = File.read(PodBuilder::project_path("Podfile")).split("\n")
         stripped_lines = lines.map { |x| Podfile.strip_line(x) }.select { |x| !x.start_with?("#")}
 
-        expected_stripped = Podfile::POST_INSTALL_ACTIONS.map { |x| Podfile.strip_line(x) }
+        expected_stripped = Podfile::PRE_INSTALL_ACTIONS.map { |x| Podfile.strip_line(x) }
 
         if !expected_stripped.all? { |x| stripped_lines.include?(x) }
-          warn_message = "PodBuilder's post install actions missing from application Podfile!\n"
+          warn_message = "PodBuilder's pre install actions missing from application Podfile!\n"
           if OPTIONS[:allow_warnings]
             puts "\n\n#{warn_message}".yellow
           else

@@ -280,9 +280,13 @@ Like `build_settings` but per pod. Pod name can also refer to subspec.
 
 Specify which build system to use to compile frameworks. Either `Legacy` (standard build system) or `Latest` (new build system). Default value: `Latest`.
 
+#### `build_xcframeworks`
+
+Specify if PodBuilder will build .xcframeworks. Will enable `library_evolution_support`. Default value: false
+
 #### `library_evolution_support`
 
-Specify if Swift frameworks should be compiled with library evolution support (BUILD_LIBRARY_FOR_DISTRIBUTION).
+Specify if Swift frameworks should be compiled with library evolution support (BUILD_LIBRARY_FOR_DISTRIBUTION). Default value: false
 
 #### `license_filename`
 
@@ -309,10 +313,6 @@ PodBuilder writes a plist and markdown license files of pods specified in the Po
 #### `use_bundler`
 
 If you use bundler to pin the version of CocoaPods in your project set this to true. Default false.
-
-#### `build_for_apple_silicon`
-
-If set to true built frameworks will include iPhone simulator slices for Apple silicon based hardware. Default false.
 
 
 # Behind the scenes

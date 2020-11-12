@@ -459,24 +459,6 @@ module PodBuilder
       return root_name == named.split("/").first
     end
 
-    def vendored_framework_path
-      if File.exist?(PodBuilder::prebuiltpath("#{root_name}/#{vendored_subspec_framework_name}"))
-        return vendored_subspec_framework_name
-      elsif File.exist?(PodBuilder::prebuiltpath("#{root_name}/#{vendored_spec_framework_name}"))
-        return vendored_spec_framework_name
-      end
-      
-      return nil
-    end
-    
-    def vendored_subspec_framework_name
-      return "#{prebuilt_rel_path}"
-    end
-    
-    def vendored_spec_framework_name
-      return "#{module_name}.framework"
-    end
-
     private
 
     def extract_vendored_frameworks(spec, all_specs)
