@@ -182,7 +182,7 @@ module PodBuilder
       subspec_base = name.split("/").first(slash_count).join("/")
       subspec_items = all_buildable_items.select { |t| t.name.start_with?("#{subspec_base}/") }
 
-      subspec_names = subspec_items.map { |t| t.name.split("/").drop(slash_count).join("/") }
+      subspec_names = subspec_items.map { |t| t.name.split("/").drop(slash_count).first }.uniq
       subspec_names.map! { |t| "#{subspec_base}/#{t}" }
 
       subspec_names.each do |subspec|
