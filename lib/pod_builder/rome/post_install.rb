@@ -3,6 +3,26 @@ require 'colored'
 require 'pathname'
 
 module PodBuilder
+  class XcodeBuildSettings
+    attr_reader :platform_name
+    attr_reader :build_destination
+
+    def initialize(platform_name)
+      @platform_name = platform_name
+   
+      case platform_name
+      when "iphoneos" then @build_destination = "generic/platform=iOS"
+      when "iphonesimulator" then @build_destination = "generic/platform=iOS Simulator"
+      when "catalyst" then @build_destination = "platform=macOS,arch=x86_64,variant=Mac Catalyst"
+      when "macos" then @build_destination = "generic/platform=OS X"
+      when "tvos" then @build_destination = "generic/platform=tvOS"
+      when "tvossimulator" then @build_destination = "generic/platform=tvOS Simulator"
+      when "watchos" then @build_destination = "generic/platform=watchOS"
+      when "watchossimulator" then @build_destination = "generic/platform=watchOS Simulator"
+      else raise "\n\nUnknown platform '#{platform_name}'".red end
+    end
+  end
+
   def self.build_for_iosish_platform_framework(sandbox, build_dir, target, device, simulator, configuration, deterministic_build)    
     dsym_device_folder = File.join(build_dir, "dSYM", device)
     dsym_simulator_folder = File.join(build_dir, "dSYM", simulator)
@@ -269,6 +289,7 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
   if user_options["pre_compile"]
     user_options["pre_compile"].call(installer_context)
   end
+  build_catalyst = user_options.fetch('build_catalyst', false)
   build_xcframeworks = user_options.fetch('build_xcframeworks', false)
   
   prebuilt_root_paths = JSON.parse(user_options["prebuilt_root_paths"].gsub('=>', ':'))
@@ -291,23 +312,27 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
     project_path = sandbox_root.parent + 'Pods/Pods.xcodeproj'
         
     case target.platform_name
-    when :ios then platforms = ['iphoneos', 'iphonesimulator']
-    when :osx then platforms = ['macos']
-    when :tvos then platforms = ['appletvos', 'appletvsimulator']
-    when :watchos then platforms = ['watchos', 'watchsimulator']
+    when :ios then 
+      xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("iphoneos"), PodBuilder::XcodeBuildSettings.new("iphonesimulator")]
+      if build_catalyst
+        xcodebuild_settings += [PodBuilder::XcodeBuildSettings.new("catalyst")]
+      end
+    when :osx then xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("macos")]
+    when :tvos then xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("tvos"), PodBuilder::XcodeBuildSettings.new("tvossimulator")]
+    when :watchos then xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("watchos"), PodBuilder::XcodeBuildSettings.new("watchossimulator")]
     else raise "\n\nUnknown platform '#{target.platform_name}'".red end
   
-    platforms.each do |platform|
-      puts "Building xcframeworks for #{platform}".yellow
-      raise "\n\n#{platform} xcframework archive failed!".red if !system("xcodebuild archive -project #{project_path.to_s} -scheme Pods-DummyTarget -sdk #{platform} -archivePath '#{build_dir}/#{platform}' SKIP_INSTALL=NO > /dev/null")
+    xcodebuild_settings.each do |xcodebuild_setting|
+      puts "Building xcframeworks for #{xcodebuild_setting.platform_name}".yellow
+      raise "\n\n#{build_destination} xcframework archive failed!".red if !system("xcodebuild archive -project #{project_path.to_s} -scheme Pods-DummyTarget -destination '#{xcodebuild_setting.build_destination}' -archivePath '#{build_dir}/#{xcodebuild_setting.platform_name}' SKIP_INSTALL=NO > /dev/null 2>&1")
     end
 
-    built_items = Dir.glob("#{build_dir}/#{platforms.first}.xcarchive/Products/Library/Frameworks/*").reject { |t| File.basename(t, ".*") == "Pods_DummyTarget" }
+    built_items = Dir.glob("#{build_dir}/#{xcodebuild_settings[0].platform_name}.xcarchive/Products/Library/Frameworks/*").reject { |t| File.basename(t, ".*") == "Pods_DummyTarget" }
 
     built_items.each do |built_item|      
       built_item_paths = [built_item]
-      platforms.drop(1).each do |platform|
-        path = "#{build_dir}/#{platform}.xcarchive/Products/Library/Frameworks/#{File.basename(built_item)}"
+      xcodebuild_settings.drop(1).each do |xcodebuild_setting|
+        path = "#{build_dir}/#{xcodebuild_setting.platform_name}.xcarchive/Products/Library/Frameworks/#{File.basename(built_item)}"
         if File.directory?(path)
           built_item_paths.push(path)
         else
@@ -321,16 +346,16 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
       framework_name = File.basename(built_item_paths.first, ".*")
       xcframework_path = "#{base_destination}/#{framework_name}/#{framework_name}.xcframework"
       framework_params = built_item_paths.map { |t| "-framework '#{t}'"}.join(" ")
-      raise "\n\nFailed packing xcframework!".red if !system("xcodebuild -create-xcframework #{framework_params} -output '#{xcframework_path}' > /dev/null")      
+      raise "\n\nFailed packing xcframework!".red if !system("xcodebuild -create-xcframework #{framework_params} -output '#{xcframework_path}' > /dev/null 2>&1")      
 
       if enable_dsym
-        platforms.each do |platform|
-          dsym_source = "#{build_dir}/#{platform}.xcarchive/dSYMs/"
+        xcodebuild_settings.each do |xcodebuild_setting|
+          dsym_source = "#{build_dir}/#{xcodebuild_setting.platform_name}.xcarchive/dSYMs/"
           if File.directory?(dsym_source)
             destination = sandbox_root.parent + "dSYMs"
             FileUtils.mkdir_p(destination)
             FileUtils.mv(dsym_source, destination)
-            FileUtils.mv("#{destination}/dSYMs", "#{destination}/#{platform}")
+            FileUtils.mv("#{destination}/dSYMs", "#{destination}/#{xcodebuild_setting.platform_name}")
           end  
         end
       else

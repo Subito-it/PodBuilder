@@ -79,16 +79,17 @@ module PodBuilder
           end  
         end
         
+        build_catalyst = should_build_catalyst(installer)
+
         install_result = InstallResult.new
         podfiles_items.reject { |x| x.empty? }.each do |podfile_items|
           build_configuration = podfile_items.map(&:build_configuration).uniq.first
           
           podfile_items = podfile_items.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
-          podfile_content = Podfile.from_podfile_items(podfile_items, analyzer, build_configuration, install_using_frameworks, Configuration.build_xcframeworks)
+          podfile_content = Podfile.from_podfile_items(podfile_items, analyzer, build_configuration, install_using_frameworks, build_catalyst, Configuration.build_xcframeworks)
           
           install_result += Install.podfile(podfile_content, podfile_items, podfile_items.first.build_configuration)          
           
-          # remove lockfile which gets unexplicably created
           FileUtils.rm_f(PodBuilder::basepath("Podfile.lock"))
         end
 
@@ -123,6 +124,15 @@ module PodBuilder
       end
 
       private
+
+      def self.should_build_catalyst(installer)
+        build_settings = installer.analysis_result.targets.map { |t| t.user_project.root_object.targets.map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } } }.flatten
+        build_catalyst = build_settings.detect { |t| t["SUPPORTS_MACCATALYST"] == "YES" } != nil 
+        
+        puts "\nTo support Catalyst you should enable 'build_xcframeworks' in PodBuilder.json\n".red unless Configuration.build_xcframeworks
+
+        return build_catalyst
+      end
 
       def self.prepare_defines_modules_override(all_buildable_items)
         all_buildable_items.each do |item|

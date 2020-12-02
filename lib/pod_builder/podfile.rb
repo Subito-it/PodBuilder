@@ -5,7 +5,7 @@ module PodBuilder
     
     PRE_INSTALL_ACTIONS = ["Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}", "require 'pod_builder/podfile/pre_actions_swizzles'"].freeze
 
-    def self.from_podfile_items(items, analyzer, build_configuration, install_using_frameworks, build_xcframeworks)
+    def self.from_podfile_items(items, analyzer, build_configuration, install_using_frameworks, build_catalyst, build_xcframeworks)
       raise "\n\nno items".red unless items.count > 0
 
       sources = analyzer.sources
@@ -18,7 +18,8 @@ module PodBuilder
       podfile.sub!("%%%use_frameworks%%%", install_using_frameworks ? "use_frameworks!" : "use_modular_headers!") 
       podfile.sub!("%%%uses_frameworks%%%", install_using_frameworks ? "true" : "false") 
       podfile.sub!("%%%build_xcframeworks%%%", build_xcframeworks ? "true" : "false") 
-
+      podfile.sub!("%%%build_catalyst%%%", build_catalyst ? "true" : "false") 
+      
       podfile.sub!("%%%platform_name%%%", platform.name.to_s)
       podfile.sub!("%%%deployment_version%%%", platform.deployment_target.version)
 
