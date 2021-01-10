@@ -41,6 +41,9 @@ module PodBuilder
         build_settings["ONLY_ACTIVE_ARCH"] = "NO"
         build_settings["DEBUG_INFORMATION_FORMAT"] = "dwarf-with-dsym"
 
+        # https://thi.imhttps://thi.im/posts/swift-serialize-debugging-options/
+        build_settings["SWIFT_SERIALIZE_DEBUGGING_OPTIONS"] = "NO"
+
         build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = platform.deployment_target.version # Fix compilation warnings on Xcode 12
 
         # Don't store .pcm info in binary, see https://forums.swift.org/t/swift-behavior-of-gmodules-and-dsyms/23211/3
