@@ -327,11 +327,8 @@ The podspec of the Pod you're trying to build doesn't specify the swift_version 
 
 ```json
 "spec_overrides": {
-    "Google-Mobile-Ads-SDK": {
-      "module_name": "GoogleMobileAds"
-    },
     "PodWithError": {
-      "swift_version": "5.0"
+      "swift_version": "5.3"
     }
 }
 ```
