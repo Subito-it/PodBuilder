@@ -39,18 +39,10 @@ module PodBuilder
         "ENABLE_BITCODE": "NO"
       }
     }.freeze
-    DEFAULT_SKIP_PODS = ["GoogleMaps", "React-RCTFabric", "React-Core", "React-CoreModules"] # Not including React-RCTNetwork might loose some debug warnings
-
-    DEFAULT_FORCE_PREBUILD_PODS = []
-    DEFAULT_BUILD_SYSTEM = "Latest".freeze # either Latest (New build system) or Legacy (Standard build system)
-    DEFAULT_LIBRARY_EVOLUTION_SUPPORT = false
-    DEFAULT_PLATFORMS = ["iphoneos", "iphonesimulator", "appletvos", "appletvsimulator"].freeze
-    DEFAULT_BUILD_USING_REPO_PATHS = false
     
     private_constant :DEFAULT_BUILD_SETTINGS
     private_constant :DEFAULT_BUILD_SETTINGS_OVERRIDES
-    private_constant :DEFAULT_BUILD_SYSTEM
-    private_constant :DEFAULT_LIBRARY_EVOLUTION_SUPPORT
+    private_constant :DEFAULT_SPEC_OVERRIDE
     
     class <<self      
       attr_accessor :allow_building_development_pods
@@ -84,17 +76,18 @@ module PodBuilder
       attr_accessor :build_xcframeworks_include
       attr_accessor :build_xcframeworks_exclude
     end
-    
-    @allow_building_development_pods = false
+
     @build_settings = DEFAULT_BUILD_SETTINGS
     @build_settings_overrides = DEFAULT_BUILD_SETTINGS_OVERRIDES
-    @build_system = DEFAULT_BUILD_SYSTEM
-    @library_evolution_support = DEFAULT_LIBRARY_EVOLUTION_SUPPORT
-    @base_path = "PodBuilder" # Not nice. This value is used only for initial initization. Once config is loaded it will be an absolute path. FIXME
     @spec_overrides = DEFAULT_SPEC_OVERRIDE
+
+    @allow_building_development_pods = false
+    @build_system = "Latest".freeze # either Latest (New build system) or Legacy (Standard build system)
+    @library_evolution_support = false
+    @base_path = "PodBuilder" # Not nice. This value is used only for initial initization. Once config is loaded it will be an absolute path. FIXME
     @skip_licenses = []
-    @skip_pods = DEFAULT_SKIP_PODS
-    @force_prebuild_pods = DEFAULT_FORCE_PREBUILD_PODS
+    @skip_pods = ["GoogleMaps", "React-RCTFabric", "React-Core", "React-CoreModules"] # Not including React-RCTNetwork might loose some debug warnings
+    @force_prebuild_pods = []
     @license_filename = "Pods-acknowledgements"
     @development_pods_paths = []
     @build_base_path = "/tmp/pod_builder".freeze
@@ -111,8 +104,8 @@ module PodBuilder
     @use_bundler = false
     @deterministic_build = false
 
-    @supported_platforms = DEFAULT_PLATFORMS
-    @build_using_repo_paths = DEFAULT_BUILD_USING_REPO_PATHS
+    @supported_platforms = ["iphoneos", "iphonesimulator", "appletvos", "appletvsimulator"].freeze
+    @build_using_repo_paths = false
     @react_native_project = false
 
     @build_xcframeworks_all = false
@@ -236,7 +229,7 @@ module PodBuilder
             Configuration.build_xcframeworks_exclude = value
           end
         end
-        
+
         Configuration.build_settings.freeze
 
         sanity_check()
