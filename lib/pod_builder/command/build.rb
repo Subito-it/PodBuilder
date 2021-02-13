@@ -71,6 +71,12 @@ module PodBuilder
 
         check_dependencies_build_configurations(all_buildable_items)
 
+        # When building mixed framwork/xcframeworks pods xcframeworks should be built last 
+        # so that the .xcframework overwrite the .framwork if the same pod needs to be built
+        # in both ways. 
+        # For example we might have configured to build onlt PodA as xcframework, another pod
+        # PodB has a dependency to PodA. When Building PodB, PodA gets rebuilt as .framework
+        # but then PodA gets rebuilt again as .xcframework overwriting the .framework.
         podfiles_items = [pods_to_build_debug] + [pods_to_build_release] + [pods_to_build_debug_xcframework] + [pods_to_build_release_xcframework]
 
         install_using_frameworks = Podfile::install_using_frameworks(analyzer)
