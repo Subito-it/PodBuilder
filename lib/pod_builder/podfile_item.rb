@@ -103,27 +103,27 @@ module PodBuilder
     #
     attr_accessor :libraries
 
-    # @return [String] source_files
+    # @return [String] Source_files
     #
     attr_accessor :source_files
 
-    # @return [String] license
+    # @return [String] License
     #
     attr_accessor :license
 
-    # @return [String] summary
+    # @return [String] Summary
     #
     attr_accessor :summary
 
-    # @return [Hash] source
+    # @return [Hash] Source
     #
     attr_accessor :source
 
-    # @return [Hash] authors
+    # @return [Hash] Authors
     #
     attr_accessor :authors
 
-    # @return [String] homepage
+    # @return [String] Homepage
     #
     attr_accessor :homepage
 
