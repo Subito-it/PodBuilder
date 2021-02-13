@@ -46,7 +46,6 @@ module PodBuilder
     DEFAULT_LIBRARY_EVOLUTION_SUPPORT = false
     DEFAULT_PLATFORMS = ["iphoneos", "iphonesimulator", "appletvos", "appletvsimulator"].freeze
     DEFAULT_BUILD_USING_REPO_PATHS = false
-    DEFAULT_BUILD_XCFRAMEWORKS = false
     
     private_constant :DEFAULT_BUILD_SETTINGS
     private_constant :DEFAULT_BUILD_SETTINGS_OVERRIDES
@@ -81,7 +80,9 @@ module PodBuilder
       attr_accessor :build_using_repo_paths
       attr_accessor :react_native_project
       attr_accessor :lldbinit_name
-      attr_accessor :build_xcframeworks
+      attr_accessor :build_xcframeworks_all
+      attr_accessor :build_xcframeworks_include
+      attr_accessor :build_xcframeworks_exclude
     end
     
     @allow_building_development_pods = false
@@ -114,7 +115,9 @@ module PodBuilder
     @build_using_repo_paths = DEFAULT_BUILD_USING_REPO_PATHS
     @react_native_project = false
 
-    @build_xcframeworks = DEFAULT_BUILD_XCFRAMEWORKS
+    @build_xcframeworks_all = false
+    @build_xcframeworks_include = []
+    @build_xcframeworks_exclude = []
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
@@ -218,9 +221,19 @@ module PodBuilder
             Configuration.react_native_project = value
           end
         end
-        if value = json["build_xcframeworks"]
+        if value = json["build_xcframeworks_all"]
           if [TrueClass, FalseClass].include?(value.class)
-            Configuration.build_xcframeworks = value
+            Configuration.build_xcframeworks_all = value
+          end
+        end
+        if value = json["build_xcframeworks_include"]
+          if value.is_a?(Array)
+            Configuration.build_xcframeworks_include = value
+          end
+        end
+        if value = json["build_xcframeworks_exclude"]
+          if value.is_a?(Array)
+            Configuration.build_xcframeworks_exclude = value
           end
         end
         
