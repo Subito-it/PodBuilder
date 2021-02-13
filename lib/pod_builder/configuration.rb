@@ -292,6 +292,11 @@ module PodBuilder
           puts "PodBuilder.json contains '#{pod}' both in `force_prebuild_pods` and `skip_pods`. Will force prebuilding.".yellow
         end
       end
+      if Configuration.build_xcframeworks_all
+        raise "Invalid PodBuilder.json configuration: 'build_xcframeworks_all' is true and 'build_xcframeworks_include' is not empty" if Configuration.build_xcframeworks_include.count > 0
+      else
+        raise "Invalid PodBuilder.json configuration: 'build_xcframeworks_all' is false and 'build_xcframeworks_exclude' is not empty" if Configuration.build_xcframeworks_exclude.count > 0
+      end
     end
     
     def self.config_path
