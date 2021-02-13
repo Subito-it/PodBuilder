@@ -134,6 +134,10 @@ module PodBuilder
     # @return [Bool] Defines module
     #
     attr_accessor :defines_module
+
+    # @return [Bool] Should build as xcframework
+    #
+    attr_accessor :build_xcframework
     
     # Initialize a new instance
     #
@@ -235,6 +239,13 @@ module PodBuilder
       @source = spec.root.attributes_hash.fetch("source", { "git"=>"https://github.com/Subito-it/PodBuilder.git" })
       @authors = spec.root.attributes_hash.fetch("authors", {"PodBuilder"=>"pod@podbuilder.com"})
       @homepage = spec.root.attributes_hash.fetch("homepage", "https://github.com/Subito-it/PodBuilder")
+
+      if Configuration.build_xcframeworks_all
+        build_as_xcframework = !Configuration.build_xcframeworks_exclude.include?(@root_name)
+      else
+        build_as_xcframework = Configuration.build_xcframeworks_include.include?(@root_name)
+      end
+      @build_xcframework = build_as_xcframework
     end
 
     def pod_specification(all_poditems, parent_spec = nil)
