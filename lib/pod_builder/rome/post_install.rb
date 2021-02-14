@@ -6,9 +6,11 @@ module PodBuilder
   class XcodeBuildSettings
     attr_reader :platform_name
     attr_reader :build_destination
+    attr_reader :configuration
 
-    def initialize(platform_name)
+    def initialize(platform_name, configuration)
       @platform_name = platform_name
+      @configuration = configuration
    
       case platform_name
       when "iphoneos" then @build_destination = "generic/platform=iOS"
@@ -313,18 +315,18 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
         
     case target.platform_name
     when :ios then 
-      xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("iphoneos"), PodBuilder::XcodeBuildSettings.new("iphonesimulator")]
+      xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("iphoneos", configuration), PodBuilder::XcodeBuildSettings.new("iphonesimulator", configuration)]
       if build_catalyst
-        xcodebuild_settings += [PodBuilder::XcodeBuildSettings.new("catalyst")]
+        xcodebuild_settings += [PodBuilder::XcodeBuildSettings.new("catalyst", configuration)]
       end
-    when :osx then xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("macos")]
-    when :tvos then xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("tvos"), PodBuilder::XcodeBuildSettings.new("tvossimulator")]
-    when :watchos then xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("watchos"), PodBuilder::XcodeBuildSettings.new("watchossimulator")]
+    when :osx then xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("macos", configuration)]
+    when :tvos then xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("tvos", configuration), PodBuilder::XcodeBuildSettings.new("tvossimulator", configuration)]
+    when :watchos then xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("watchos", configuration), PodBuilder::XcodeBuildSettings.new("watchossimulator", configuration)]
     else raise "\n\nUnknown platform '#{target.platform_name}'".red end
   
     xcodebuild_settings.each do |xcodebuild_setting|
       puts "Building xcframeworks for #{xcodebuild_setting.platform_name}".yellow
-      raise "\n\n#{build_destination} xcframework archive failed!".red if !system("xcodebuild archive -project #{project_path.to_s} -scheme Pods-DummyTarget -destination '#{xcodebuild_setting.build_destination}' -archivePath '#{build_dir}/#{xcodebuild_setting.platform_name}' SKIP_INSTALL=NO > /dev/null 2>&1")
+      raise "\n\n#{build_destination} xcframework archive failed!".red if !system("xcodebuild archive -project #{project_path.to_s} -scheme Pods-DummyTarget -configuration #{xcodebuild_setting.configuration} -destination '#{xcodebuild_setting.build_destination}' -archivePath '#{build_dir}/#{xcodebuild_setting.platform_name}' SKIP_INSTALL=NO > /dev/null 2>&1")
     end
 
     built_items = Dir.glob("#{build_dir}/#{xcodebuild_settings[0].platform_name}.xcarchive/Products/Library/Frameworks/*").reject { |t| File.basename(t, ".*") == "Pods_DummyTarget" }
