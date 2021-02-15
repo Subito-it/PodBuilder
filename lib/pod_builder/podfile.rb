@@ -63,9 +63,6 @@ module PodBuilder
         elsif Configuration.library_evolution_support || item.build_xcframework
           build_settings["BUILD_LIBRARY_FOR_DISTRIBUTION"] = "YES"
         end
-        if item.build_xcframework
-          build_settings["BUILD_LIBRARY_FOR_DISTRIBUTION"] = "YES"
-        end
 
         build_settings["SWIFT_VERSION"] = item_build_settings["SWIFT_VERSION"] || item.swift_version || project_swift_version(analyzer)
 
