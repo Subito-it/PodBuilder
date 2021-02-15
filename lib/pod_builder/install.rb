@@ -394,6 +394,14 @@ module PodBuilder
           next
         end
 
+        if podfile_item = podfile_items.detect { |t| t.root_name == pod_name }
+          if Dir.glob("#{source_path}/**/Modules/**/*.swiftmodule/*.swiftinterface").count > 0
+            # We can safely remove .swiftmodule if .swiftinterface exists
+            swiftmodule_files = Dir.glob("#{source_path}/**/Modules/**/*.swiftmodule/*.swiftmodule")
+            swiftmodule_files.each { |t| PodBuilder::safe_rm_rf(t) }
+          end
+        end
+
         unless Dir.glob("#{source_path}/**/*").select { |t| File.file?(t) }.empty?
           destination_folder = PodBuilder::prebuiltpath(root_name)
           FileUtils.mkdir_p(destination_folder)
