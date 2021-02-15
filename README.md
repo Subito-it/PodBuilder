@@ -280,9 +280,17 @@ Like `build_settings` but per pod. Pod name can also refer to subspec.
 
 Specify which build system to use to compile frameworks. Either `Legacy` (standard build system) or `Latest` (new build system). Default value: `Latest`.
 
-#### `build_xcframeworks`
+#### `build_xcframeworks_all`
 
-Specify if PodBuilder will build .xcframeworks. Will enable `library_evolution_support`. Default value: false
+Specify if PodBuilder should build all pods as .xcframeworks. Will enable `library_evolution_support`. Default value: false
+
+#### `build_xcframeworks_exclude`
+
+Specify which pods PodBuilder should NOT be built as .xcframeworks when `build_xcframeworks_all` is true. Default value: []
+
+#### `build_xcframeworks_include`
+
+Specify which pods PodBuilder should be built as .xcframeworks. Will enable `library_evolution_support`. Default value: []
 
 #### `library_evolution_support`
 
