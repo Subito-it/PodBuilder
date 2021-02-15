@@ -53,7 +53,11 @@ module PodBuilder
           resources = []
           exclude_files = []
           vendored_frameworks.each do |vendored_framework|
-            binary_path = Dir.glob(PodBuilder::prebuiltpath("#{item.root_name}/#{vendored_framework}/**/#{File.basename(vendored_framework, ".*")}")).first
+            if vendored_framework.end_with?(".xcframework")
+              binary_path = Dir.glob(PodBuilder::prebuiltpath("#{item.root_name}/#{vendored_framework}/**/#{File.basename(vendored_framework, ".*")}")).reject { |t| t.include?("simulator") }.first
+            else
+              binary_path = Dir.glob(PodBuilder::prebuiltpath("#{item.root_name}/#{vendored_framework}/**/#{File.basename(vendored_framework, ".*")}")).first
+            end
 
             next if binary_path.nil?
 
