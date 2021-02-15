@@ -379,6 +379,7 @@ module PodBuilder
       pod_names.each do |pod_name|   
         root_name = pod_name.split("/").first
 
+        # Remove existing files
         items_to_delete = Dir.glob("#{PodBuilder::prebuiltpath(root_name)}/**/*")
         items_to_delete.each { |t| PodBuilder::safe_rm_rf(t) }
       end
