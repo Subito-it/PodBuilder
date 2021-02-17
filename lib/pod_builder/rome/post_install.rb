@@ -326,7 +326,7 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
   
     xcodebuild_settings.each do |xcodebuild_setting|
       puts "Building xcframeworks for #{xcodebuild_setting.platform_name}".yellow
-      raise "\n\n#{build_destination} xcframework archive failed!".red if !system("xcodebuild archive -project #{project_path.to_s} -scheme Pods-DummyTarget -configuration #{xcodebuild_setting.configuration} -destination '#{xcodebuild_setting.build_destination}' -archivePath '#{build_dir}/#{xcodebuild_setting.platform_name}' SKIP_INSTALL=NO > /dev/null 2>&1")
+      raise "\n\n#{xcodebuild_setting.build_destination} xcframework archive failed!".red if !system("xcodebuild archive -project #{project_path.to_s} -scheme Pods-DummyTarget -configuration #{xcodebuild_setting.configuration} -destination '#{xcodebuild_setting.build_destination}' -archivePath '#{build_dir}/#{xcodebuild_setting.platform_name}' SKIP_INSTALL=NO > /dev/null 2>&1")
     end
 
     built_items = Dir.glob("#{build_dir}/#{xcodebuild_settings[0].platform_name}.xcarchive/Products/Library/Frameworks/*").reject { |t| File.basename(t, ".*") == "Pods_DummyTarget" }
