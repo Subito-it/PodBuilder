@@ -32,8 +32,9 @@ module PodBuilder
           argument_pods = all_buildable_items.map(&:root_name).uniq
         else
           argument_pods = Podfile::resolve_pod_names(argument_pods, all_buildable_items)
-          deps = all_buildable_items.select { |t| argument_pods.include?(t.root_name) }.map(&:dependency_names).flatten.map { |t| t.split("/").first }
-          argument_pods += deps
+          # These doesnt make particular sense since we'll be adding dependencies before building (in order to reuse prebuilt cache if available)
+          # deps = all_buildable_items.select { |t| argument_pods.include?(t.root_name) }.map(&:dependency_names).flatten.map { |t| t.split("/").first }
+          # argument_pods += deps
           argument_pods.uniq!
         end
 
