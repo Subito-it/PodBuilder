@@ -44,8 +44,6 @@ module PodBuilder
         }
         argument_pods = available_argument_pods.uniq
         
-        prebuilt_pods_to_install = prebuilt_items.select { |x| argument_pods.include?(x.root_name) }
-
         Podfile.restore_podfile_clean(all_buildable_items)
 
         restore_file_error = Podfile.restore_file_sanity_check
@@ -54,6 +52,9 @@ module PodBuilder
 
         pods_to_build = resolve_pods_to_build(argument_pods, buildable_items)
         buildable_items -= pods_to_build
+
+        argument_pods += pods_to_build.map(&:root_name)
+        argument_pods.uniq!
 
         # We need to split pods to build in 3 groups
         # 1. pods to build in release
@@ -102,7 +103,7 @@ module PodBuilder
 
           podfile_content = Podfile.from_podfile_items(podfile_items, analyzer, build_configuration, install_using_frameworks, build_catalyst, podfile_items.first.build_xcframework)
           
-          install_result += Install.podfile(podfile_content, podfile_items, podfile_items.first.build_configuration)          
+          install_result += Install.podfile(podfile_content, podfile_items, argument_pods, podfile_items.first.build_configuration)          
           
           FileUtils.rm_f(PodBuilder::basepath("Podfile.lock"))
         end
@@ -120,6 +121,7 @@ module PodBuilder
         builded_pods_and_deps = podfiles_items.flatten.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
         builded_pods_and_deps.select! { |x| !x.is_prebuilt }
         
+        prebuilt_pods_to_install = prebuilt_items.select { |x| argument_pods.include?(x.root_name) }
         Podfile::write_restorable(builded_pods_and_deps + prebuilt_pods_to_install, all_buildable_items, analyzer)     
         if !OPTIONS.has_key?(:skip_prebuild_update)   
           Podfile::write_prebuilt(all_buildable_items, analyzer)
@@ -225,15 +227,17 @@ module PodBuilder
         pods_to_build = buildable_items.select { |x| argument_pods.include?(x.root_name) }
         pods_to_build += other_subspecs(pods_to_build, buildable_items)
 
-        if OPTIONS[:resolve_parent_dependencies]
-          dependencies = []
-          buildable_items.each do |pod|
-            if !(pod.dependencies(buildable_items) & pods_to_build).empty?
-              dependencies.push(pod)
-            end
+        # Build all pods that depend on the those that were explictly passed by the user
+        dependencies = []
+        buildable_items.each do |pod|
+          if !(pod.dependencies(buildable_items) & pods_to_build).empty?
+            dependencies.push(pod)
           end
-          pods_to_build += dependencies
         end
+        log = dependencies.reject { |t| pods_to_build.map(&:root_name).include?(t.root_name) }.map(&:root_name)
+        puts "Adding inverse dependencies: #{log.join(", ")}".blue
+
+        pods_to_build += dependencies
 
         return pods_to_build.uniq
       end      

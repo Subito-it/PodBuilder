@@ -139,7 +139,7 @@ module PodBuilder
 
   class Install
     # This method will generate prebuilt data by building from "/tmp/pod_builder/Podfile"
-    def self.podfile(podfile_content, podfile_items, build_configuration)
+    def self.podfile(podfile_content, podfile_items, argument_pods, build_configuration)
       puts "Preparing build Podfile".yellow
       
       PodBuilder::safe_rm_rf(Configuration.build_path)
@@ -160,7 +160,7 @@ module PodBuilder
         lock_file = "#{Configuration.build_path}/pod_builder.lock"
         FileUtils.touch(lock_file)
         
-        prebuilt_entries = use_prebuilt_entries_for_unchanged_pods(podfile_path, podfile_items)
+        prebuilt_entries = use_prebuilt_entries_for_unchanged_pods(podfile_path, podfile_items, argument_pods)
         
         install
         
@@ -280,44 +280,66 @@ module PodBuilder
       return podfile_content
     end
     
-    def self.use_prebuilt_entries_for_unchanged_pods(podfile_path, podfile_items)
+    def self.use_prebuilt_entries_for_unchanged_pods(podfile_path, podfile_items, argument_pods)
       podfile_content = File.read(podfile_path)
       
       replaced_items = []
 
+      download # Copy files under #{Configuration.build_path}/Pods so that we can determine build folder hashes
+
+      gitignored_files = PodBuilder::gitignoredfiles
+
+      prebuilt_root_paths = Hash.new
+
+      puts "Optimizing build".yellow
+      puts "Build overview:".blue
+
+      prebuild_log = lambda { |item|
+        if item.is_prebuilt
+          puts "#{item.root_name} is prebuilt"
+        else
+          puts "#{item.root_name} from source".blue
+        end
+      }
+
+      # Replace prebuilt entries in Podfile for Pods that have no changes in source code which will avoid rebuilding them
+      items = podfile_items.group_by { |t| t.root_name }.map { |k, v| v.first }.sort_by { |t| t.root_name } # Return one podfile_item per root_name
       if OPTIONS.has_key?(:force_rebuild)
-        podfile_content.gsub!("%%%prebuilt_root_paths%%%", "{}")
-      else
-        download # Copy files under #{Configuration.build_path}/Pods so that we can determine build folder hashes
+        rebuild_pods = items.select { |t| argument_pods.include?(t.root_name) }
 
-        gitignored_files = PodBuilder::gitignoredfiles
-
-        prebuilt_root_paths = Hash.new
-
-        # Replace prebuilt entries in Podfile for Pods that have no changes in source code which will avoid rebuilding them
-        items = podfile_items.group_by { |t| t.root_name }.map { |k, v| v.first } # Return one podfile_item per root_name
-        items.each do |item|
-          podspec_path = item.prebuilt_podspec_path
-          if last_build_folder_hash = build_folder_hash_in_prebuilt_info_file(item)
-            if last_build_folder_hash == build_folder_hash(item, gitignored_files)
-              puts "No changes detected to '#{item.root_name}', will skip rebuild".blue
-
-              replaced_items.push(item)
-
-              podfile_items.select { |t| t.root_name == item.root_name }.each do |replace_item|
-                replace_regex = "pod '#{Regexp.quote(replace_item.name)}', .*"
-                replace_line_found = podfile_content =~ /#{replace_regex}/i
-                raise "\n\nFailed finding pod entry for '#{replace_item.name}'".red unless replace_line_found
-                podfile_content.gsub!(/#{replace_regex}/, replace_item.prebuilt_entry(true, true))
-
-                prebuilt_root_paths[replace_item.root_name] = PodBuilder::prebuiltpath
-              end
-            end
-          end
+        rebuild_pods.each do |item|
+          prebuild_log.call(item)
         end
 
-        podfile_content.gsub!("%%%prebuilt_root_paths%%%", prebuilt_root_paths.to_s)
+        items -= rebuild_pods
       end
+      
+      items.each do |item|
+        podspec_path = item.prebuilt_podspec_path
+        unless last_build_folder_hash = build_folder_hash_in_prebuilt_info_file(item)
+          prebuild_log.call(item)
+          next
+        end
+        
+        if last_build_folder_hash == build_folder_hash(item, gitignored_files)
+          puts "#{item.root_name} reuse PodBuilder cache"
+
+          replaced_items.push(item)
+
+          podfile_items.select { |t| t.root_name == item.root_name }.each do |replace_item|
+            replace_regex = "pod '#{Regexp.quote(replace_item.name)}', .*"
+            replace_line_found = podfile_content =~ /#{replace_regex}/i
+            raise "\n\nFailed finding pod entry for '#{replace_item.name}'".red unless replace_line_found
+            podfile_content.gsub!(/#{replace_regex}/, replace_item.prebuilt_entry(true, true))
+
+            prebuilt_root_paths[replace_item.root_name] = PodBuilder::prebuiltpath
+          end
+        else
+          prebuild_log.call(item)
+        end
+      end
+
+      podfile_content.gsub!("%%%prebuilt_root_paths%%%", prebuilt_root_paths.to_s)
 
       File.write(podfile_path, podfile_content)
 
