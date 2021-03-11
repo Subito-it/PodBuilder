@@ -487,7 +487,7 @@ module PodBuilder
           end
         end
         
-        return Digest::MD5.hexdigest(file_hashes.join)
+        return Digest::MD5.hexdigest(file_hashes.sort.join)
       else
         # Pod folder might be under .gitignore
         item_path = "#{Configuration.build_path}/Pods/#{podfile_item.root_name}"
