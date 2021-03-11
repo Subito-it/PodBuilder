@@ -294,11 +294,11 @@ module PodBuilder
       puts "Optimizing build".yellow
       puts "Build strategy".blue
 
-      prebuild_log = lambda { |item|
+      prebuild_log = lambda { |item, reason|
         if item.is_prebuilt
           puts "#{item.root_name} is prebuilt"
         else
-          puts "#{item.root_name} from source".blue
+          puts "#{item.root_name} from source #{reason}".blue
         end
       }
 
@@ -308,7 +308,7 @@ module PodBuilder
         rebuild_pods = items.select { |t| argument_pods.include?(t.root_name) }
 
         rebuild_pods.each do |item|
-          prebuild_log.call(item)
+          prebuild_log.call(item, "")
         end
 
         items -= rebuild_pods
@@ -317,7 +317,7 @@ module PodBuilder
       items.each do |item|
         podspec_path = item.prebuilt_podspec_path
         unless last_build_folder_hash = build_folder_hash_in_prebuilt_info_file(item)
-          prebuild_log.call(item)
+          prebuild_log.call(item, "(folder hash missing)")
           next
         end
         
@@ -335,7 +335,7 @@ module PodBuilder
             prebuilt_root_paths[replace_item.root_name] = PodBuilder::prebuiltpath
           end
         else
-          prebuild_log.call(item)
+          prebuild_log.call(item, "(folder hash mismatch)")
         end
       end
 
