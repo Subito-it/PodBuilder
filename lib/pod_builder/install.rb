@@ -292,7 +292,7 @@ module PodBuilder
       prebuilt_root_paths = Hash.new
 
       puts "Optimizing build".yellow
-      puts "Build overview:".blue
+      puts "Build strategy".blue
 
       prebuild_log = lambda { |item|
         if item.is_prebuilt
