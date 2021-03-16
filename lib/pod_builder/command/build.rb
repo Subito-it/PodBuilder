@@ -32,9 +32,6 @@ module PodBuilder
           argument_pods = all_buildable_items.map(&:root_name).uniq
         else
           argument_pods = Podfile::resolve_pod_names(argument_pods, all_buildable_items)
-          # These doesnt make particular sense since we'll be adding dependencies before building (in order to reuse prebuilt cache if available)
-          # deps = all_buildable_items.select { |t| argument_pods.include?(t.root_name) }.map(&:dependency_names).flatten.map { |t| t.split("/").first }
-          # argument_pods += deps
           argument_pods.uniq!
         end
 
@@ -56,9 +53,11 @@ module PodBuilder
         argument_pods += pods_to_build.map(&:root_name)
         argument_pods.uniq!
 
-        # We need to split pods to build in 3 groups
+        # We need to split pods to build in 4 groups
         # 1. pods to build in release
         # 2. pods to build in debug
+        # 3. pods to build in release as xcframeworks
+        # 4. pods to build in debug as xcframeworks
 
         check_not_building_development_pods(pods_to_build)
 
