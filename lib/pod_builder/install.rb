@@ -479,10 +479,11 @@ module PodBuilder
           unless File.file?(path)
             next
           end
-          
+
           path = File.expand_path(path)
           rel_path = path.gsub(rootpath, "")[1..]
-          unless exclude_files.include?(rel_path)
+
+          unless exclude_files.any? { |t| rel_path.start_with?(t) }
             file_hashes.push(Digest::MD5.hexdigest(File.read(path)))
           end
         end
