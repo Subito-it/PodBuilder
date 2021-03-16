@@ -61,6 +61,14 @@ module PodBuilder
 
         check_not_building_development_pods(pods_to_build)
 
+        # We need to recursively add dependencies to properly split pods in groups.
+        # Example:        
+        # 1. PodA has a dep to PodB
+        # 2. PodB is marked to be built as xcframework
+        # 3. We rebuild PodA only (pods_to_build contains only PodA)
+        # 4. We need to add dependencies recursively so that PodB is is added to pods_to_build_release_xcframework
+        pods_to_build = pods_to_build.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
+
         pods_to_build_debug = pods_to_build.select { |x| x.build_configuration == "debug" }
         pods_to_build_release = pods_to_build - pods_to_build_debug
 
@@ -97,9 +105,14 @@ module PodBuilder
         install_result = InstallResult.new
         podfiles_items.reject { |x| x.empty? }.each do |podfile_items|
           build_configuration = podfile_items.map(&:build_configuration).uniq.first
-          
-          podfile_items = podfile_items.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
 
+          # We need to recursively find dependencies again because some of the required dependencies might have been moved to a separate group
+          # Example:
+          # 1. PodA has a dep to PodB
+          # 2. PodB is marked to be built as xcframework -> PodB will be added to pods_to_build_release_xcframework and won't be present in
+          # pods_to_build_release and therefore build will fail
+          podfile_items = podfile_items.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
+          
           podfile_content = Podfile.from_podfile_items(podfile_items, analyzer, build_configuration, install_using_frameworks, build_catalyst, podfile_items.first.build_xcframework)
           
           install_result += Install.podfile(podfile_content, podfile_items, argument_pods, podfile_items.first.build_configuration)          
