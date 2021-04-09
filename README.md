@@ -216,7 +216,7 @@ As an example here we're setting `module_name` in Google's Advertising SDK:
 }
 ```
 
-### `skip_pods`
+#### `skip_pods`
 
 You may want to skip some pods to be prebuilt, you can do that as follows:
 
@@ -229,7 +229,7 @@ You may want to skip some pods to be prebuilt, you can do that as follows:
 ```
 
 
-### `force_prebuild_pods`
+#### `force_prebuild_pods`
 
 You may want to force some pods to be prebuilt, this might be the case for prebuilt ones (pods with a single vendored .framework) which are dependencies of othere pods
 
@@ -244,7 +244,9 @@ You may want to force some pods to be prebuilt, this might be the case for prebu
 
 #### `build_settings`
 
-Xcode build settings to use. You can override the default values which are:
+These settings allow you to specify the build settings to use when compiling prebuilt items. These values won't be reflected in your project once the pod has been built.
+
+You can override the default values which are:
 
 ```json
 {
