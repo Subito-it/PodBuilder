@@ -107,8 +107,8 @@ module PodBuilder
                 next
               end
     
-              matches = line.gsub("\"", "'").match(/pod '(.*?)',(.*)/)
-              if matches&.size == 3
+              matches = line.gsub("\"", "'").match(/pod '(.*?)'/)
+              if matches&.size == 2
                 if matches[1].split("/").first == pod_name_to_switch
                   default_entries[current_section] = line
                 end  
