@@ -91,12 +91,12 @@ module PodBuilder
         install_using_frameworks = Podfile::install_using_frameworks(analyzer)
         if Configuration.react_native_project
           if install_using_frameworks
-            raise "\n\nOnly static library packaging currently supported for react native projects. Please remove 'use_frameworks!' in #{PodBuilder::basepath("Podfile")}".red 
+            raise "\n\nOnly static library packaging currently supported for react native projects. Please remove 'use_frameworks!' in #{PodBuilder::basepath("Podfile")}\n".red 
           end  
           prepare_defines_modules_override(all_buildable_items)
         else
           unless install_using_frameworks
-            raise "\n\nOnly framework packaging currently supported. Please add 'use_frameworks!' at root level (not nested in targets) in #{PodBuilder::basepath("Podfile")}".red
+            raise "\n\nOnly framework packaging currently supported. Please add 'use_frameworks!' at root level (not nested in targets) in #{PodBuilder::basepath("Podfile")}\n".red
           end  
         end
         
@@ -179,11 +179,11 @@ module PodBuilder
       end
 
       def self.check_pods_exists(pods, buildable_items)
-        raise "\n\nEmpty Podfile?".red if buildable_items.nil?
+        raise "\n\nEmpty Podfile?\n".red if buildable_items.nil?
 
         buildable_items = buildable_items.map(&:root_name)
         pods.each do |pod|
-          raise "\n\nPod `#{pod}` wasn't found in Podfile.\n\nFound:\n#{buildable_items.join("\n")}\n\n".red if !buildable_items.include?(pod)
+          raise "\n\nPod `#{pod}` wasn't found in Podfile.\n\nFound:\n#{buildable_items.join("\n")}\n".red if !buildable_items.include?(pod)
         end
       end
 
@@ -197,7 +197,7 @@ module PodBuilder
           pods_with_unaligned_build_configuration = pods_with_common_deps.select { |x| x.build_configuration != pod.build_configuration }
           pods_with_unaligned_build_configuration.map!(&:name)
 
-          raise "\n\nDependencies of `#{pod.name}` don't have the same build configuration (#{pod.build_configuration}) of `#{pods_with_unaligned_build_configuration.join(",")}`'s dependencies".red if pods_with_unaligned_build_configuration.count > 0
+          raise "\n\nDependencies of `#{pod.name}` don't have the same build configuration (#{pod.build_configuration}) of `#{pods_with_unaligned_build_configuration.join(",")}`'s dependencies\n".red if pods_with_unaligned_build_configuration.count > 0
         end
       end
 
@@ -228,7 +228,7 @@ module PodBuilder
           if OPTIONS[:allow_warnings]
             puts "\n\n#{warn_message}".yellow
           else
-            raise "\n\n#{warn_message}".red
+            raise "\n\n#{warn_message}\n".red
           end
         end
       end

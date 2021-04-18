@@ -60,7 +60,7 @@ module PodBuilder
         
         return { "repo": "local" }
       else
-        raise "\n\nFailed extracting version from line:\n#{line}\n\n".red
+        raise "\n\nFailed extracting version from line:\n#{line}\n".red
       end
     end
 

@@ -216,7 +216,7 @@ module PodBuilder
             
       def self.check_not_building_subspec(pod_to_switch)
         if pod_to_switch.include?("/")
-          raise "\n\nCan't switch subspec #{pod_to_switch} refer to podspec name.\n\nUse `pod_builder switch #{pod_to_switch.split("/").first}` instead\n\n".red
+          raise "\n\nCan't switch subspec #{pod_to_switch} refer to podspec name.\n\nUse `pod_builder switch #{pod_to_switch.split("/").first}` instead\n".red
         end
       end
     end

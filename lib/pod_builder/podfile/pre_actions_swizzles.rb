@@ -24,7 +24,7 @@ class Pod::Generator::EmbedFrameworksScript
   alias_method :swz_initialize, :initialize
   
   def initialize(*args)
-    raise "Unsupported CocoaPods version" if (args.count == 0 || args.count > 2)
+    raise "\n\nUnsupported CocoaPods version\n".red if (args.count == 0 || args.count > 2)
     
     frameworks_by_config = args[0]
     frameworks_by_config.keys.each do |key|

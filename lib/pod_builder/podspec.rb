@@ -142,7 +142,7 @@ module PodBuilder
         end
         if !install_using_frameworks && spec_var == "p1" && vendored_libraries.map { |t| File.basename(t) }.include?("lib#{item.root_name}.a" )
           module_path_files = Dir.glob(PodBuilder.prebuiltpath("#{item.root_name}/**/#{item.root_name}.modulemap"))
-          raise "\n\nToo many module maps found for #{item.root_name}".red if module_path_files.count > 1
+          raise "\n\nToo many module maps found for #{item.root_name}\n".red if module_path_files.count > 1
 
           rel_path = Pathname.new(PodBuilder::prebuiltpath).relative_path_from(Pathname.new(PodBuilder::project_path("Pods"))).to_s
           prebuilt_root_var = "#{item.root_name.upcase.gsub("-", "_")}_PREBUILT_ROOT"
