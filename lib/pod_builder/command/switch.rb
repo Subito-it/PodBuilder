@@ -13,19 +13,29 @@ module PodBuilder
           return -1
         end
 
+        should_resolve_dependencies = false
+
+        pods_not_found = []
         pod_names_to_switch = []
         argument_pods.each do |pod|
           pod_name_to_switch = pod
           pod_name_to_switch = Podfile::resolve_pod_names_from_podfile([pod_name_to_switch]).first
-          raise "\n\nDid not find pod '#{pod}'".red if pod_name_to_switch.nil?
-          
-          check_not_building_subspec(pod_name_to_switch)  
 
-          pod_names_to_switch.push(pod_name_to_switch)
+          if pod_name_to_switch.nil?
+            should_resolve_dependencies = true
+            pods_not_found.push(pod)
+          else
+            check_not_building_subspec(pod_name_to_switch)  
+
+            pod_names_to_switch.push(pod_name_to_switch)  
+          end          
         end
 
-        if OPTIONS[:resolve_parent_dependencies] == true
-          install_update_repo = OPTIONS.fetch(:update_repos, true)
+        if should_resolve_dependencies 
+          puts "\nAnalyzing Podfile, this will slow down switch.\nYou can avoid this by explictly declaring the following pods in PodBuilder's Podfile (#{PodBuilder::basepath("Podfile")}):\n#{pods_not_found.map { |t| "- #{t} " }.join(" ")}\n\n".yellow
+        end
+
+        if OPTIONS[:resolve_parent_dependencies] == true || should_resolve_dependencies
           install_update_repo = OPTIONS.fetch(:update_repos, false)
           installer, analyzer = Analyze.installer_at(PodBuilder::basepath, install_update_repo)
   
