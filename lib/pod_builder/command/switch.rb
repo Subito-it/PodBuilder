@@ -26,6 +26,7 @@ module PodBuilder
 
         if OPTIONS[:resolve_parent_dependencies] == true
           install_update_repo = OPTIONS.fetch(:update_repos, true)
+          install_update_repo = OPTIONS.fetch(:update_repos, false)
           installer, analyzer = Analyze.installer_at(PodBuilder::basepath, install_update_repo)
   
           all_buildable_items = Analyze.podfile_items(installer, analyzer)
