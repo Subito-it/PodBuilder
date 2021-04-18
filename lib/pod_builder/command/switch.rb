@@ -115,7 +115,7 @@ module PodBuilder
               end
             end
     
-            raise "\n\n'#{pod_name_to_switch}' not found in #{podfile_path}".red if default_entries.keys.count == 0
+            raise "\n\n'#{pod_name_to_switch}' not found in PodBuilder's Podfile.\n\nYou might need to explictly add:\n\n    pod '#{pod_name_to_switch}'\n\nto #{podfile_path}\n".red if default_entries.keys.count == 0
           end
 
           if development_path.nil? 
