@@ -55,7 +55,7 @@ module PodBuilder
 
             podspec_content = File.read(podspec_path)
 
-            regex = "p\\d\\.dependency '(.*)'"
+            regex = "p\\d\\.dependency ['|\"](.*)['|\"]"
 
             podspec_content.each_line do |line|
               matches = line.match(/#{regex}/)
