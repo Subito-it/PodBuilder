@@ -157,7 +157,7 @@ module PodBuilder
         build_settings = installer.analysis_result.targets.map { |t| t.user_project.root_object.targets.map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } } }.flatten
         build_catalyst = build_settings.detect { |t| t["SUPPORTS_MACCATALYST"] == "YES" } != nil 
         
-        puts "\nTo support Catalyst you should enable 'build_xcframeworks' in PodBuilder.json\n".red if build_catalyst && !Configuration.build_xcframeworks
+        puts "\nTo support Catalyst you should enable 'build_xcframeworks' in PodBuilder.json\n".red if build_catalyst && !Configuration.build_xcframeworks_all
 
         return build_catalyst
       end
