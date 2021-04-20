@@ -364,7 +364,7 @@ Please open an issue here. You may also add the name of the pod to the [`skip_po
 
 # Git LFS
 
-We high encourage to use PodBuilder in combination with Git LFS. Tacking PodBuilder/Prebuilt/**/*.framework/* and PodBuilder/Prebuilt/**/*.a and PodBuilder/dSYM/**/* will ensure that your repo size stays under control with all the benefits of having prebuilt dependencies ready to use.
+We high encourage to use PodBuilder in combination with Git LFS. Tacking `PodBuilder/Prebuilt/**/*.framework/*` and `PodBuilder/Prebuilt/**/*.a` and `PodBuilder/dSYM/**/*` will ensure that your repo size stays under control with all the benefits of having prebuilt dependencies ready to use.
 
 
 # Try it out!
