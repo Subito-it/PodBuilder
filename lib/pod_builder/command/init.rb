@@ -122,11 +122,11 @@ module PodBuilder
         # React-Core.podspec
         file = "React-Core.podspec"
         paths = Dir.glob("#{PodBuilder::git_rootpath}/node_modules/**/#{file}")
-        raise "Unexpected number of #{file} found" if paths.count != 1
+        raise "\n\nUnexpected number of #{file} found\n".red if paths.count != 1
 
         content = File.read(paths[0])
         expected_header_search_path_prefix = "s.pod_target_xcconfig    = { \"HEADER_SEARCH_PATHS\" => \""
-        raise "Expected header search path entry not found" unless content.include?(expected_header_search_path_prefix)
+        raise "\n\nExpected header search path entry not found\n".red unless content.include?(expected_header_search_path_prefix)
 
         content.sub!(expected_header_search_path_prefix, "#{expected_header_search_path_prefix}\\\"$(PODS_ROOT)/Headers/Public/Flipper-Folly\\\" ")
         File.write(paths[0], content)        
@@ -134,11 +134,11 @@ module PodBuilder
         # React-CoreModules.podspec
         file = "React-CoreModules.podspec"
         paths = Dir.glob("#{PodBuilder::git_rootpath}/node_modules/**/#{file}")
-        raise "Unexpected number of #{file} found" if paths.count != 1
+        raise "\n\nUnexpected number of #{file} found\n".red if paths.count != 1
 
         content = File.read(paths[0])
         expected_header_search_path_prefix = "\"HEADER_SEARCH_PATHS\" => \""
-        raise "Expected header search path entry not found" unless content.include?(expected_header_search_path_prefix)
+        raise "\n\nExpected header search path entry not found\n".red unless content.include?(expected_header_search_path_prefix)
 
         content.sub!(expected_header_search_path_prefix, "#{expected_header_search_path_prefix}\\\"$(PODS_ROOT)/Headers/Public/Flipper-Folly\\\" ")
         File.write(paths[0], content)

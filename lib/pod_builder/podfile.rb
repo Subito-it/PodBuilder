@@ -6,7 +6,7 @@ module PodBuilder
     PRE_INSTALL_ACTIONS = ["Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}", "require 'pod_builder/podfile/pre_actions_swizzles'"].freeze
 
     def self.from_podfile_items(items, analyzer, build_configuration, install_using_frameworks, build_catalyst, build_xcframeworks)
-      raise "\n\nno items".red unless items.count > 0
+      raise "\n\nno items\n".red unless items.count > 0
 
       sources = analyzer.sources
       
@@ -354,7 +354,7 @@ module PodBuilder
 
         if stripped_line.match(/(pod')(.*?)(')/) != nil
           starting_def_found = stripped_line.start_with?("def") && (line.match("\s*def\s") != nil)
-          raise "\n\nUnsupported single line def/pod. `def` and `pod` shouldn't be on the same line, please modify the following line:\n#{line}".red if starting_def_found
+          raise "\n\nUnsupported single line def/pod. `def` and `pod` shouldn't be on the same line, please modify the following line:\n#{line}\n".red if starting_def_found
         end
       end
     end
@@ -396,9 +396,9 @@ module PodBuilder
       if target_settings.count == 1
         return target_settings.first
       elsif target_settings.count > 1
-        raise "\n\n'use_frameworks!' should be declared only once at Podfile root level (not nested in targets)".red
+        raise "\n\n'use_frameworks!' should be declared only once at Podfile root level (not nested in targets)\n".red
       else
-        raise "\n\nFailed detecting use_frameworks!"
+        raise "\n\nFailed detecting use_frameworks!\n".red
       end
 
       return true
@@ -443,13 +443,13 @@ module PodBuilder
     def self.project_swift_version(analyzer)
       swift_versions = analyzer.instance_variable_get("@result").targets.map { |x| x.target_definition.swift_version }.compact.uniq
 
-      raise "\n\nFound different Swift versions in targets. Expecting one, got `#{swift_versions}`".red if swift_versions.count > 1
+      raise "\n\nFound different Swift versions in targets. Expecting one, got `#{swift_versions}`\n".red if swift_versions.count > 1
 
       return swift_versions.first || PodBuilder::system_swift_version
     end
 
     def self.podfile_items_at(podfile_path, include_prebuilt = false)
-      raise "\n\nExpecting basepath folder!".red if !File.exist?(PodBuilder::basepath("Podfile"))
+      raise "\n\nExpecting basepath folder!\n".red if !File.exist?(PodBuilder::basepath("Podfile"))
 
       if File.basename(podfile_path) != "Podfile"
         File.rename(PodBuilder::basepath("Podfile"), PodBuilder::basepath("Podfile.tmp"))
@@ -607,12 +607,12 @@ module PodBuilder
       base = File.expand_path(File.join(PodBuilder::project_path, ".."))
       bin_js = Dir.glob("#{base}/node_modules/@react-native-community/cli/build/bin.js")
 
-      raise "\n\nReact native cli bin_js not found! Did you run yarn install?".red unless bin_js.count == 1
+      raise "\n\nReact native cli bin_js not found! Did you run yarn install?\n".red unless bin_js.count == 1
       bin_js = bin_js.first
 
       config_dest_path = PodBuilder::basepath("rn_config.json")
 
-      raise "\n\nFailed generating react native configuration file".red unless system("node '#{bin_js}' config > #{config_dest_path}")
+      raise "\n\nFailed generating react native configuration file\n".red unless system("node '#{bin_js}' config > #{config_dest_path}")
       
       content = File.read(config_dest_path)
 
@@ -624,7 +624,7 @@ module PodBuilder
         json["project"]["ios"]["sourceDir"] = "./"
         json["project"]["ios"]["podfile"] = "./"  
       rescue => exception
-        raise "\n\nFailed updating react native configuration json".red
+        raise "\n\nFailed updating react native configuration json\n".red
       end
       
       File.write(config_dest_path, JSON.pretty_generate(json))

@@ -45,7 +45,7 @@ begin
         elsif defined?(Pod::Target::BuildType) # CocoaPods 1.7, 1.8
           Pod::Target::BuildType.new(linkage: :dynamic, packaging: :framework)
         else
-          raise "\n\nBuildType not found. Open an issue reporting your CocoaPods version".red
+          raise "\n\nBuildType not found. Open an issue reporting your CocoaPods version\n".red
         end
       else
         swz_build_type()
@@ -247,7 +247,7 @@ module PodBuilder
     def self.license_specifiers
       acknowledge_file = "#{Configuration.build_path}/Pods/Target Support Files/Pods-DummyTarget/Pods-DummyTarget-acknowledgements.plist"
       unless File.exist?(acknowledge_file)
-        raise "\n\nLicense file not found".red
+        raise "\n\nLicense file not found\n".red
       end
       
       plist = CFPropertyList::List.new(:file => acknowledge_file)
@@ -329,7 +329,7 @@ module PodBuilder
           podfile_items.select { |t| t.root_name == item.root_name }.each do |replace_item|
             replace_regex = "pod '#{Regexp.quote(replace_item.name)}', .*"
             replace_line_found = podfile_content =~ /#{replace_regex}/i
-            raise "\n\nFailed finding pod entry for '#{replace_item.name}'".red unless replace_line_found
+            raise "\n\nFailed finding pod entry for '#{replace_item.name}'\n".red unless replace_line_found
             podfile_content.gsub!(/#{replace_regex}/, replace_item.prebuilt_entry(true, true))
 
             prebuilt_root_paths[replace_item.root_name] = PodBuilder::prebuiltpath

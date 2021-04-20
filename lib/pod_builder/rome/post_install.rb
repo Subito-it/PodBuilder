@@ -21,7 +21,7 @@ module PodBuilder
       when "tvossimulator" then @build_destination = "generic/platform=tvOS Simulator"
       when "watchos" then @build_destination = "generic/platform=watchOS"
       when "watchossimulator" then @build_destination = "generic/platform=watchOS Simulator"
-      else raise "\n\nUnknown platform '#{platform_name}'".red end
+      else raise "\n\nUnknown platform '#{platform_name}'\n".red end
     end
   end
 
@@ -65,7 +65,7 @@ module PodBuilder
         `xcrun lipo -remove arm64 #{simulator_lib} -o #{simulator_lib}`
       end
       
-      raise "Lipo failed on #{device_lib}" unless system("xcrun lipo -create -output #{device_lib} #{device_lib} #{simulator_lib}")
+      raise "\n\nLipo failed on #{device_lib}\n".red unless system("xcrun lipo -create -output #{device_lib} #{device_lib} #{simulator_lib}")
       
       merge_header_into(device_swift_header_path, simulator_swift_header_path)
       
@@ -116,7 +116,7 @@ module PodBuilder
         `xcrun lipo -remove arm64 #{simulator_lib} -o #{simulator_lib}`
       end
       
-      raise "Lipo failed on #{device_lib}" unless system("xcrun lipo -create -output #{device_lib} #{device_lib} #{simulator_lib}")
+      raise "\n\nLipo failed on #{device_lib}\n".red unless system("xcrun lipo -create -output #{device_lib} #{device_lib} #{simulator_lib}")
       
       device_headers = Dir.glob("#{device_base}/**/*.h")
       simulator_headers = Dir.glob("#{simulator_base}/**/*.h")
@@ -247,7 +247,7 @@ module PodBuilder
     output = stdout + stderr
     unless status.success?
       if raise_on_failure
-        raise "#{full_command}\n\n#{output}"
+        raise "\n\n#{full_command}\n\n#{output}\n".red
       else
         UI.message("[!] Failed: #{full_command}".red)
       end
@@ -307,7 +307,7 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
   build_dir.rmtree if build_dir.directory?
 
   targets = installer_context.umbrella_targets.select { |t| t.specs.any? }
-  raise "\n\nUnsupported target count".red unless targets.count == 1
+  raise "\n\nUnsupported target count\n".red unless targets.count == 1
   target = targets.first
 
   if build_xcframeworks
@@ -322,11 +322,11 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
     when :osx then xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("macos", configuration)]
     when :tvos then xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("tvos", configuration), PodBuilder::XcodeBuildSettings.new("tvossimulator", configuration)]
     when :watchos then xcodebuild_settings = [PodBuilder::XcodeBuildSettings.new("watchos", configuration), PodBuilder::XcodeBuildSettings.new("watchossimulator", configuration)]
-    else raise "\n\nUnknown platform '#{target.platform_name}'".red end
+    else raise "\n\nUnknown platform '#{target.platform_name}'\n".red end
   
     xcodebuild_settings.each do |xcodebuild_setting|
       puts "Building xcframeworks for #{xcodebuild_setting.platform_name}".yellow
-      raise "\n\n#{xcodebuild_setting.build_destination} xcframework archive failed!".red if !system("xcodebuild archive -project #{project_path.to_s} -scheme Pods-DummyTarget -configuration #{xcodebuild_setting.configuration} -destination '#{xcodebuild_setting.build_destination}' -archivePath '#{build_dir}/#{xcodebuild_setting.platform_name}' SKIP_INSTALL=NO > /dev/null 2>&1")
+      raise "\n\n#{xcodebuild_setting.build_destination} xcframework archive failed!\n".red if !system("xcodebuild archive -project #{project_path.to_s} -scheme Pods-DummyTarget -configuration #{xcodebuild_setting.configuration} -destination '#{xcodebuild_setting.build_destination}' -archivePath '#{build_dir}/#{xcodebuild_setting.platform_name}' SKIP_INSTALL=NO > /dev/null 2>&1")
     end
 
     built_items = Dir.glob("#{build_dir}/#{xcodebuild_settings[0].platform_name}.xcarchive/Products/Library/Frameworks/*").reject { |t| File.basename(t, ".*") == "Pods_DummyTarget" }
@@ -348,7 +348,7 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
       framework_name = File.basename(built_item_paths.first, ".*")
       xcframework_path = "#{base_destination}/#{framework_name}/#{framework_name}.xcframework"
       framework_params = built_item_paths.map { |t| "-framework '#{t}'"}.join(" ")
-      raise "\n\nFailed packing xcframework!".red if !system("xcodebuild -create-xcframework #{framework_params} -output '#{xcframework_path}' > /dev/null 2>&1")      
+      raise "\n\nFailed packing xcframework!\n".red if !system("xcodebuild -create-xcframework #{framework_params} -output '#{xcframework_path}' > /dev/null 2>&1")      
 
       if enable_dsym
         xcodebuild_settings.each do |xcodebuild_setting|
@@ -361,7 +361,7 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
           end  
         end
       else
-        raise "Not implemented"
+        raise "\n\nNot implemented\n".red
       end
     end
 
@@ -377,7 +377,7 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
     when [:osx, false] then PodBuilder::xcodebuild(sandbox, target.cocoapods_target_label, configuration, PodBuilder::Configuration.deterministic_build, prebuilt_root_paths)
     when [:tvos, false] then PodBuilder::build_for_iosish_platform_lib(sandbox, build_dir, target, 'appletvos', 'appletvsimulator', configuration, PodBuilder::Configuration.deterministic_build, prebuilt_root_paths)
     when [:watchos, false] then PodBuilder::build_for_iosish_platform_lib(sandbox, build_dir, target, 'watchos', 'watchsimulator', configuration, PodBuilder::Configuration.deterministic_build, prebuilt_root_paths)
-    else raise "\n\nUnknown platform '#{target.platform_name}'".red end
+    else raise "\n\nUnknown platform '#{target.platform_name}'\n".red end
 
     raise Pod::Informative, 'The build directory was not found in the expected location.' unless build_dir.directory?
     
@@ -436,7 +436,7 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
         FileUtils.mv(dsym_source, sandbox_root.parent)
       end
     else
-      raise "Not implemented"
+      raise "\n\nNot implemented\n".red
     end    
   end
 

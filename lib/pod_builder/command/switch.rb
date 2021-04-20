@@ -13,19 +13,27 @@ module PodBuilder
           return -1
         end
 
+        pods_not_found = []
         pod_names_to_switch = []
         argument_pods.each do |pod|
           pod_name_to_switch = pod
           pod_name_to_switch = Podfile::resolve_pod_names_from_podfile([pod_name_to_switch]).first
-          raise "\n\nDid not find pod '#{pod}'".red if pod_name_to_switch.nil?
-          
-          check_not_building_subspec(pod_name_to_switch)  
 
-          pod_names_to_switch.push(pod_name_to_switch)
+          if pod_name_to_switch.nil?
+            pods_not_found.push(pod)
+          else
+            check_not_building_subspec(pod_name_to_switch)  
+
+            pod_names_to_switch.push(pod_name_to_switch)  
+          end          
         end
 
-        if OPTIONS[:resolve_parent_dependencies] == true
-          install_update_repo = OPTIONS.fetch(:update_repos, true)
+        unless pods_not_found.empty?
+          puts "\nAnalyzing Podfile, this will slow down switch.\nYou can avoid this by explictly declaring the following pods in PodBuilder's Podfile (#{PodBuilder::basepath("Podfile")}):\n#{pods_not_found.map { |t| "- #{t} " }.join(" ")}\n\n".yellow
+        end
+
+        if OPTIONS[:resolve_parent_dependencies] == true || pods_not_found.empty? == false
+          install_update_repo = OPTIONS.fetch(:update_repos, false)
           installer, analyzer = Analyze.installer_at(PodBuilder::basepath, install_update_repo)
   
           all_buildable_items = Analyze.podfile_items(installer, analyzer)
@@ -55,7 +63,7 @@ module PodBuilder
 
             podspec_content = File.read(podspec_path)
 
-            regex = "p\\d\\.dependency '(.*)'"
+            regex = "p\\d\\.dependency ['|\"](.*)['|\"]"
 
             podspec_content.each_line do |line|
               matches = line.match(/#{regex}/)
@@ -107,15 +115,15 @@ module PodBuilder
                 next
               end
     
-              matches = line.gsub("\"", "'").match(/pod '(.*?)',(.*)/)
-              if matches&.size == 3
+              matches = line.gsub("\"", "'").match(/pod '(.*?)'/)
+              if matches&.size == 2
                 if matches[1].split("/").first == pod_name_to_switch
                   default_entries[current_section] = line
                 end  
               end
             end
     
-            raise "\n\n'#{pod_name_to_switch}' not found in #{podfile_path}".red if default_entries.keys.count == 0
+            raise "\n\n'#{pod_name_to_switch}' not found in PodBuilder's Podfile.\n\nYou might need to explictly add:\n\n    pod '#{pod_name_to_switch}'\n\nto #{podfile_path}\n".red if default_entries.keys.count == 0
           end
 
           if development_path.nil? 
@@ -216,7 +224,7 @@ module PodBuilder
             
       def self.check_not_building_subspec(pod_to_switch)
         if pod_to_switch.include?("/")
-          raise "\n\nCan't switch subspec #{pod_to_switch} refer to podspec name.\n\nUse `pod_builder switch #{pod_to_switch.split("/").first}` instead\n\n".red
+          raise "\n\nCan't switch subspec #{pod_to_switch} refer to podspec name.\n\nUse `pod_builder switch #{pod_to_switch.split("/").first}` instead\n".red
         end
       end
     end

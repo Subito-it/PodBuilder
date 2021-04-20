@@ -19,7 +19,7 @@ module PodBuilder
           end
           source_path = File.expand_path(source_path)  
           
-          raise "\n\nSpecified path does not exists" unless File.directory?(source_path)
+          raise "\n\nSpecified path does not exists\n".red unless File.directory?(source_path)
         end
         
         base_path = PodBuilder::basepath

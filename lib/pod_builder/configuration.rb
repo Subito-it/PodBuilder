@@ -286,9 +286,9 @@ module PodBuilder
         end
       end
       if Configuration.build_xcframeworks_all
-        raise "Invalid PodBuilder.json configuration: 'build_xcframeworks_all' is true and 'build_xcframeworks_include' is not empty" if Configuration.build_xcframeworks_include.count > 0
+        raise "\n\nInvalid PodBuilder.json configuration: 'build_xcframeworks_all' is true and 'build_xcframeworks_include' is not empty\n".red if Configuration.build_xcframeworks_include.count > 0
       else
-        raise "Invalid PodBuilder.json configuration: 'build_xcframeworks_all' is false and 'build_xcframeworks_exclude' is not empty" if Configuration.build_xcframeworks_exclude.count > 0
+        raise "\n\nInvalid PodBuilder.json configuration: 'build_xcframeworks_all' is false and 'build_xcframeworks_exclude' is not empty\n".red if Configuration.build_xcframeworks_exclude.count > 0
       end
     end
     
