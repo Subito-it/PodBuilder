@@ -170,6 +170,14 @@ module PodBuilder
                     if line.include?("# pb<") && marker = line.split("# pb<").last
                       default_line = default_line.chomp("\n") + " # pb<#{marker}"
                     end
+                    if (path_match = default_line.match(/:path => '(.*?)'/)) && path_match&.size == 2
+                      original_path = path_match[1]
+                      if !is_absolute_path(original_path)
+                        updated_path = Pathname.new(PodBuilder::basepath(original_path)).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
+                        default_line.gsub!(":path => '#{original_path}'", ":path => '#{updated_path}'")
+                      end
+                    end
+
                     lines.append(default_line)
                     next
                   elsif
@@ -194,7 +202,11 @@ module PodBuilder
         return 0
       end
       
-      private     
+      private 
+      
+      def self.is_absolute_path(path)
+        return ["~", "/"].any? { |t| path.start_with?(t) }
+      end  
 
       def self.find_podspec(podname)
         unless Configuration.development_pods_paths.count > 0
