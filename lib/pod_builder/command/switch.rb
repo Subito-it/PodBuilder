@@ -141,8 +141,8 @@ module PodBuilder
               current_section = line.split(" ")[1]
             end
 
-            matches = line.gsub("\"", "'").match(/pod '(.*?)',(.*)/)
-            if matches&.size == 3
+            matches = line.gsub("\"", "'").match(/pod '(.*?)'/)
+            if matches&.size == 2
               if matches[1].split("/").first == pod_name_to_switch
                 case OPTIONS[:switch_mode]
                 when "prebuilt"
