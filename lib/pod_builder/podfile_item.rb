@@ -138,6 +138,10 @@ module PodBuilder
     # @return [Bool] Should build as xcframework
     #
     attr_accessor :build_xcframework
+
+    # @return [Bool] True if it's a pod that doesn't provide source code (is already shipped as a prebuilt pod)
+    #
+    attr_accessor :is_prebuilt
     
     # Initialize a new instance
     #
@@ -246,6 +250,8 @@ module PodBuilder
         build_as_xcframework = Configuration.build_xcframeworks_include.include?(@root_name)
       end
       @build_xcframework = build_as_xcframework
+
+      @is_prebuilt = extract_is_prebuilt(spec, all_specs, checkout_options, supported_platforms)
     end
 
     def pod_specification(all_poditems, parent_spec = nil)
@@ -333,33 +339,6 @@ module PodBuilder
       deps.uniq!
 
       return deps
-    end
-
-    # @return [Bool] True if it's a pod that doesn't provide source code (is already shipped as a prebuilt pod)
-    #    
-    def is_prebuilt
-      if Configuration.force_prebuild_pods.include?(@root_name) || Configuration.force_prebuild_pods.include?(@name)
-        return false
-      end
-
-      # We treat pods to skip like prebuilt ones
-      if Configuration.skip_pods.include?(@root_name) || Configuration.skip_pods.include?(@name)
-        return true
-      end
-
-      # Podspecs aren't always properly written (source_file key is often used instead of header_files)
-      # Therefore it can become tricky to understand which pods are already precompiled by boxing a .framework or .a
-      embedded_as_vendored = vendored_frameworks.map { |x| File.basename(x) }.include?("#{module_name}.framework")
-      embedded_as_static_lib = vendored_libraries.map { |x| File.basename(x) }.include?("lib#{module_name}.a")
-      
-      only_headers = (source_files.count > 0 && @source_files.all? { |x| x.end_with?(".h") })
-      no_sources = (@source_files.count == 0 || only_headers) && (@vendored_frameworks + @vendored_libraries).count > 0
-
-      if !no_sources && !only_headers
-        return false
-      else
-        return (no_sources || only_headers || embedded_as_static_lib || embedded_as_vendored)
-      end
     end
 
     # @return [Bool] True if it's a subspec
@@ -471,6 +450,44 @@ module PodBuilder
     end
 
     private
+
+    # @return [Bool] True if it's a pod that doesn't provide source code (is already shipped as a prebuilt pod)
+    #    
+    def extract_is_prebuilt(spec, all_specs, checkout_options, supported_platforms)
+      if Configuration.force_prebuild_pods.include?(@root_name) || Configuration.force_prebuild_pods.include?(@name)
+        return false
+      end
+
+      # We treat pods to skip like prebuilt ones
+      if Configuration.skip_pods.include?(@root_name) || Configuration.skip_pods.include?(@name)
+        return true
+      end
+
+      if default_subspecs != nil && default_subspecs.count > 0
+        default_subspecs.each do |default_subspec_name|
+          if (default_spec = all_specs.detect { |t| t.name == "#{root_name}/#{default_subspec_name}" })
+            default_item = PodfileItem.new(default_spec, all_specs, checkout_options, supported_platforms)
+            if default_item.is_prebuilt
+              return true
+            end
+          end
+        end
+      end
+
+      # Podspecs aren't always properly written (source_file key is often used instead of header_files)
+      # Therefore it can become tricky to understand which pods are already precompiled by boxing a .framework or .a
+      embedded_as_vendored = vendored_frameworks.map { |x| File.basename(x) }.include?("#{module_name}.framework")
+      embedded_as_static_lib = vendored_libraries.map { |x| File.basename(x) }.include?("lib#{module_name}.a")
+      
+      only_headers = (source_files.count > 0 && @source_files.all? { |x| x.end_with?(".h") })
+      no_sources = (@source_files.count == 0 || only_headers) && (@vendored_frameworks + @vendored_libraries).count > 0
+
+      if !no_sources && !only_headers
+        return false
+      else
+        return (no_sources || only_headers || embedded_as_static_lib || embedded_as_vendored)
+      end
+    end
 
     def extract_vendored_frameworks(spec, all_specs)
       items = []
