@@ -17,19 +17,18 @@ module PodBuilder
         CLAide::Command::PluginManager.loaded_plugins["cocoapods"].push(pluginspec)
       end
 
-      current_dir = Dir.pwd
-      Dir.chdir(path)
-
-      config = Pod::Config.new()
-      installer = Pod::Installer.new(config.sandbox, config.podfile, config.lockfile)
-      installer.repo_update = repo_update
-      installer.update = false 
-
-      installer.prepare
-
-      analyzer = installer.resolve_dependencies
-
-      Dir.chdir(current_dir)
+      installer = nil
+      analyzer = nil
+      Dir.chdir(path) do 
+        config = Pod::Config.new()
+        installer = Pod::Installer.new(config.sandbox, config.podfile, config.lockfile)
+        installer.repo_update = repo_update
+        installer.update = false 
+  
+        installer.prepare
+  
+        analyzer = installer.resolve_dependencies  
+      end
 
       return installer, analyzer
     end

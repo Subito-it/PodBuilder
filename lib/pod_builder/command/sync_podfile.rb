@@ -12,17 +12,17 @@ module PodBuilder
 
         all_buildable_items = Analyze.podfile_items(installer, analyzer)
 
-        Dir.chdir(PodBuilder::project_path)
-
-        previous_podfile_content = File.read("Podfile")
-        Podfile::write_prebuilt(all_buildable_items, analyzer)        
-        updated_podfile_content = File.read("Podfile")
-
-        Licenses::write([], all_buildable_items)
-
-        if previous_podfile_content != updated_podfile_content
-          bundler_prefix = Configuration.use_bundler ? "bundle exec " : ""
-          system("#{bundler_prefix}pod install;")
+        Dir.chdir(PodBuilder::project_path) do
+          previous_podfile_content = File.read("Podfile")
+          Podfile::write_prebuilt(all_buildable_items, analyzer)        
+          updated_podfile_content = File.read("Podfile")
+  
+          Licenses::write([], all_buildable_items)
+  
+          if previous_podfile_content != updated_podfile_content
+            bundler_prefix = Configuration.use_bundler ? "bundle exec " : ""
+            system("#{bundler_prefix}pod install;")
+          end  
         end
         
         puts "\n\n🎉 done!\n".green

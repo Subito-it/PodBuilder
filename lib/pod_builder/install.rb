@@ -447,11 +447,9 @@ module PodBuilder
     end
     
     def self.init_git(path)
-      current_dir = Dir.pwd
-      
-      Dir.chdir(path)
-      system("git init")
-      Dir.chdir(current_dir)
+      Dir.chdir(path) do 
+        system("git init")
+      end
     end
     
     def self.build_folder_hash_in_prebuilt_info_file(podfile_item)

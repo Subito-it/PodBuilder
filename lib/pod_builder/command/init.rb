@@ -110,8 +110,9 @@ module PodBuilder
      
         File.write(gemfile_path, gemfile_lines.join("\n"))
 
-        Dir.chdir(PodBuilder::home)
-        system("bundle")
+        Dir.chdir(PodBuilder::home) do 
+          system("bundle")
+        end
       end
 
       def self.trim_gemfile_line(line)
