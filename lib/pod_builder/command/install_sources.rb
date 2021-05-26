@@ -45,19 +45,17 @@ module PodBuilder
         dest_path = PodBuilder::basepath("Sources")
         FileUtils.mkdir_p(dest_path)
 
-        current_dir = Dir.pwd
-        Dir.chdir(dest_path)
-
-        repo_dir = File.join(dest_path, spec.podspec_name)
-        if !File.directory?(repo_dir)
-          raise "\n\nFailed cloning #{spec.name}".red if !system("git clone #{spec.repo} #{spec.podspec_name}")
+        Dir.chdir(dest_path) do
+          repo_dir = File.join(dest_path, spec.podspec_name)
+          if !File.directory?(repo_dir)
+            raise "\n\nFailed cloning #{spec.name}".red if !system("git clone #{spec.repo} #{spec.podspec_name}")
+          end
         end
 
-        Dir.chdir(repo_dir)
-        puts "Checking out #{spec.podspec_name}".yellow
-        raise "\n\nFailed cheking out #{spec.name}".red if !system(git_hard_checkout_cmd(spec))
-
-        Dir.chdir(current_dir)
+        Dir.chdir(repo_dir) do
+          puts "Checking out #{spec.podspec_name}".yellow
+          raise "\n\nFailed cheking out #{spec.name}".red if !system(git_hard_checkout_cmd(spec))
+        end
       end
 
       def self.git_hard_checkout_cmd(spec)
