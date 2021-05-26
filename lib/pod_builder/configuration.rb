@@ -75,6 +75,7 @@ module PodBuilder
       attr_accessor :build_xcframeworks_all
       attr_accessor :build_xcframeworks_include
       attr_accessor :build_xcframeworks_exclude
+      attr_accessor :post_actions
     end
 
     @build_settings = DEFAULT_BUILD_SETTINGS
@@ -111,6 +112,8 @@ module PodBuilder
     @build_xcframeworks_all = false
     @build_xcframeworks_include = []
     @build_xcframeworks_exclude = []
+
+    @post_actions = {}
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
@@ -227,6 +230,11 @@ module PodBuilder
         if value = json["build_xcframeworks_exclude"]
           if value.is_a?(Array)
             Configuration.build_xcframeworks_exclude = value
+          end
+        end
+        if value = json["post_actions"]
+          if value.is_a?(Hash)
+            Configuration.post_actions = PodBuilder::PostActions.load(value)
           end
         end
 
