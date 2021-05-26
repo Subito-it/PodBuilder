@@ -147,6 +147,8 @@ module PodBuilder
           puts "\n\n⚠️ Podfile.restore was found invalid and was overwritten. Error:\n #{restore_file_error}".red
         end
 
+        Configuration.post_actions[:build]&.execute()
+
         puts "\n\n🎉 done!\n".green
         return 0
       end
