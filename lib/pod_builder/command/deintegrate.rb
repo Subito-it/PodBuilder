@@ -43,15 +43,16 @@ module PodBuilder
 
         PodBuilder::safe_rm_rf(Configuration.base_path)
 
-        Dir.chdir(PodBuilder::project_path)
-        bundler_prefix = Configuration.use_bundler ? "bundle exec " : ""
-        system("#{bundler_prefix}pod install;")
+        Dir.chdir(PodBuilder::project_path) do 
+          bundler_prefix = Configuration.use_bundler ? "bundle exec " : ""
+          system("#{bundler_prefix}pod install;")
 
-        license_base = PodBuilder::project_path(Configuration.license_filename)
-        FileUtils.rm_f("#{license_base}.plist")
-        FileUtils.rm_f("#{license_base}.md")
+          license_base = PodBuilder::project_path(Configuration.license_filename)
+          FileUtils.rm_f("#{license_base}.plist")
+          FileUtils.rm_f("#{license_base}.md")
 
-        update_gemfile
+          update_gemfile
+        end
 
         puts "\n\n🎉 done!\n".green
         return 0
@@ -89,8 +90,9 @@ module PodBuilder
         gemfile_lines.select! { |x| !trim_gemfile_line(x).include?(trim_gemfile_line(podbuilder_line)) }
         File.write(gemfile_path, gemfile_lines.join("\n"))
 
-        Dir.chdir(PodBuilder::home)
-        system("bundle")
+        Dir.chdir(PodBuilder::home) do 
+          system("bundle")
+        end
       end
 
       def self.trim_gemfile_line(line)
