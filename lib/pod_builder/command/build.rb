@@ -163,28 +163,28 @@ module PodBuilder
         # ref: 
         # https://github.com/Subito-it/PodBuilder/issues/39
         #
-        build_settings = if integrate_targets
-                           installer.analysis_result.targets.map { |t| t.user_project.root_object.targets.map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } } }.flatten
-                         else
-                            # Find all `xcodeproj` in Podfile
-                            user_projects_build_settings = installer.analysis_result.targets.map { |t|
-                              user_project_path = PodBuilder.basepath + '/' + t.target_definition.user_project_path
-                              project = Xcodeproj::Project.open(user_project_path)
-                              project.root_object.targets.map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } }
-                            }
-                            .flatten
-                            .compact
+        if integrate_targets
+          build_settings = installer.analysis_result.targets.map { |t| t.user_project.root_object.targets.map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } } }.flatten
+        else
+          # Find all `xcodeproj` in Podfile
+          user_projects_build_settings = installer.analysis_result.targets.map { |t|
+            user_project_path = PodBuilder.basepath + '/' + t.target_definition.user_project_path
+            project = Xcodeproj::Project.open(user_project_path)
+            project.root_object.targets.map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } }
+          }
+          .flatten
+          .compact
 
-                            # Find root `xcodeproj`
-                            project = Xcodeproj::Project.open(PodBuilder.find_xcodeproj)
-                            root_project_build_setting = project
-                                                          .root_object
-                                                          .targets
-                                                          .map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } }
-                                                          .flatten
+          # Find root `xcodeproj`
+          project = Xcodeproj::Project.open(PodBuilder.find_xcodeproj)
+          root_project_build_setting = project
+                                        .root_object
+                                        .targets
+                                        .map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } }
+                                        .flatten
 
-                            user_projects_build_settings | root_project_build_setting
-                         end
+          build_settings = user_projects_build_settings | root_project_build_setting
+        end
         
         build_catalyst = build_settings.detect { |t| t["SUPPORTS_MACCATALYST"] == "YES" } != nil 
         
