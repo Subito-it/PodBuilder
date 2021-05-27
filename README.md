@@ -324,6 +324,22 @@ PodBuilder writes a plist and markdown license files of pods specified in the Po
 
 If you use bundler to pin the version of CocoaPods in your project set this to true. Default false.
 
+#### `post_actions`
+
+Post actions allow to execute custom scripts after a given command (`switch`, `build`) has been performed.
+
+You need to specify a `path` to the executable script which is relative to the _PodBuilder_ folder. Optionally you can also specify whether the command should or should not print the output to stdout/stderr by passing a bool to the `quiet` key (default: false).
+
+```json
+{
+    "post_actions": { 
+                        "switch" : { "path": "post_switch_action.rb", "quiet": true },
+                        "build" : { "path": "post_buil_action.rb", "quiet": false }
+                    }
+}
+```
+
+
 
 # Behind the scenes
 
