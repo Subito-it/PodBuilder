@@ -154,7 +154,38 @@ module PodBuilder
       private
 
       def self.should_build_catalyst(installer)
-        build_settings = installer.analysis_result.targets.map { |t| t.user_project.root_object.targets.map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } } }.flatten
+        integrate_targets = installer.podfile.installation_options.integrate_targets
+
+        # NOTE:
+        # When `integrate_targets` is false, 
+        # `user_project` is nil and Build Settings cannot be collected, 
+        # so collect Build Settings from xcodeproj and root xcodeproj defined in the Podfile
+        # ref: 
+        # https://github.com/Subito-it/PodBuilder/issues/39
+        #
+        if integrate_targets
+          build_settings = installer.analysis_result.targets.map { |t| t.user_project.root_object.targets.map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } } }.flatten
+        else
+          # Find all `xcodeproj` in Podfile
+          user_projects_build_settings = installer.analysis_result.targets.map { |t|
+            user_project_path = PodBuilder.basepath + '/' + t.target_definition.user_project_path
+            project = Xcodeproj::Project.open(user_project_path)
+            project.root_object.targets.map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } }
+          }
+          .flatten
+          .compact
+
+          # Find root `xcodeproj`
+          project = Xcodeproj::Project.open(PodBuilder.find_xcodeproj)
+          root_project_build_setting = project
+                                        .root_object
+                                        .targets
+                                        .map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } }
+                                        .flatten
+
+          build_settings = user_projects_build_settings | root_project_build_setting
+        end
+        
         build_catalyst = build_settings.detect { |t| t["SUPPORTS_MACCATALYST"] == "YES" } != nil 
         
         puts "\nTo support Catalyst you should enable 'build_xcframeworks' in PodBuilder.json\n".red if build_catalyst && !Configuration.build_xcframeworks_all
