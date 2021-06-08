@@ -34,7 +34,7 @@ module PodBuilder
       items.each do |item|
         build_settings = Configuration.build_settings.dup
 
-        item_build_settings = Configuration.build_settings_overrides[item.name] || {}
+        item_build_settings = Configuration.build_settings_overrides[item.name].dup || {}
         
         # These settings need to be set as is to properly build frameworks
         build_settings["SWIFT_COMPILATION_MODE"] = "wholemodule"
@@ -45,10 +45,6 @@ module PodBuilder
         build_settings["SWIFT_SERIALIZE_DEBUGGING_OPTIONS"] = "NO"
 
         build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = platform.deployment_target.version # Fix compilation warnings on Xcode 12
-
-        # Don't store .pcm info in binary, see https://forums.swift.org/t/swift-behavior-of-gmodules-and-dsyms/23211/3
-        build_settings["CLANG_ENABLE_MODULE_DEBUGGING"] = "NO"
-        build_settings["OTHER_SWIFT_FLAGS"] = "$(inherited) -Xfrontend -no-clang-module-breadcrumbs"
 
         # Ignore deprecation warnings
         build_settings["GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS"] = "NO"
@@ -70,9 +66,19 @@ module PodBuilder
           build_settings["BITCODE_GENERATION_MODE"] = "bitcode"
         end
 
+        # Don't store .pcm info in binary, see https://forums.swift.org/t/swift-behavior-of-gmodules-and-dsyms/23211/3
+        build_settings["CLANG_ENABLE_MODULE_DEBUGGING"] = "NO"
+        other_swift_flags_override = " $(inherited) -Xfrontend -no-clang-module-breadcrumbs"
+
         item_build_settings.each do |k, v|
-          build_settings[k] = v
+          # Do not allow to override above settings which are mandatory for a correct compilation
+          if build_settings[k].nil?
+            build_settings[k] = v
+          end
         end
+
+        # All the below settings should be merged with global (Configuration.build_settings) or per pod build_settings (Configuration.build_settings_overrides)
+        build_settings["OTHER_SWIFT_FLAGS"] = build_settings.fetch("OTHER_SWIFT_FLAGS", "") + other_swift_flags_override        
 
         podfile_build_settings += "set_build_settings(\"#{item.root_name}\", #{build_settings.to_s}, installer)\n  "
 
