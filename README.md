@@ -343,7 +343,7 @@ You need to specify a `path` to the executable script which is relative to the _
 
 # Behind the scenes
 
-PodBuilder leverages CocoaPods code and [cocoapods-rome plugin](https://github.com/CocoaPods/Prebuilt) to compile pods into frameworks. Every compiled framework will be boxed (by adding it as a `vendored_framework`) as a subspec of a local podspec. When needed additional settings will be automatically ported from the original podspec, like for example xcconfig settings.
+PodBuilder leverages CocoaPods to compile pods into frameworks. Every compiled framework will be boxed (by adding it as a `vendored_framework`) as a subspec of a local podspec. When needed additional settings will be automatically ported from the original podspec, like for example custom xcconfig settings.
 
 # FAQ
 
