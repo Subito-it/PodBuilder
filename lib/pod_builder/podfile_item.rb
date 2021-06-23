@@ -184,14 +184,26 @@ module PodBuilder
       @weak_frameworks = []
       @libraries = []
 
-      @frameworks += extract_array(spec, "framework")
-      @frameworks += extract_array(spec, "frameworks")
+      @frameworks += extract_array(spec.attributes_hash, "framework")
+      @frameworks += extract_array(spec.attributes_hash, "frameworks")
+      supported_platforms.each do |platform|        
+        @frameworks += extract_array(spec.attributes_hash[platform], "framework")
+        @frameworks += extract_array(spec.attributes_hash[platform], "frameworks")
+      end       
       
-      @weak_frameworks += extract_array(spec, "weak_framework")
-      @weak_frameworks += extract_array(spec, "weak_frameworks")  
+      @weak_frameworks += extract_array(spec.attributes_hash, "weak_framework")
+      @weak_frameworks += extract_array(spec.attributes_hash, "weak_frameworks")  
+      supported_platforms.each do |platform|        
+        @weak_frameworks += extract_array(spec.attributes_hash[platform], "weak_framework")
+        @weak_frameworks += extract_array(spec.attributes_hash[platform], "weak_frameworks")
+      end
 
-      @libraries += extract_array(spec, "library")
-      @libraries += extract_array(spec, "libraries")  
+      @libraries += extract_array(spec.attributes_hash, "library")
+      @libraries += extract_array(spec.attributes_hash, "libraries")  
+      supported_platforms.each do |platform|        
+        @libraries += extract_array(spec.attributes_hash[platform], "library")
+        @libraries += extract_array(spec.attributes_hash[platform], "libraries")
+      end
 
       @header_dir = spec.attributes_hash["header_dir"]
 
@@ -201,7 +213,7 @@ module PodBuilder
       @swift_version = spec.root.swift_version&.to_s
       @module_name = spec.root.module_name
 
-      @default_subspecs = extract_array(spec, "default_subspecs")
+      @default_subspecs = extract_array(spec.attributes_hash, "default_subspecs")
       if default_subspec = spec.attributes_hash["default_subspec"]
         @default_subspecs.push(default_subspec)        
       end
@@ -516,8 +528,12 @@ module PodBuilder
       return items.flatten.uniq.compact
     end
 
-    def extract_array(spec, key)
-      element = spec.attributes_hash.fetch(key, [])
+    def extract_array(dict, key)
+      if dict.nil?
+        return []
+      end
+
+      element = dict.fetch(key, [])
       if element.instance_of? String
         element = [element]
       end
