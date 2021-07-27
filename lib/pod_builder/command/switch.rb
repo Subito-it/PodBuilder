@@ -223,11 +223,28 @@ module PodBuilder
           if Pathname.new(path).relative?
             path = PodBuilder::basepath(path)
           end
-          podspec = Dir.glob(File.expand_path("#{path}/**/#{podname}*.podspec*"))
-          podspec.select! { |x| !x.include?("/Local Podspecs/") }
-          podspec.select! { |x| Dir.glob(File.join(File.dirname(x), "*")).count > 1 } # exclude podspec folder (which has one file per folder)
-          if podspec.count > 0
-            podspec_path = Pathname.new(podspec.first).dirname.to_s
+          podspec_paths = Dir.glob(File.expand_path("#{path}/**/#{podname}*.podspec*"))
+          podspec_paths.select! { |t| !t.include?("/Local Podspecs/") }
+          podspec_paths.select! { |t| Dir.glob(File.join(File.dirname(t), "*")).count > 1 } # exclude podspec folder (which has one file per folder)
+          if podspec_paths.count > 1
+            if match_name_path = podspec_paths.find{ |t| File.basename(t, ".*") == podname }
+              podspec_path = Pathname.new(match_name_path).dirname.to_s
+            else
+              # Try parsing podspec
+              podspec_paths.each do |path|
+                content = File.read(path).gsub("\"", "'").gsub(" ", "")
+                if content.include?("name='#{podname}'")
+                  podspec_path = path                  
+                end
+                unless podspec_path.nil?
+                  break
+                end
+              end  
+            end
+
+            break
+          elsif podspec_paths.count == 1
+            podspec_path = Pathname.new(podspec_paths.first).dirname.to_s
             break
           end
         end
