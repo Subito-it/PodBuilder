@@ -140,12 +140,7 @@ module PodBuilder
   class Install
     # This method will generate prebuilt data by building from "/tmp/pod_builder/Podfile"
     def self.podfile(podfile_content, podfile_items, argument_pods, build_configuration)
-      puts "Preparing build Podfile".yellow
-      
-      PodBuilder::safe_rm_rf(Configuration.build_path)
-      FileUtils.mkdir_p(Configuration.build_path)
-      
-      init_git(Configuration.build_path) # this is needed to be able to call safe_rm_rf
+      puts "Preparing build Podfile".yellow      
       
       podfile_content = copy_development_pods_source_code(podfile_content, podfile_items)
       
@@ -452,13 +447,7 @@ module PodBuilder
         File.write(gitattributes_path, expected_attributes, mode: 'a')
       end
     end
-    
-    def self.init_git(path)
-      Dir.chdir(path) do 
-        system("git init")
-      end
-    end
-    
+        
     def self.build_folder_hash_in_prebuilt_info_file(podfile_item)
       prebuilt_info_path = PodBuilder::prebuiltpath(File.join(podfile_item.root_name, Configuration.prebuilt_info_filename))
       

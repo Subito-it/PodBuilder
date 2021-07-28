@@ -114,7 +114,12 @@ module PodBuilder
           podfile_items = podfile_items.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
           
           podfile_content = Podfile.from_podfile_items(podfile_items, analyzer, build_configuration, install_using_frameworks, build_catalyst, podfile_items.first.build_xcframework)
-          
+
+          PodBuilder::safe_rm_rf(Configuration.build_path)
+          FileUtils.mkdir_p(Configuration.build_path)
+
+          init_git(Configuration.build_path) # this is needed to be able to call safe_rm_rf
+
           install_result += Install.podfile(podfile_content, podfile_items, argument_pods, podfile_items.first.build_configuration)          
           
           FileUtils.rm_f(PodBuilder::basepath("Podfile.lock"))
@@ -145,7 +150,7 @@ module PodBuilder
 
         if (restore_file_error = restore_file_error) && Configuration.restore_enabled
           puts "\n\n⚠️ Podfile.restore was found invalid and was overwritten. Error:\n #{restore_file_error}".red
-        end
+        end        
 
         Configuration.post_actions[:build]&.execute()
 
@@ -154,6 +159,12 @@ module PodBuilder
       end
 
       private
+
+      def self.init_git(path)
+        Dir.chdir(path) do 
+          system("git init")
+        end
+      end  
 
       def self.should_build_catalyst(installer)
         integrate_targets = installer.podfile.installation_options.integrate_targets
