@@ -13,6 +13,8 @@ module PodBuilder
           return -1
         end
 
+        Configuration.pre_actions[:switch]&.execute()
+
         pods_not_found = []
         pod_names_to_switch = []
         argument_pods.each do |pod|
