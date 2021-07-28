@@ -591,8 +591,10 @@ module PodBuilder
         if matches&.size == 4 && !stripped_line.start_with?("#")
           path = matches[2]
 
+          file_exists = File.exist?(File.expand_path(path))
+
           is_absolute = ["~", "/"].include?(path[0])
-          unless !is_absolute
+          if is_absolute || !file_exists
             podfile_lines.push(line)
             next
           end
