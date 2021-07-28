@@ -120,9 +120,13 @@ module PodBuilder
 
           init_git(Configuration.build_path) # this is needed to be able to call safe_rm_rf
 
+          Configuration.pre_actions[:build]&.execute()
+          
           install_result += Install.podfile(podfile_content, podfile_items, argument_pods, podfile_items.first.build_configuration)          
           
           FileUtils.rm_f(PodBuilder::basepath("Podfile.lock"))
+
+          Configuration.post_actions[:build]&.execute()
         end
 
         install_result.write_prebuilt_info_files
@@ -151,8 +155,6 @@ module PodBuilder
         if (restore_file_error = restore_file_error) && Configuration.restore_enabled
           puts "\n\n⚠️ Podfile.restore was found invalid and was overwritten. Error:\n #{restore_file_error}".red
         end        
-
-        Configuration.post_actions[:build]&.execute()
 
         puts "\n\n🎉 done!\n".green
         return 0
