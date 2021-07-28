@@ -12,7 +12,7 @@ require 'pod_builder/info'
 require 'pod_builder/configuration'
 require 'pod_builder/podspec'
 require 'pod_builder/licenses'
-require 'pod_builder/post_actions'
+require 'pod_builder/actions'
 
 require 'core_ext/string'
 

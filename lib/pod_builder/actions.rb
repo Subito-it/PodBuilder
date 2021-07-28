@@ -2,7 +2,7 @@ require 'pod_builder/core'
 require 'json'
 
 module PodBuilder
-  module PostActions
+  module Actions
     def self.load(hash)
       actions = {}
       if json = hash["switch"]

@@ -234,7 +234,7 @@ module PodBuilder
         end
         if value = json["post_actions"]
           if value.is_a?(Hash)
-            Configuration.post_actions = PodBuilder::PostActions.load(value)
+            Configuration.post_actions = PodBuilder::Actions.load(value)
           end
         end
 
