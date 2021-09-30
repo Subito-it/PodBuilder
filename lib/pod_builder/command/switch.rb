@@ -1,4 +1,5 @@
 require 'pod_builder/core'
+require 'set'
 
 module PodBuilder
   module Command
@@ -87,6 +88,8 @@ module PodBuilder
           pod_names_to_switch = pod_names_to_switch.map { |t| t.split("/").first }.uniq
           dep_pod_names_to_switch.reject { |t| pod_names_to_switch.include?(t) } 
         end
+
+        inhibit_warnings = inhibit_warnings_pods()
         
         pod_names_to_switch.each do |pod_name_to_switch|
           development_path = ""
@@ -94,7 +97,7 @@ module PodBuilder
 
           case OPTIONS[:switch_mode]
           when "development"
-            development_path = find_podspec(pod_name_to_switch)               
+            development_path = find_podspec(pod_name_to_switch)              
           when "prebuilt"
             podfile_path = PodBuilder::basepath("Podfile.restore")
             content = File.read(podfile_path)
@@ -161,6 +164,9 @@ module PodBuilder
                   indentation = line.split("pod '").first
                   rel_path = Pathname.new(development_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
                   development_line = "#{indentation}pod '#{matches[1]}', :path => '#{rel_path}'\n"
+                  if inhibit_warnings.include?(matches[1])
+                    development_line = development_line.chomp("\n") + ", :inhibit_warnings => true\n"
+                  end
                   if line.include?("# pb<") && marker = line.split("# pb<").last
                     development_line = development_line.chomp("\n") + " # pb<#{marker}"
                   end
@@ -169,6 +175,9 @@ module PodBuilder
                   next
                 when "default"
                   if default_line = default_entries[current_section]
+                    if inhibit_warnings.include?(matches[1])
+                      default_line = default_line.chomp("\n") + ", :inhibit_warnings => true\n"
+                    end  
                     if line.include?("# pb<") && marker = line.split("# pb<").last
                       default_line = default_line.chomp("\n") + " # pb<#{marker}"
                     end
@@ -210,6 +219,26 @@ module PodBuilder
       end
       
       private 
+
+      def self.inhibit_warnings_pods
+        ret = Set.new
+
+        podfile_path = PodBuilder::basepath("Podfile")
+        content = File.read(podfile_path)
+
+        content.each_line do |line|
+          unless (name_match = line.match(/^\s*pod ['|"](.*?)['|"](.*)/)) && name_match.size == 3
+            next
+          end
+
+          if line.gsub(" ", "").include?(":inhibit_warnings=>true")
+            pod_name = name_match[1]
+            ret.add?(pod_name)
+          end
+        end
+
+        return ret
+      end
       
       def self.is_absolute_path(path)
         return ["~", "/"].any? { |t| path.start_with?(t) }
