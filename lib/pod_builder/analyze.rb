@@ -52,7 +52,10 @@ module PodBuilder
       
       supported_platforms = analyzer.instance_variable_get("@result").targets.map { |t| t.platform.safe_string_name.downcase }
       
-      return all_specs.map { |spec| PodfileItem.new(spec, all_specs, checkout_options, supported_platforms) }.sort_by(&:name)
+      target_definitions = installer.podfile.target_definitions.values
+      items = all_specs.map { |spec| PodfileItem.new(spec, all_specs, target_definitions, checkout_options, supported_platforms) }.sort_by(&:name)
+
+      return items
     end
   end
 end

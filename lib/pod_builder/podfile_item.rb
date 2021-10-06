@@ -142,6 +142,10 @@ module PodBuilder
     # @return [Bool] True if it's a pod that doesn't provide source code (is already shipped as a prebuilt pod)
     #
     attr_accessor :is_prebuilt
+
+    # @return [Bool] True if warnings should be inhibited for the pod
+    #
+    attr_accessor :inhibit_warnings
     
     # Initialize a new instance
     #
@@ -149,7 +153,7 @@ module PodBuilder
     #
     # @param [Hash] checkout_options
     #
-    def initialize(spec, all_specs, checkout_options, supported_platforms)
+    def initialize(spec, all_specs, target_definitions, checkout_options, supported_platforms)
       @name = spec.name
       @root_name = spec.name.split("/").first
 
@@ -264,6 +268,7 @@ module PodBuilder
       @build_xcframework = build_as_xcframework
 
       @is_prebuilt = extract_is_prebuilt(spec, all_specs, checkout_options, supported_platforms)
+      @inhibit_warnings = target_definitions.any? { |t| t.inhibits_warnings_for_pod?(@name) }
     end
 
     def pod_specification(all_poditems, parent_spec = nil)
@@ -369,6 +374,10 @@ module PodBuilder
     #
     def entry(include_version = true, include_pb_entry = true)
       e = "pod '#{@name}'"
+
+      if !is_prebuilt && inhibit_warnings
+        e += ", :inhibit_warnings => true"
+      end
 
       unless include_version
         return e
@@ -478,7 +487,7 @@ module PodBuilder
       if default_subspecs != nil && default_subspecs.count > 0
         default_subspecs.each do |default_subspec_name|
           if (default_spec = all_specs.detect { |t| t.name == "#{root_name}/#{default_subspec_name}" })
-            default_item = PodfileItem.new(default_spec, all_specs, checkout_options, supported_platforms)
+            default_item = PodfileItem.new(default_spec, all_specs, [], checkout_options, supported_platforms)
             if default_item.is_prebuilt
               return true
             end
