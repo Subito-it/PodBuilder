@@ -189,8 +189,6 @@ module PodBuilder
 
                     lines.append(default_line)
                     next
-                  elsif
-                    raise "\n\nLine for pod '#{matches[1]}' in section '#{current_section}' not found in PodBuilder's Podfile".red
                   end
                 else
                   raise "\n\nUnsupported mode '#{OPTIONS[:switch_mode]}'".red
