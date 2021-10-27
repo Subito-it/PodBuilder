@@ -173,9 +173,7 @@ module PodBuilder
                   next
                 when "default"
                   if default_line = default_entries[current_section]
-                    if inhibit_warnings.include?(matches[1])
-                      default_line = default_line.chomp("\n") + ", :inhibit_warnings => true\n"
-                    end  
+                    # default_line is already extracted from PodBuilder's Podfile and already includes :inhibit_warnings 
                     if line.include?("# pb<") && marker = line.split("# pb<").last
                       default_line = default_line.chomp("\n") + " # pb<#{marker}"
                     end
