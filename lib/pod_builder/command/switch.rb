@@ -108,17 +108,10 @@ module PodBuilder
             podfile_path = PodBuilder::basepath("Podfile")
             content = File.read(podfile_path)
               
-            current_section = ""
-            content.each_line do |line|
-              stripped_line = line.strip
-              if stripped_line.start_with?("def ") || stripped_line.start_with?("target ")
-                current_section = line.split(" ")[1]
-                next
-              end
-    
+            content.each_line do |line|    
               if (matches = line.match(/^\s*pod ['|"](.*?)['|"](.*)/)) && matches.size == 3
                 if matches[1].split("/").first == pod_name_to_switch
-                  default_entries[current_section] = line
+                  default_entries[pod_name_to_switch] = line
                 end  
               end
             end
@@ -138,13 +131,7 @@ module PodBuilder
           content = File.read(podfile_path)
           
           lines = []
-          current_section = ""
           content.each_line do |line|
-            stripped_line = line.strip
-            if stripped_line.start_with?("def ") || stripped_line.start_with?("target ")
-              current_section = line.split(" ")[1]
-            end
-
             if (matches = line.match(/^\s*pod ['|"](.*?)['|"](.*)/)) && matches.size == 3
               if matches[1].split("/").first == pod_name_to_switch
                 case OPTIONS[:switch_mode]
@@ -172,7 +159,7 @@ module PodBuilder
                   lines.append(development_line)
                   next
                 when "default"
-                  if default_line = default_entries[current_section]
+                  if default_line = default_entries[pod_name_to_switch]
                     # default_line is already extracted from PodBuilder's Podfile and already includes :inhibit_warnings 
                     if line.include?("# pb<") && marker = line.split("# pb<").last
                       default_line = default_line.chomp("\n") + " # pb<#{marker}"
