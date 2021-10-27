@@ -93,7 +93,7 @@ module PodBuilder
         
         pod_names_to_switch.each do |pod_name_to_switch|
           development_path = ""
-          default_entries = Hash.new
+          default_entry = nil
 
           case OPTIONS[:switch_mode]
           when "development"
@@ -111,12 +111,12 @@ module PodBuilder
             content.each_line do |line|    
               if (matches = line.match(/^\s*pod ['|"](.*?)['|"](.*)/)) && matches.size == 3
                 if matches[1].split("/").first == pod_name_to_switch
-                  default_entries[pod_name_to_switch] = line
+                  default_entry = line
                 end  
               end
             end
     
-            raise "\n\n'#{pod_name_to_switch}' not found in PodBuilder's Podfile.\n\nYou might need to explictly add:\n\n    pod '#{pod_name_to_switch}'\n\nto #{podfile_path}\n".red if default_entries.keys.count == 0
+            raise "\n\n'#{pod_name_to_switch}' not found in PodBuilder's Podfile.\n\nYou might need to explictly add:\n\n    pod '#{pod_name_to_switch}'\n\nto #{podfile_path}\n".red if default_entry.nil?
           end
 
           if development_path.nil? 
@@ -159,7 +159,7 @@ module PodBuilder
                   lines.append(development_line)
                   next
                 when "default"
-                  if default_line = default_entries[pod_name_to_switch]
+                  if default_line = default_entry
                     # default_line is already extracted from PodBuilder's Podfile and already includes :inhibit_warnings 
                     if line.include?("# pb<") && marker = line.split("# pb<").last
                       default_line = default_line.chomp("\n") + " # pb<#{marker}"
