@@ -591,7 +591,7 @@ module PodBuilder
         if matches&.size == 4 && !stripped_line.start_with?("#")
           path = matches[2]
 
-          file_exists = File.exist?(File.expand_path(path))
+          file_exists = [path, "#{path}.rb"].any? { |t| File.exist?(File.expand_path(t)) }
 
           is_absolute = ["~", "/"].include?(path[0])
           if is_absolute || !file_exists
@@ -641,17 +641,32 @@ module PodBuilder
     end
 
     def self.prepare_for_react_native_rn_pods_file(podfile_content)
+      use_react_native_open_found = false
+      enable_hermes = false
+      indentation = ""
+
       lines = []
       podfile_content.each_line do |line|
-        if line.include?("use_react_native!")
+        if line.include?("use_react_native!(")
+          use_react_native_open_found = true
+
           matches = line.match(/(\s*)/)
           unless matches&.size == 2
             return podfile_content
           end
-    
           indentation = matches[1]
-          lines.push("#{indentation}use_react_native!(:path => rn_config[\"reactNativePath\"]) # pb added\n")
+        end
+
+        if use_react_native_open_found
+          if line.gsub(" ", "").include?(":hermes_enabled=>true")
+            enable_hermes = true
+          end
           lines.push("#{indentation}# #{line.strip} # pb removed\n")
+
+          if line.strip.end_with?(")")
+            use_react_native_open_found = false
+            lines.push("#{indentation}use_react_native!(:path => rn_config[\"reactNativePath\"], :hermes_enabled => #{enable_hermes ? "true" : "false"}) # pb added\n")
+          end
         else
           lines.push(line)
         end
