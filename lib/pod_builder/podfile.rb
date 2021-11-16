@@ -44,7 +44,11 @@ module PodBuilder
         # https://thi.imhttps://thi.im/posts/swift-serialize-debugging-options/
         build_settings["SWIFT_SERIALIZE_DEBUGGING_OPTIONS"] = "NO"
 
-        build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = platform.deployment_target.version # Fix compilation warnings on Xcode 12
+        if Configuration.react_native_project && item.name.include?("Folly")
+          build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = "9.0" # https://github.com/facebook/flipper/issues/834#issuecomment-899725463
+        else
+          build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = platform.deployment_target.version # Fix compilation warnings on Xcode 12
+        end
 
         # Ignore deprecation warnings
         build_settings["GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS"] = "NO"
