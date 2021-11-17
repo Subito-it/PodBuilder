@@ -31,6 +31,14 @@ module PodBuilder
           end
         end
 
+        Dir.glob(PodBuilder::prebuiltpath("*")).each do |path|
+          basename = File.basename(path)
+          if (Dir.glob("#{path}/**/*.framework").count + Dir.glob("#{path}/**/*.a").count) == 0
+            puts "Cleaning up `#{basename}`, no prebuilt items found".blue
+            PodBuilder::safe_rm_rf(path)
+          end
+        end
+
         puts "Cleaning dSYM folder".yellow
         module_names = buildable_items.map(&:module_name).uniq
         Dir.glob(File.join(PodBuilder::dsympath, "**/*.dSYM")).each do |path|
@@ -41,7 +49,6 @@ module PodBuilder
             PodBuilder::safe_rm_rf(path)
           end
         end
-
       end
 
       def self.install_sources(buildable_items)        
