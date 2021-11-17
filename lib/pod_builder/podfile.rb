@@ -270,6 +270,11 @@ module PodBuilder
 
       Dir.chdir(PodBuilder::project_path) do
         bundler_prefix = Configuration.use_bundler ? "bundle exec " : ""
+        
+        if Configuration.react_native_project
+          system("#{bundler_prefix}pod deintegrate;")
+        end
+
         system("#{bundler_prefix}pod install;")
       end
     end
