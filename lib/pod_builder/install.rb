@@ -147,6 +147,10 @@ module PodBuilder
       podfile_content = Podfile.update_path_entries(podfile_content, Install.method(:podfile_path_transform))
       podfile_content = Podfile.update_project_entries(podfile_content, Install.method(:podfile_path_transform))
       podfile_content = Podfile.update_require_entries(podfile_content, Install.method(:podfile_path_transform))
+
+      if Configuration.react_native_project
+        podfile_content = Podfile.prepare_react_native_compilation_workarounds(podfile_content)
+      end
       
       podfile_path = File.join(Configuration.build_path, "Podfile")
       File.write(podfile_path, podfile_content)
@@ -237,6 +241,7 @@ module PodBuilder
 
       return ret
     end
+    
     private 
     
     def self.license_specifiers

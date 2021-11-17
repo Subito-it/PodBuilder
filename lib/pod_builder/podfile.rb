@@ -719,5 +719,34 @@ module PodBuilder
 
       return podfile_content
     end
+
+    def self.prepare_react_native_compilation_workarounds(podfile_content)
+      return  podfile_content + """
+def prepare_rn_compilation_libevent
+  path = \"Pods/libevent/include/event.h\"
+  replace(path, \"#include <evutil.h>\", \"// #include <evutil.h>\")
+end
+
+def prepare_rn_flipper_module_redefinition
+  module_maps = [\"Pods/Target Support Files/Flipper-Fmt/Flipper-Fmt.modulemap\", \"Pods/Target Support Files/fmt/fmt.modulemap\"]
+  if module_maps.all? { |t| File.exist?(t) }
+    commented_module = \"/* \" + File.read(module_maps[0]) + \" */\"
+    File.write(module_maps[0], commented_module)
+  end
+end
+
+def replace(path, find, replace)
+  if File.exist?(path)
+    content = File.read(path).gsub(find, replace)
+    File.write(path, content)
+  end
+end      
+
+post_install do |installer|
+  prepare_rn_compilation_libevent()
+  prepare_rn_flipper_module_redefinition()
+end
+      """
+    end
   end
 end
