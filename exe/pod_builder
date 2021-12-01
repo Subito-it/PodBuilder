@@ -246,7 +246,14 @@ Usage:
 
       Install source of prebuilt pods to be able to step into and debug prebuilt's code.
 
-"         
+Options:
+"       
+        opts.on("-p", "--designate-pods", "Designate pods to download") do |o|
+          OPTIONS[:designate_pods] = o
+        end
+        opts.on("-s", "--no-stdin", "Never request interaction with sdtin (e.g. in CI environment)") do |o|
+          OPTIONS[:no_stdin_available] = o
+        end
       end,
       :call => [        
         PodBuilder::Command::InstallSources
