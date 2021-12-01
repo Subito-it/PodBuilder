@@ -9,11 +9,5 @@
 Gemfile.lock
 .vscode/
 .DS_Store
-Example/Pods
-Example/PodBuilder/Prebuilt
 
-Example/PodBuilder/dSYM
-
-Example/PodBuilderExample.xcodeproj/xcuserdata/*.xcuserdatad
-Example/PodBuilderExample.xcworkspace/xcuserdata
-Example/Pods
+Example/
