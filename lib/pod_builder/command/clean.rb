@@ -64,6 +64,10 @@ module PodBuilder
         end
 
         paths_to_delete.flatten.each do |path|
+          if OPTIONS.has_key?(:no_stdin_available)
+            PodBuilder::safe_rm_rf(path)
+            next
+          end
           confirm = ask("#{path} unused.\nDelete it? [Y/N] ") { |yn| yn.limit = 1, yn.validate = /[yn]/i }
           if confirm.downcase == 'y' || OPTIONS.has_key?(:no_stdin_available)
             PodBuilder::safe_rm_rf(path)
