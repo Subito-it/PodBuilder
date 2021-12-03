@@ -386,32 +386,27 @@ module PodBuilder
 
       non_prebuilt_items = podfile_items.reject(&:is_prebuilt)
 
-      pod_names = non_prebuilt_items.map(&:root_name).uniq
-
-      pod_names.reject! { |t| 
-        folder_path = PodBuilder::buildpath_prebuiltpath(t)
+      non_prebuilt_items.reject! { |item| 
+        folder_path = PodBuilder::buildpath_prebuiltpath(item.module_name)
         File.directory?(folder_path) && Dir.empty?(folder_path) # When using prebuilt items we end up with empty folders
       } 
 
-      pod_names.each do |pod_name|   
-        root_name = pod_name.split("/").first
-
+      non_prebuilt_items.each do |item|
         # Remove existing files
-        items_to_delete = Dir.glob("#{PodBuilder::prebuiltpath(root_name)}/**/*")
+        items_to_delete = Dir.glob("#{PodBuilder::prebuiltpath(item.root_name)}/**/*")
         items_to_delete.each { |t| PodBuilder::safe_rm_rf(t) }
       end
 
       # Now copy
-      pod_names.each do |pod_name|        
-        root_name = pod_name.split("/").first
-        source_path = PodBuilder::buildpath_prebuiltpath(root_name)
+      non_prebuilt_items.each do |item|
+        source_path = PodBuilder::buildpath_prebuiltpath(item.module_name)
 
         unless File.directory?(source_path)
-          puts "Prebuilt items for #{pod_name} not found".blue
+          puts "Prebuilt items for #{item.root_name} not found".blue
           next
         end
 
-        if podfile_item = podfile_items.detect { |t| t.root_name == pod_name }
+        if podfile_item = podfile_items.detect { |t| t.root_name == item.root_name }
           if Dir.glob("#{source_path}/**/Modules/**/*.swiftmodule/*.swiftinterface").count > 0
             # We can safely remove .swiftmodule if .swiftinterface exists
             swiftmodule_files = Dir.glob("#{source_path}/**/Modules/**/*.swiftmodule/*.swiftmodule")
@@ -427,7 +422,7 @@ module PodBuilder
         project_folder.select { |t| File.directory?(t) && Dir.empty?(t) }.each { |t| PodBuilder::safe_rm_rf(t) }
 
         unless Dir.glob("#{source_path}/**/*").select { |t| File.file?(t) }.empty?
-          destination_folder = PodBuilder::prebuiltpath(root_name)
+          destination_folder = PodBuilder::prebuiltpath(item.root_name)
           FileUtils.mkdir_p(destination_folder)
           FileUtils.cp_r("#{source_path}/.", destination_folder)  
         end
