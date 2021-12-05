@@ -303,8 +303,9 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
   
   build_dir = sandbox_root.parent + 'build'
   base_destination = sandbox_root.parent + 'Prebuilt'
-  
+
   build_dir.rmtree if build_dir.directory?
+  base_destination.rmtree if base_destination.directory?
 
   targets = installer_context.umbrella_targets.select { |t| t.specs.any? }
   raise "\n\nUnsupported target count\n".red unless targets.count == 1
@@ -385,7 +386,6 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
     built_count = Dir["#{build_dir}/*"].select { |t| specs.include?(File.basename(t)) }.count
     Pod::UI.puts "Built #{built_count} #{'item'.pluralize(built_count)}, copying..."
     
-    base_destination.rmtree if base_destination.directory?
       
     installer_context.umbrella_targets.each do |umbrella|
       umbrella.specs.each do |spec|
