@@ -284,6 +284,35 @@ module PodBuilder
   end
 end
 
+def self.copy_resources_and_vendored_items(installer_context, uses_frameworks, base_destination, sandbox)
+  installer_context.umbrella_targets.each do |umbrella|
+    umbrella.specs.each do |spec|
+      root_name = spec.name.split("/").first
+      
+      if uses_frameworks
+        destination = File.join(base_destination, root_name)        
+      else
+        destination = File.join(base_destination, root_name, root_name)        
+      end
+      # Make sure the device target overwrites anything in the simulator build, otherwise iTunesConnect
+      # can get upset about Info.plist containing references to the simulator SDK
+      files = Pathname.glob("build/#{root_name}/*").reject { |f| f.to_s =~ /Pods[^.]+\.framework/ }
+      
+      consumer = spec.consumer(umbrella.platform_name)
+      file_accessor = Pod::Sandbox::FileAccessor.new(sandbox.pod_dir(spec.root.name), consumer)
+      files += file_accessor.vendored_libraries
+      files += file_accessor.vendored_frameworks
+      files += file_accessor.resources
+      
+      FileUtils.mkdir_p(destination)        
+      files.each do |file|
+        FileUtils.cp_r(file, destination)
+      end    
+    end
+  end
+
+end
+
 Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_context, user_options|  
   enable_dsym = user_options.fetch('dsym', true)
   configuration = user_options.fetch('configuration', 'Debug')
@@ -384,34 +413,9 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
     
     specs = installer_context.umbrella_targets.map { |t| t.specs.map(&:name) }.flatten.map { |t| t.split("/").first }.uniq
     built_count = Dir["#{build_dir}/*"].select { |t| specs.include?(File.basename(t)) }.count
-    Pod::UI.puts "Built #{built_count} #{'item'.pluralize(built_count)}, copying..."
+    Pod::UI.puts "Built #{built_count} #{'item'.pluralize(built_count)}, copying..."    
     
-      
-    installer_context.umbrella_targets.each do |umbrella|
-      umbrella.specs.each do |spec|
-        root_name = spec.name.split("/").first
-        
-        if uses_frameworks
-          destination = File.join(base_destination, root_name)        
-        else
-          destination = File.join(base_destination, root_name, root_name)        
-        end
-        # Make sure the device target overwrites anything in the simulator build, otherwise iTunesConnect
-        # can get upset about Info.plist containing references to the simulator SDK
-        files = Pathname.glob("build/#{root_name}/*").reject { |f| f.to_s =~ /Pods[^.]+\.framework/ }
-        
-        consumer = spec.consumer(umbrella.platform_name)
-        file_accessor = Pod::Sandbox::FileAccessor.new(sandbox.pod_dir(spec.root.name), consumer)
-        files += file_accessor.vendored_libraries
-        files += file_accessor.vendored_frameworks
-        files += file_accessor.resources
-        
-        FileUtils.mkdir_p(destination)        
-        files.each do |file|
-          FileUtils.cp_r(file, destination)
-        end    
-      end
-    end
+    copy_resources_and_vendored_items(installer_context, uses_frameworks, base_destination, sandbox)
     
     # Depending on the resource it may happen that it is present twice, both in the .framework and in the parent folder
     Dir.glob("#{base_destination}/*") do |path|
