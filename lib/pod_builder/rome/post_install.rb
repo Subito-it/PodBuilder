@@ -310,7 +310,6 @@ def self.copy_resources_and_vendored_items(installer_context, uses_frameworks, b
       end    
     end
   end
-
 end
 
 Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_context, user_options|  
@@ -397,6 +396,8 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
 
     built_count = built_items.count
     Pod::UI.puts "Built #{built_count} #{'item'.pluralize(built_count)}"
+
+    copy_resources_and_vendored_items(installer_context, true, base_destination, sandbox)
   else
     case [target.platform_name, uses_frameworks]
     when [:ios, true] then PodBuilder::build_for_iosish_platform_framework(sandbox, build_dir, target, 'iphoneos', 'iphonesimulator', configuration, PodBuilder::Configuration.deterministic_build)
