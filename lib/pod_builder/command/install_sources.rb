@@ -45,8 +45,8 @@ module PodBuilder
         dest_path = PodBuilder::basepath("Sources")
         FileUtils.mkdir_p(dest_path)
 
+        repo_dir = File.join(dest_path, spec.podspec_name)
         Dir.chdir(dest_path) do
-          repo_dir = File.join(dest_path, spec.podspec_name)
           if !File.directory?(repo_dir)
             raise "\n\nFailed cloning #{spec.name}".red if !system("git clone #{spec.repo} #{spec.podspec_name}")
           end
