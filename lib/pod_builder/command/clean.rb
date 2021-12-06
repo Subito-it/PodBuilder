@@ -69,7 +69,7 @@ module PodBuilder
             next
           end
           confirm = ask("#{path} unused.\nDelete it? [Y/N] ") { |yn| yn.limit = 1, yn.validate = /[yn]/i }
-          if confirm.downcase == 'y' || OPTIONS.has_key?(:no_stdin_available)
+          if confirm.downcase == 'y'
             PodBuilder::safe_rm_rf(path)
           end
         end
