@@ -26,7 +26,15 @@ module PodBuilder
         Dir.glob(PodBuilder::prebuiltpath("*")).each do |path|
           basename = File.basename(path)
           unless root_names.include?(basename) 
-            puts "Cleanining up `#{basename}`, no longer found among dependencies".blue
+            puts "Cleaning up `#{basename}`, no longer found among dependencies".blue
+            PodBuilder::safe_rm_rf(path)
+          end
+        end
+
+        Dir.glob(PodBuilder::prebuiltpath("*")).each do |path|
+          basename = File.basename(path)
+          if (Dir.glob("#{path}/**/*.framework").count + Dir.glob("#{path}/**/*.a").count) == 0
+            puts "Cleaning up `#{basename}`, no prebuilt items found".blue
             PodBuilder::safe_rm_rf(path)
           end
         end
@@ -37,11 +45,10 @@ module PodBuilder
           dsym_basename = File.basename(path, ".*")
           dsym_basename.gsub!(/\.framework$/, "")
           unless module_names.include?(dsym_basename)
-            puts "Cleanining up `#{dsym_basename}`, no longer found among dependencies".blue
+            puts "Cleaning up `#{dsym_basename}`, no longer found among dependencies".blue
             PodBuilder::safe_rm_rf(path)
           end
         end
-
       end
 
       def self.install_sources(buildable_items)        
