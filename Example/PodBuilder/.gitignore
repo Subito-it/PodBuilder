@@ -1,6 +1,0 @@
-Pods/
-*.xcworkspace
-*.xcodeproj
-Podfile.lock
-Sources
-PodBuilderDevPodsPaths.json
