@@ -88,7 +88,7 @@ module PodBuilder
     @library_evolution_support = false
     @base_path = "PodBuilder" # Not nice. This value is used only for initial initization. Once config is loaded it will be an absolute path. FIXME
     @skip_licenses = []
-    @skip_pods = ["GoogleMaps", "React-RCTFabric", "React-Core", "React-CoreModules"] # Not including React-RCTNetwork might loose some debug warnings
+    @skip_pods = ["GoogleMaps", "React-RCTFabric", "React-Core", "React-CoreModules", "FBReactNativeSpec", "fmt", "RCT-Folly", "React-jsi"] # Not including React-RCTNetwork might loose some debug warnings
     @force_prebuild_pods = []
     @license_filename = "Pods-acknowledgements"
     @development_pods_paths = []

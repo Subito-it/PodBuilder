@@ -44,7 +44,11 @@ module PodBuilder
         # https://thi.imhttps://thi.im/posts/swift-serialize-debugging-options/
         build_settings["SWIFT_SERIALIZE_DEBUGGING_OPTIONS"] = "NO"
 
-        build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = platform.deployment_target.version # Fix compilation warnings on Xcode 12
+        if Configuration.react_native_project && item.name.include?("Folly")
+          build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = "9.0" # https://github.com/facebook/flipper/issues/834#issuecomment-899725463
+        else
+          build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = platform.deployment_target.version # Fix compilation warnings on Xcode 12
+        end
 
         # Ignore deprecation warnings
         build_settings["GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS"] = "NO"
@@ -266,6 +270,11 @@ module PodBuilder
 
       Dir.chdir(PodBuilder::project_path) do
         bundler_prefix = Configuration.use_bundler ? "bundle exec " : ""
+        
+        if Configuration.react_native_project
+          system("#{bundler_prefix}pod deintegrate;")
+        end
+
         system("#{bundler_prefix}pod install;")
       end
     end
@@ -714,6 +723,35 @@ module PodBuilder
       Configuration.react_native_project = true
 
       return podfile_content
+    end
+
+    def self.prepare_react_native_compilation_workarounds(podfile_content)
+      return  podfile_content + """
+def prepare_rn_compilation_libevent
+  path = \"Pods/libevent/include/event.h\"
+  replace(path, \"#include <evutil.h>\", \"// #include <evutil.h>\")
+end
+
+def prepare_rn_flipper_module_redefinition
+  module_maps = [\"Pods/Target Support Files/Flipper-Fmt/Flipper-Fmt.modulemap\", \"Pods/Target Support Files/fmt/fmt.modulemap\"]
+  if module_maps.all? { |t| File.exist?(t) }
+    commented_module = \"/* \" + File.read(module_maps[0]) + \" */\"
+    File.write(module_maps[0], commented_module)
+  end
+end
+
+def replace(path, find, replace)
+  if File.exist?(path)
+    content = File.read(path).gsub(find, replace)
+    File.write(path, content)
+  end
+end      
+
+post_install do |installer|
+  prepare_rn_compilation_libevent()
+  prepare_rn_flipper_module_redefinition()
+end
+      """
     end
   end
 end
