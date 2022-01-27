@@ -242,12 +242,15 @@ Options:
         opts.banner = "
 Usage:
         
-    $ pod_builder install_sources
+    $ pod_builder install_sources [OPTIONS] <PODNAME...>
 
       Install source of prebuilt pods to be able to step into and debug prebuilt's code.
 
 Options:
 "       
+        opts.on("-a", "--all", "Install all available sources") do |o|
+          OPTIONS[:all] = o
+        end
         opts.on("-s", "--no-stdin", "Never request interaction with sdtin (e.g. in CI environment)") do |o|
           OPTIONS[:no_stdin_available] = o
         end
