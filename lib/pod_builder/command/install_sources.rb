@@ -11,7 +11,7 @@ module PodBuilder
 
         PodBuilder::prepare_basepath
 
-        argument_pods = OPTIONS.has_key?(:all) ? [] : ARGV.dup
+        argument_pods = ARGV.dup
 
         install_update_repo = OPTIONS.fetch(:update_repos, true)
         installer, analyzer = Analyze.installer_at(PodBuilder::basepath, install_update_repo)
@@ -22,10 +22,9 @@ module PodBuilder
         framework_files = Dir.glob("#{base_path}/**/*.framework")
         
         framework_files.each do |path|
-          rel_path = Pathname.new(path).relative_path_from(Pathname.new(base_path)).to_s
-          next if !OPTIONS.has_key?(:all) && !argument_pods.include?(rel_path.sub(/\/.*/m, ""))
+          next if !OPTIONS.has_key?(:all) && !argument_pods.include?(File.basename(path, ".*"))
 
-          if podfile_spec = podfile_items.detect { |x| "#{x.root_name}/#{x.prebuilt_rel_path}" == rel_path }
+          if podfile_spec = podfile_items.detect { |x| x.root_name == File.basename(path, ".*") }
             update_repo(podfile_spec)
           end
         end
