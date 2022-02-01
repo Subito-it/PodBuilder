@@ -226,7 +226,7 @@ module PodBuilder
           data["swift_version"] = swift_version
         end
         
-        specs = podfile_items.select { |x| x.module_name == podfile_item.module_name }
+        specs = podfile_items.select { |x| x.root_name == podfile_item.root_name }
         subspecs_deps = specs.map(&:dependency_names).flatten
         subspec_self_deps = subspecs_deps.select { |x| x.start_with?("#{prebuilt_name}/") }
         data["specs"] = (specs.map(&:name) + subspec_self_deps).uniq
