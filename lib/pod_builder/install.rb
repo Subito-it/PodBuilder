@@ -406,7 +406,7 @@ module PodBuilder
 
       # Now copy
       non_prebuilt_items.each do |item|
-        source_path = PodBuilder::buildpath_prebuiltpath(item.module_name)
+        source_path = PodBuilder::buildpath_prebuiltpath(item.root_name)
 
         unless File.directory?(source_path)
           puts "Prebuilt items for #{item.root_name} not found".blue

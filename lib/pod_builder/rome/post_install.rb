@@ -360,6 +360,7 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
 
     built_items = Dir.glob("#{build_dir}/#{xcodebuild_settings[0].platform_name}.xcarchive/Products/Library/Frameworks/*").reject { |t| File.basename(t, ".*") == "Pods_DummyTarget" }
 
+    specs = installer_context.umbrella_targets.map(&:specs).flatten
     built_items.each do |built_item|      
       built_item_paths = [built_item]
       xcodebuild_settings.drop(1).each do |xcodebuild_setting|
@@ -374,8 +375,12 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
 
       next if built_item_paths.count == 0
 
-      framework_name = File.basename(built_item_paths.first, ".*")
-      xcframework_path = "#{base_destination}/#{framework_name}/#{framework_name}.xcframework"
+      module_name = File.basename(built_item_paths.first, ".*")
+      spec = specs.detect { |t| t.module_name == module_name }
+
+      next if spec.nil?
+
+      xcframework_path = "#{base_destination}/#{spec.name}/#{module_name}.xcframework"
       framework_params = built_item_paths.map { |t| "-framework '#{t}'"}.join(" ")
       raise "\n\nFailed packing xcframework!\n".red if !system("xcodebuild -create-xcframework #{framework_params} -output '#{xcframework_path}' > /dev/null 2>&1")      
 
