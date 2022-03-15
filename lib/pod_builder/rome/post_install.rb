@@ -388,7 +388,7 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
         xcodebuild_settings.each do |xcodebuild_setting|
           dsym_source = "#{build_dir}/#{xcodebuild_setting.platform_name}.xcarchive/dSYMs/"
           if File.directory?(dsym_source)
-            destination = sandbox_root.parent + "dSYMs"
+            destination = PodBuilder::buildpath_dsympath
             FileUtils.mkdir_p(destination)
             FileUtils.mv(dsym_source, destination)
             FileUtils.mv("#{destination}/dSYMs", "#{destination}/#{xcodebuild_setting.platform_name}")
@@ -443,7 +443,7 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
     if enable_dsym
       dsym_source = "#{build_dir}/dSYM"
       if File.directory?(dsym_source)
-        FileUtils.mv(dsym_source, sandbox_root.parent)
+        FileUtils.mv(dsym_source, PodBuilder::buildpath_dsympath)
       end
     else
       raise "\n\nNot implemented\n".red
