@@ -375,12 +375,13 @@ module PodBuilder
     def entry(include_version = true, include_pb_entry = true)
       e = "pod '#{@name}'"
 
+      e_suffix = ""
       if !is_prebuilt && inhibit_warnings
-        e += ", :inhibit_warnings => true"
+        e_suffix = ", :inhibit_warnings => true"
       end
 
       unless include_version
-        return e
+        return e + e_suffix
       end
 
       if is_external
@@ -405,6 +406,8 @@ module PodBuilder
       else
         e += ", '=#{@version}'"  
       end
+
+      e += e_suffix
 
       if include_pb_entry && !is_prebuilt
         prebuilt_info_path = PodBuilder::prebuiltpath("#{root_name}/#{Configuration::prebuilt_info_filename}")
