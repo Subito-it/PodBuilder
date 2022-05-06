@@ -756,6 +756,26 @@ def replace(path, find, replace)
   end
 end      
 
+pre_install do |installer|
+  require 'json'
+
+  pods_path = \"#{PodBuilder::project_path}/Pods\"
+  j = JSON.parse(File.read(\"\#{pods_path}/Local Podspecs/FBReactNativeSpec.podspec.json\"))  
+  
+  output_files = j.dig(\"script_phases\", \"output_files\")
+
+  script_lines = j.dig(\"script_phases\", \"script\").split(\"\\n\")
+  script_lines.insert(0, \"export SCRIPT_OUTPUT_FILE_0=\\\"\#{output_files[0]}\\\"\")
+  script_lines.insert(0, \"export DERIVED_FILE_DIR=/tmp\")
+  script_lines.insert(0, \"export PODS_TARGET_SRCROOT=\\\"#{PodBuilder::project_path}/../node_modules/react-native/React/FBReactNativeSpec\\\"\")
+  script_lines.insert(0, \"export PODS_ROOT=\\\"\#{pods_path}\\\"\")
+  
+  Dir.chdir(pods_path) do
+    cmd = script_lines.reject(&:blank?).join(\";\\n\")
+    system(cmd)
+  end
+end
+
 post_install do |installer|
   prepare_rn_compilation_libevent()
   prepare_rn_flipper_module_redefinition()
