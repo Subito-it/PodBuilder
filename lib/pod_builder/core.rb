@@ -176,6 +176,9 @@ module PodBuilder
     end
 
     PodBuilder::safe_rm_rf(basepath("Pods"))
+    if Configuration.react_native_project
+      PodBuilder::safe_rm_rf(basepath("build"))
+    end
   end
 
   def self.system_swift_version

@@ -65,6 +65,10 @@ module PodBuilder
                        source_path_rel_path,
                        development_pods_config_rel_path]
         
+        if Configuration.react_native_project
+          git_ignores.push("build/")
+        end
+        
         File.write("#{OPTIONS[:prebuild_path]}/.gitignore", git_ignores.join("\n"))
       end
 
