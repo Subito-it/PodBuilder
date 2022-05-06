@@ -145,7 +145,7 @@ module PodBuilder
         expected_header_search_path_prefix = "\"HEADER_SEARCH_PATHS\" => \""
         raise "\n\nExpected header search path entry not found\n".red unless content.include?(expected_header_search_path_prefix)
 
-        content.sub!(expected_header_search_path_prefix, "#{expected_header_search_path_prefix}\\\"$(PODS_ROOT)/Headers/Public/Flipper-Folly\\\" ")
+        content.sub!(expected_header_search_path_prefix, "#{expected_header_search_path_prefix}\\\"$(PODS_ROOT)/Headers/Public/Flipper-Folly\\\" \\\"$(PODS_ROOT)/../build/generated/ios\\\" ")
         File.write(paths[0], content)
       end
     end
