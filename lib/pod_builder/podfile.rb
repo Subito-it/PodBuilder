@@ -754,7 +754,7 @@ def replace(path, find, replace)
     content = File.read(path).gsub(find, replace)
     File.write(path, content)
   end
-end      
+end  
 
 pre_install do |installer|
   require 'json'
@@ -780,6 +780,20 @@ post_install do |installer|
   prepare_rn_compilation_libevent()
   prepare_rn_flipper_module_redefinition()
   prepare_rn_react_codegen()
+
+  installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+          if target.name == 'React-Codegen'
+            config.build_settings['HEADER_SEARCH_PATHS'] = config.build_settings.fetch('HEADER_SEARCH_PATHS', []) + ['$(inherited)', '${PODS_ROOT}/Flipper-Folly', '${PODS_ROOT}/React-Core/ReactCommon', '$(PODS_ROOT)/React-Core/ReactCommon/react/renderer/graphics/platform/cxx', '$(PODS_ROOT)/React-Codegen/build/generated/ios']
+          end
+          if target.name == 'React-Core'
+            config.build_settings['HEADER_SEARCH_PATHS'] = config.build_settings.fetch('HEADER_SEARCH_PATHS', []) + ['$(inherited)', '${PODS_ROOT}/Flipper-Folly']
+          end
+          if target.name == 'React-CoreModules'
+            config.build_settings['HEADER_SEARCH_PATHS'] = config.build_settings.fetch('HEADER_SEARCH_PATHS', []) + ['$(inherited)', '${PODS_ROOT}/Flipper-Folly', '$(PODS_ROOT)/../build/generated/ios']
+          end
+      end
+  end
 end
       """
     end
