@@ -65,6 +65,10 @@ module PodBuilder
                        source_path_rel_path,
                        development_pods_config_rel_path]
         
+        if Configuration.react_native_project
+          git_ignores.push("build/")
+        end
+        
         File.write("#{OPTIONS[:prebuild_path]}/.gitignore", git_ignores.join("\n"))
       end
 
@@ -141,7 +145,7 @@ module PodBuilder
         expected_header_search_path_prefix = "\"HEADER_SEARCH_PATHS\" => \""
         raise "\n\nExpected header search path entry not found\n".red unless content.include?(expected_header_search_path_prefix)
 
-        content.sub!(expected_header_search_path_prefix, "#{expected_header_search_path_prefix}\\\"$(PODS_ROOT)/Headers/Public/Flipper-Folly\\\" ")
+        content.sub!(expected_header_search_path_prefix, "#{expected_header_search_path_prefix}\\\"$(PODS_ROOT)/Headers/Public/Flipper-Folly\\\" \\\"$(PODS_ROOT)/../build/generated/ios\\\" ")
         File.write(paths[0], content)
       end
     end
