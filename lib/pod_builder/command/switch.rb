@@ -250,7 +250,7 @@ module PodBuilder
           if Pathname.new(path).relative?
             path = PodBuilder::basepath(path)
           end
-          podspec_paths = Dir.glob(File.expand_path("#{path}/**/#{podname}*.podspec*"))
+          podspec_paths = Dir.glob(File.expand_path("#{path}/**/#{podname}.podspec"))
           podspec_paths.select! { |t| !t.include?("/Local Podspecs/") }
           podspec_paths.select! { |t| Dir.glob(File.join(File.dirname(t), "*")).count > 1 } # exclude podspec folder (which has one file per folder)
           if podspec_paths.count > 1
