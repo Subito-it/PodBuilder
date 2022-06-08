@@ -9,7 +9,22 @@ module PodBuilder
         PodBuilder::prepare_basepath
         
         argument_pods = ARGV.dup
-        
+        switch_all = argument_pods.first == "*"
+
+        if switch_all
+          pods = []
+          podspecs = Dir.glob("#{PodBuilder::prebuiltpath}/**/*.podspec")
+          podspecs.each do |podspec|
+            spec = Pod::Specification.from_file(podspec)
+            podname = spec.attributes_hash["name"]
+            pods.push(podname)
+          end
+          argument_pods = pods
+          if OPTIONS[:switch_mode] == "development"
+              argument_pods.reject! { |pod_name| self.find_podspec(pod_name).nil? }
+          end
+        end
+
         unless argument_pods.count > 0 
           return -1
         end

@@ -71,6 +71,7 @@ PodBuilder comes with a rich set of commands:
 - `restore_all`: rebuilts all pods declared in the Restore-Podfile file
 - `install_sources`: installs sources of pods to debug into prebuild frameworks
 - `switch`: switch between prebuilt, development or standard pod in the Application-Podfile
+- `switch_all`: switch all pods between prebuilt, development or standard in the Application-Podfile
 - `clean`: removes unused prebuilt frameworks, dSYMs and source files added by install_sources
 - `sync_podfile`: updates the Application-Podfile with all pods declared in the PodBuilder-Podfile file
 - `info`: outputs json-formatted information reflecting the current status of prebuilt pods
@@ -157,6 +158,10 @@ To support development pods you should specify the path(s) that contain the pods
 ```
 
 PodBuilder will automatically determine the proper path when switching a particular pod.
+
+#### `switch_all` command
+
+As `switch` but will switch all pods defined in PodBuilder-Podfile.
 
 #### `clean` command
 
