@@ -41,6 +41,7 @@ Command:
     + install_sources                Install sources of pods to debug into prebuilt items
     + generate_lldbinit              Generate an lldbinit file with setting target.source-map to debug prebuilt items
     + switch                         Switch between prebuilt/development/standard pod in the Application-Podfile
+    + switch_all                     Switch all pods between prebuilt/development/standard in the Application-Podfile
     + clean                          Remove prebuild items, dSYMs and source files added by `install_sources` command that are no longer in the PodBuilder-Podfile
     + sync_podfile                   Update your Application-Podfile with all pods declared in the PodBuilder-Podfile
     + info                           Print json-formatted informations about prebuilt items
@@ -313,6 +314,41 @@ Options:
       end,
       :call => [        
         PodBuilder::Command::Switch
+      ]
+    },
+
+    "switch_all" => {      
+      :opts => OptionParser.new do |opts|
+        opts.banner = "
+Usage:
+        
+    $ pod_builder switch_all [OPTIONS]
+
+      Switch all pods integration between prebuilt/development/default version.
+        
+Options:
+"        
+        opts.on("-p", "--prebuilt", "Use prebuilt") do |o|
+          OPTIONS[:switch_mode] = "prebuilt"
+        end
+        opts.on("-d", "--development", "Development pod") do |o|
+          OPTIONS[:switch_mode] = "development"
+        end
+        opts.on("-s", "--default", "Default version specified in PodBuilder-Podfile") do |o|
+          OPTIONS[:switch_mode] = "default"
+        end
+        opts.on("-c", "--child-deps", "Include dependencies of the specified <PODNAME...>") do |o|
+          OPTIONS[:resolve_child_dependencies] = true
+        end
+        opts.on("-r", "--parent-deps", "Include all pods that depend on the specified <PODNAME...>") do |o|
+          OPTIONS[:resolve_parent_dependencies] = true
+        end
+        opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update (only when passing --parent-deps") do |o|
+          OPTIONS[:update_repos] = false
+        end
+      end,
+      :call => [        
+        PodBuilder::Command::SwitchAll
       ]
     },
 
