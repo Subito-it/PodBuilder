@@ -77,6 +77,7 @@ module PodBuilder
       attr_accessor :build_xcframeworks_exclude
       attr_accessor :pre_actions
       attr_accessor :post_actions
+      attr_accessor :development_team
     end
 
     @build_settings = DEFAULT_BUILD_SETTINGS
@@ -116,6 +117,8 @@ module PodBuilder
 
     @pre_actions = {}
     @post_actions = {}
+
+    @development_team = ""
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
@@ -244,6 +247,11 @@ module PodBuilder
             Configuration.post_actions = PodBuilder::Actions.load(value)
           end
         end
+        if value = json["development_team"]
+          if value.is_a?(String) && value.length > 0
+            Configuration.development_team = value
+          end
+        end
 
         Configuration.build_settings.freeze
 
@@ -288,6 +296,7 @@ module PodBuilder
       config["deterministic_build"] = Configuration.deterministic_build
       config["build_using_repo_paths"] = Configuration.build_using_repo_paths
       config["react_native_project"] = Configuration.react_native_project
+      config["development_team"] = Configuration.development_team
       
       File.write(config_path, JSON.pretty_generate(config))
     end
