@@ -371,6 +371,10 @@ PodBuilder leverages CocoaPods to compile pods into frameworks. Every compiled f
 
 # FAQ
 
+### **I get an _'Failed getting 'DEVELOPMENT_TEAM' build setting'_ when building**
+
+PodBuilder might fail to automatically extract the developer team from your current project which is required to sign executables. Add the `development_team` key in PodBuilder.json file with your development team identifier.
+
 ### **I get an _'`PodWithError` does not specify a Swift version and none of the targets (`DummyTarget`)'_ when building**
 
 The podspec of the Pod you're trying to build doesn't specify the swift_version which is required in recent versions of CocoaPods. Either contact the author/mantainer of the Pod asking it to fix the podspec or add a `spec_overrides` in _PodBuilder.json_.
