@@ -378,9 +378,16 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
       module_name = File.basename(built_item_paths.first, ".*")
       spec = specs.detect { |t| t.module_name == module_name }
 
+      # There seems to be a potential bug in CocoaPods-Core (https://github.com/CocoaPods/Core/issues/730)
+      if spec.nil?
+        # Given the above issue when all specs of a pod are subspecs (e.g. specs contains Pod1/Subspec1, Pod1/Subspec2, ...) we'll fail getting the correct specification by relying on module name
+        spec = specs.detect { |t| t.name.split("/").first == module_name }
+      end
+
       next if spec.nil?
 
-      xcframework_path = "#{base_destination}/#{spec.name}/#{module_name}.xcframework"
+      root_name = spec.name.split("/").first
+      xcframework_path = "#{base_destination}/#{root_name}/#{module_name}.xcframework"
       framework_params = built_item_paths.map { |t| "-framework '#{t}'"}.join(" ")
       raise "\n\nFailed packing xcframework!\n".red if !system("xcodebuild -create-xcframework #{framework_params} -output '#{xcframework_path}' > /dev/null 2>&1")      
 
