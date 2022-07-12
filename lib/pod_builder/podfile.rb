@@ -8,6 +8,18 @@ module PodBuilder
     def self.from_podfile_items(items, analyzer, build_configuration, install_using_frameworks, build_catalyst, build_xcframeworks)
       raise "\n\nno items\n".red unless items.count > 0
 
+      # Xcode 14 requires a development team to be specified for the compilation to succeed
+      development_team = Configuration::development_team
+      if development_team.empty?
+        project_path = "#{PodBuilder.project_path}/#{Configuration::project_name}.xcodeproj"
+        development_team = `grep -rh 'DEVELOPMENT_TEAM' '#{project_path}' | uniq`.strip
+        development_team_match = development_team.match(/DEVELOPMENT_TEAM = (.+);/)
+        if development_team.split("\n").count != 1 || development_team_match&.size != 2
+          raise "\n\nFailed getting 'DEVELOPMENT_TEAM' build setting, please add your development team to #{PodBuilder::basepath(Configuration.configuration_filename)} as per documentation".red
+        end
+        development_team = development_team_match[1]
+      end
+
       sources = analyzer.sources
       
       cwd = File.dirname(File.expand_path(__FILE__))
@@ -27,10 +39,12 @@ module PodBuilder
 
       podfile.sub!("%%%build_configuration%%%", build_configuration.capitalize)
 
+      podfile.sub!("%%%development_team%%%", development_team)
+
       podfile_build_settings = ""
       
       pod_dependencies = {}
-
+      
       items.each do |item|
         build_settings = Configuration.build_settings.dup
 

@@ -25,8 +25,8 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "bundler", "~> 2.0"
   spec.add_development_dependency "rake", ">= 12.3.3"
-  spec.add_development_dependency "ruby-debug-ide", '0.6.1'
-  spec.add_development_dependency "debase", '0.2.2'
+  spec.add_development_dependency "ruby-debug-ide"
+  spec.add_development_dependency "debase", '0.2.5.beta2'
 
   spec.add_runtime_dependency 'xcodeproj'
   spec.add_runtime_dependency 'colored'
