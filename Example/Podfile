@@ -21,9 +21,3 @@ target 'PodBuilderExample' do
   # pod 'FirebasePerformance'
   # pod 'FirebaseCrashlytics'
 end
-
-pre_install do |installer|
-  Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}
-  require 'pod_builder/podfile/pre_actions_swizzles'
-   
-end

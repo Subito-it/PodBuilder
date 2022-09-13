@@ -2,6 +2,12 @@ require 'xcodeproj'
 require 'pod_builder/core'
 require 'digest'
 
+# Skip warning
+Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}
+
+# workaround for https://github.com/CocoaPods/CocoaPods/issues/3289
+Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_static_framework_transitive_dependencies) {}
+
 # The following begin/end clause contains a set of monkey patches of the original CP implementation
 
 # The Pod::Target and Pod::Installer::Xcode::PodTargetDependencyInstaller swizzles patch
