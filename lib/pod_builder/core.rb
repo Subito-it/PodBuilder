@@ -13,6 +13,7 @@ require 'pod_builder/configuration'
 require 'pod_builder/podspec'
 require 'pod_builder/licenses'
 require 'pod_builder/actions'
+require 'pod_builder/podfile/podfile_swizzles'
 
 require 'core_ext/string'
 

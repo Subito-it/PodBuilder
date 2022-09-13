@@ -1,7 +1,7 @@
 require 'digest'
 require 'colored'
 require 'highline/import'
-require 'pod_builder/podfile/podfile_swizzles'
+require 'pod_builder/core'
 
 module PodBuilder
   class InstallResult

@@ -1,4 +1,7 @@
 require 'cfpropertylist'
+require 'pod_builder/core'
+
+PodBuilder::Configuration::load
 
 %%%sources%%%
 
