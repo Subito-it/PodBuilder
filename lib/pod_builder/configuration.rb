@@ -323,13 +323,21 @@ module PodBuilder
       
       return File.join(path, Configuration.configuration_filename)
     end
-    
+
+    @@podbuilder_path_cache = nil
     def self.podbuilder_path
+      if path = @@podbuilder_path_cache
+        return path
+      end
+
       paths = Dir.glob("#{PodBuilder::home}/**/.pod_builder")
       paths.reject! { |t| t.match(/pod-builder-.*\/Example\/#{File.basename(Configuration.base_path)}\/\.pod_builder$/i) }
       raise "\n\nToo many .pod_builder found `#{paths.join("\n")}`\n".red if paths.count > 1
-      
-      return paths.count > 0 ? File.dirname(paths.first) : nil
+
+      path = paths.count > 0 ? File.dirname(paths.first) : nil
+      @@podbuilder_path_cache = path
+
+      return path
     end
   end  
 end
