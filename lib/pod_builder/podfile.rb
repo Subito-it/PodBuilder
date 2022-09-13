@@ -369,7 +369,9 @@ module PodBuilder
         return
       end
 
-      File.read(podfile_path).each_line do |line|
+      content = File.read(podfile_path)
+
+      content.each_line do |line|
         stripped_line = strip_line(line)
         unless !stripped_line.start_with?("#")
           next
@@ -379,6 +381,10 @@ module PodBuilder
           starting_def_found = stripped_line.start_with?("def") && (line.match("\s*def\s") != nil)
           raise "\n\nUnsupported single line def/pod. `def` and `pod` shouldn't be on the same line, please modify the following line:\n#{line}\n".red if starting_def_found
         end
+      end
+
+      unless content.include?("PodBuilder::Configuration::load")
+        raise "\n\nUnsupported PodBuilder/Podfile found!\n\nStarting from version 5.x Podfile should contain the following lines:\nrequire 'pod_builder/core'\nPodBuilder::Configuration::load\n\nPlease manually add them to the top of your Podfile\n".red
       end
     end
 
@@ -503,6 +509,14 @@ module PodBuilder
 
     def self.add_install_block(podfile_content)
       return add(PODBUILDER_LOCK_ACTION, "pre_install", podfile_content)
+    end
+
+    def self.add_configuration_load_block(podfile_content)
+      unless podfile_content.include?("require 'pod_builder/core")
+        podfile_content = "require 'pod_builder/core'\nPodBuilder::Configuration::load\n\n" + podfile_content
+      end
+
+      return podfile_content
     end
 
     def self.add(entries, marker, podfile_content)
