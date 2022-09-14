@@ -31,6 +31,7 @@ module PodBuilder
 
         podfile_content = File.read(prebuilt_podfile_path)
         
+        podfile_content = Podfile.add_configuration_load_block(podfile_content)        
         podfile_content = Podfile.add_install_block(podfile_content)
         podfile_content = Podfile.update_path_entries(podfile_content, Init.method(:podfile_path_transform))
         podfile_content = Podfile.update_project_entries(podfile_content, Init.method(:podfile_path_transform))

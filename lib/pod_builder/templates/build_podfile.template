@@ -1,4 +1,7 @@
 require 'cfpropertylist'
+require 'pod_builder/core'
+
+PodBuilder::Configuration::load
 
 %%%sources%%%
 
@@ -63,10 +66,6 @@ pre_install do |installer|
     # set a random version to please CocoaPods, the proper version will be overridden by set_build_settings()
     target.root_spec.swift_version = "1.0" 
   end
-
-  # workaround for https://github.com/CocoaPods/CocoaPods/issues/3289
-  Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_static_framework_transitive_dependencies) {}
-  Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}
 end
 
 post_install do |installer|

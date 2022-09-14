@@ -150,8 +150,6 @@ module PodBuilder
 
         Podfile::install
 
-        sanity_checks
-
         if (restore_file_error = restore_file_error) && Configuration.restore_enabled
           puts "\n\n⚠️ Podfile.restore was found invalid and was overwritten. Error:\n #{restore_file_error}".red
         end        
@@ -261,22 +259,6 @@ module PodBuilder
         buildable_subspecs.select! { |x| pods_to_build_subspecs.include?(x.root_name) }
 
         return buildable_subspecs - pods_to_build
-      end
-
-      def self.sanity_checks
-        lines = File.read(PodBuilder::project_path("Podfile")).split("\n")
-        stripped_lines = lines.map { |x| Podfile.strip_line(x) }.select { |x| !x.start_with?("#")}
-
-        expected_stripped = Podfile::PRE_INSTALL_ACTIONS.map { |x| Podfile.strip_line(x) }
-
-        if !expected_stripped.all? { |x| stripped_lines.include?(x) }
-          warn_message = "PodBuilder's pre install actions missing from application Podfile!\n"
-          if OPTIONS[:allow_warnings]
-            puts "\n\n#{warn_message}".yellow
-          else
-            raise "\n\n#{warn_message}\n".red
-          end
-        end
       end
 
       def self.resolve_pods_to_build(argument_pods, buildable_items)

@@ -3,8 +3,6 @@ module PodBuilder
   class Podfile
     PODBUILDER_LOCK_ACTION = ["raise \"\\n🚨  Do not launch 'pod install' manually, use `pod_builder` instead!\\n\" if !File.exist?('pod_builder.lock')"].freeze    
     
-    PRE_INSTALL_ACTIONS = ["Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_duplicate_framework_and_library_names) {}", "require 'pod_builder/podfile/pre_actions_swizzles'"].freeze
-
     def self.from_podfile_items(items, analyzer, build_configuration, install_using_frameworks, build_catalyst, build_xcframeworks)
       raise "\n\nno items\n".red unless items.count > 0
 
@@ -254,8 +252,6 @@ module PodBuilder
       podfile_content = Podfile.update_project_entries(podfile_content, Podfile.method(:podfile_path_transform))
       podfile_content = Podfile.update_require_entries(podfile_content, Podfile.method(:podfile_path_transform))
 
-      podfile_content = add_pre_install_actions(podfile_content)
-
       project_podfile_path = PodBuilder::project_path("Podfile")
       File.write(project_podfile_path, podfile_content)
     end
@@ -272,8 +268,6 @@ module PodBuilder
       podfile_content = Podfile.update_path_entries(podfile_content, PodfileCP.method(:podfile_path_transform))
       podfile_content = Podfile.update_project_entries(podfile_content, Podfile.method(:podfile_path_transform))
       podfile_content = Podfile.update_require_entries(podfile_content, Podfile.method(:podfile_path_transform))
-
-      podfile_content = add_pre_install_actions(podfile_content)
 
       project_podfile_path = PodBuilder::project_path("Podfile")
       File.write(project_podfile_path, podfile_content)
@@ -375,7 +369,9 @@ module PodBuilder
         return
       end
 
-      File.read(podfile_path).each_line do |line|
+      content = File.read(podfile_path)
+
+      content.each_line do |line|
         stripped_line = strip_line(line)
         unless !stripped_line.start_with?("#")
           next
@@ -385,6 +381,10 @@ module PodBuilder
           starting_def_found = stripped_line.start_with?("def") && (line.match("\s*def\s") != nil)
           raise "\n\nUnsupported single line def/pod. `def` and `pod` shouldn't be on the same line, please modify the following line:\n#{line}\n".red if starting_def_found
         end
+      end
+
+      unless content.include?("PodBuilder::Configuration::load")
+        raise "\n\nUnsupported PodBuilder/Podfile found!\n\nStarting from version 5.x Podfile should contain the following lines:\nrequire 'pod_builder/core'\nPodBuilder::Configuration::load\n\nPlease manually add them to the top of your Podfile\n".red
       end
     end
 
@@ -511,8 +511,12 @@ module PodBuilder
       return add(PODBUILDER_LOCK_ACTION, "pre_install", podfile_content)
     end
 
-    def self.add_pre_install_actions(podfile_content)
-      return add(PRE_INSTALL_ACTIONS + [" "], "pre_install", podfile_content)
+    def self.add_configuration_load_block(podfile_content)
+      unless podfile_content.include?("require 'pod_builder/core")
+        podfile_content = "require 'pod_builder/core'\nPodBuilder::Configuration::load\n\n" + podfile_content
+      end
+
+      return podfile_content
     end
 
     def self.add(entries, marker, podfile_content)
