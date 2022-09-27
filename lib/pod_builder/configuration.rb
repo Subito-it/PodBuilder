@@ -303,7 +303,7 @@ module PodBuilder
       config["build_using_repo_paths"] = Configuration.build_using_repo_paths
       config["react_native_project"] = Configuration.react_native_project
       config["development_team"] = Configuration.development_team
-      config["development_language"] = "en"
+      config["development_language"] = Configuration.development_language || "en"
       
       File.write(config_path, JSON.pretty_generate(config))
     end
