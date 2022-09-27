@@ -203,6 +203,15 @@ _PodBuilder.json_ allows some advanced customizations.
 
 ## Supported keys
 
+#### `development_team`
+
+Starting with Xcode 14 it is mandatory to sign both frameworks and framework bundles. PodBuilder will try to automatically extract the developer team from the application, however there are cases where this will fail and the development_team needs to be added explicitly in the configuration file.
+
+
+#### `development_language`
+
+Starting with Xcode 14, when the main language is different than english, it might be necessary to explicitly set the default app language to properly localize app's extensions. Use the ISO 639-1 code.
+
 #### `spec_overrides`
 
 This hash allows to add/replace keys in a podspec specification. This can be useful to solve compilation issue or change compilation behaviour (e.g. compile framework statically by specifying `static_framework = true`) without having to fork the repo.
