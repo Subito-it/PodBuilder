@@ -78,6 +78,7 @@ module PodBuilder
       attr_accessor :pre_actions
       attr_accessor :post_actions
       attr_accessor :development_team
+      attr_accessor :development_language
     end
 
     @build_settings = DEFAULT_BUILD_SETTINGS
@@ -119,6 +120,7 @@ module PodBuilder
     @post_actions = {}
 
     @development_team = ""
+    @development_language = nil
     
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
@@ -252,7 +254,11 @@ module PodBuilder
             Configuration.development_team = value
           end
         end
-
+        if value = json["development_language"]
+          if value.is_a?(String) && value.length > 0
+            Configuration.development_language = value
+          end
+        end
         Configuration.build_settings.freeze
 
         sanity_check()
@@ -297,6 +303,7 @@ module PodBuilder
       config["build_using_repo_paths"] = Configuration.build_using_repo_paths
       config["react_native_project"] = Configuration.react_native_project
       config["development_team"] = Configuration.development_team
+      config["development_language"] = Configuration.development_language || "en"
       
       File.write(config_path, JSON.pretty_generate(config))
     end

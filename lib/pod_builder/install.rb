@@ -426,3 +426,18 @@ module PodBuilder
     end
   end
 end
+
+# CocoaPods seems to hard code the development language to english
+# By monkey patching the project save we make sure that the to manually rewrite the 
+# development language if it has been manually specified in PodBuilder's configuration
+class Xcodeproj::Project
+  alias_method :swz_save, :save
+  
+  def save(save_path = nil)
+    if development_language = PodBuilder::Configuration.development_language
+      root_object.development_region = development_language
+    end
+
+    swz_save(save_path)
+  end
+end 
