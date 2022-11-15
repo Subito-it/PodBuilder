@@ -11,7 +11,7 @@ module PodBuilder
         raise "\n\nToo many xcworkspaces found in current folder\n#{xcworkspace}\n".red if xcworkspace.count > 1
 
         Configuration.project_name = File.basename(xcworkspace.first, ".*")
-        
+
         OPTIONS[:prebuild_path] ||= Configuration.base_path
 
         if File.expand_path(OPTIONS[:prebuild_path]) != OPTIONS[:prebuild_path] # if not absolute
@@ -30,8 +30,8 @@ module PodBuilder
         FileUtils.cp(project_podfile_path, prebuilt_podfile_path)
 
         podfile_content = File.read(prebuilt_podfile_path)
-        
-        podfile_content = Podfile.add_configuration_load_block(podfile_content)        
+
+        podfile_content = Podfile.add_configuration_load_block(podfile_content)
         podfile_content = Podfile.add_install_block(podfile_content)
         podfile_content = Podfile.update_path_entries(podfile_content, Init.method(:podfile_path_transform))
         podfile_content = Podfile.update_project_entries(podfile_content, Init.method(:podfile_path_transform))
@@ -52,7 +52,7 @@ module PodBuilder
         return 0
       end
 
-      private 
+      private
 
       def self.write_gitignore
         source_path_rel_path = "Sources"
@@ -65,17 +65,17 @@ module PodBuilder
                        Configuration.lldbinit_name,
                        source_path_rel_path,
                        development_pods_config_rel_path]
-        
+
         if Configuration.react_native_project
           git_ignores.push("build/")
         end
-        
+
         File.write("#{OPTIONS[:prebuild_path]}/.gitignore", git_ignores.join("\n"))
       end
 
       def self.write_gitattributes
         git_attributes = ["#{Configuration.prebuilt_info_filename} binary"]
-        
+
         File.write("#{OPTIONS[:prebuild_path]}/.gitattributes", git_attributes.join("\n"))
       end
 
@@ -85,15 +85,15 @@ module PodBuilder
         original_basepath = PodBuilder::project_path
 
         podfile_base_path = Pathname.new(File.dirname(podfile_path))
-  
+
         original_path = Pathname.new(File.join(original_basepath, path))
         replace_path = original_path.relative_path_from(podfile_base_path)
         if use_absolute_paths
           replace_path = replace_path.expand_path(podfile_base_path)
         end
-  
+
         return replace_path
-      end   
+      end
 
       def self.update_gemfile
         gemfile_path = File.join(PodBuilder::home, "Gemfile")
@@ -112,10 +112,10 @@ module PodBuilder
 
         gemfile_lines.insert(0, source_line)
         gemfile_lines.push(podbuilder_line)
-     
+
         File.write(gemfile_path, gemfile_lines.join("\n"))
 
-        Dir.chdir(PodBuilder::home) do 
+        Dir.chdir(PodBuilder::home) do
           system("bundle")
         end
       end
@@ -131,11 +131,11 @@ module PodBuilder
         raise "\n\nUnexpected number of #{file} found\n".red if paths.count != 1
 
         content = File.read(paths[0])
-        expected_header_search_path_prefix = "s.pod_target_xcconfig    = { \"HEADER_SEARCH_PATHS\" => \""
+        expected_header_search_path_prefix = "s.pod_target_xcconfig    = {\n    \"HEADER_SEARCH_PATHS\" => \""
         raise "\n\nExpected header search path entry not found\n".red unless content.include?(expected_header_search_path_prefix)
 
         content.sub!(expected_header_search_path_prefix, "#{expected_header_search_path_prefix}\\\"$(PODS_ROOT)/Headers/Public/Flipper-Folly\\\" ")
-        File.write(paths[0], content)        
+        File.write(paths[0], content)
 
         # React-CoreModules.podspec
         file = "React-CoreModules.podspec"
