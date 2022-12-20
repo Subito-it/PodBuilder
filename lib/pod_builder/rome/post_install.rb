@@ -381,7 +381,7 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
       # There seems to be a potential bug in CocoaPods-Core (https://github.com/CocoaPods/Core/issues/730)
       if spec.nil?
         # Given the above issue when all specs of a pod are subspecs (e.g. specs contains Pod1/Subspec1, Pod1/Subspec2, ...) we'll fail getting the correct specification by relying on module name
-        spec = specs.detect { |t| t.name.split("/").first == module_name }
+        spec = specs.detect { |t| t.name.split("/").first == module_name } || specs.detect { |t| t.parent&.module_name == module_name }
       end
 
       next if spec.nil?
