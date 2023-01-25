@@ -356,8 +356,17 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
     xcodebuild_settings.each do |xcodebuild_setting|
       puts "Building xcframeworks for #{xcodebuild_setting.platform_name}".yellow
 
-      archive_cmd = "xcodebuild archive -project #{project_path.to_s} -scheme Pods-DummyTarget -configuration #{xcodebuild_setting.configuration} -destination '#{xcodebuild_setting.build_destination}' -archivePath '#{build_dir}/#{xcodebuild_setting.platform_name}' SKIP_INSTALL=NO > #{PodBuilder::Configuration.build_base_path}/archive_#{xcodebuild_setting.platform_name}.log"
-      raise "\n\n#{xcodebuild_setting.build_destination} xcframework archive failed!\n".red if !system(archive_cmd)
+      log_path = "#{PodBuilder::Configuration.build_base_path}/archive_#{xcodebuild_setting.platform_name}.log"
+      archive_cmd = "xcodebuild archive -project #{project_path.to_s} -scheme Pods-DummyTarget -configuration #{xcodebuild_setting.configuration} -destination '#{xcodebuild_setting.build_destination}' -archivePath '#{build_dir}/#{xcodebuild_setting.platform_name}' SKIP_INSTALL=NO > #{log_path}"
+      unless system(archive_cmd)
+        puts "\n\n#{xcodebuild_setting.build_destination} xcframework archive failed, see #{log_path}!\n".red
+        if system("which xcbeautify")
+          puts `cat '#{log_path}' | xcbeautify --is-ci`
+        elsif system("which xcpretty")          
+          puts `cat '#{log_path}' | xcpretty`          
+        end
+        raise ""
+      end
     end
 
     built_items = Dir.glob("#{build_dir}/#{xcodebuild_settings[0].platform_name}.xcarchive/Products/Library/Frameworks/*").reject { |t| File.basename(t, ".*") == "Pods_DummyTarget" }
@@ -392,8 +401,9 @@ Pod::HooksManager.register('podbuilder-rome', :post_install) do |installer_conte
       xcframework_path = "#{base_destination}/#{root_name}/#{module_name}.xcframework"
       framework_params = built_item_paths.map { |t| "-framework '#{t}'"}.join(" ")
 
-      create_framework_cmd = "xcodebuild -create-xcframework #{framework_params} -output '#{xcframework_path}' > #{PodBuilder::Configuration.build_base_path}/create_framework.log"
-      raise "\n\nFailed packing xcframework!\n".red if !system(create_framework_cmd)
+      log_path = "#{PodBuilder::Configuration.build_base_path}/create_framework.log"
+      create_framework_cmd = "xcodebuild -create-xcframework #{framework_params} -output '#{xcframework_path}' > #{log_path}"
+      raise "\n\nFailed packing xcframework! See #{log_path}\n".red if !system(create_framework_cmd)
 
       if enable_dsym
         xcodebuild_settings.each do |xcodebuild_setting|
