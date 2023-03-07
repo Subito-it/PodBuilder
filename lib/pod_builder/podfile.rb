@@ -37,6 +37,7 @@ module PodBuilder
       podfile.sub!("%%%sources%%%", sources.map { |x| "source '#{x.url}'" }.join("\n"))
 
       podfile.sub!("%%%build_configuration%%%", build_configuration.capitalize)
+      podfile.sub!("%%%keep_swiftmodules%%%", Configuration.keep_swiftmodules ? "true" : "false")
 
       podfile.sub!("%%%development_team%%%", development_team)
 
