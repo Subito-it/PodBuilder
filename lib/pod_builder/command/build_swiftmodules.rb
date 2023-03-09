@@ -68,7 +68,7 @@ module PodBuilder
                       " ""
 
             unless system(cmd)
-              puts "Failed generating for swiftmodules for #{module_name} and arch #{arch}".red
+              puts "Failed generating swiftmodules for #{module_name} and arch #{arch}".red
             end
           end
         end
@@ -92,11 +92,7 @@ module PodBuilder
         archs = arch.split("-").reject { |t| ["apple", "ios"].include?(t) }
         frameworks_paths = frameworks_paths.select { |t| t.include?("#{module_name}.framework") }
 
-        if arch.include?("simulator")
-          frameworks_paths.select! { |t| t.include?("-simulator/") }
-        else
-          frameworks_paths.reject! { |t| t.include?("-simulator/") }
-        end
+        frameworks_paths.select! { |t| t.include?("-simulator/") == arch.include?("simulator") }
         frameworks_paths.select! { |t| t.include?("/ios-") } # currently we support only iOS xcframeworks
         frameworks_paths.reject! { |t| t.include?("maccatalyst/") } # currently we do not support catalyst xcframeworks
 
