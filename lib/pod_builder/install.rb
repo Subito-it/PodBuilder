@@ -327,7 +327,7 @@ module PodBuilder
         end
 
         # Cleanup unneeded files (see https://github.com/bazelbuild/rules_apple/pull/1113)
-        ignore_files = Dir.glob(["#{source_path}/**/Modules/**/*.swiftmodule/*.swiftdoc", "#{source_path}/**/Modules/**/*.swiftmodule/**/*.swiftsourceinfo"])
+        ignore_files = Dir.glob("#{source_path}/**/Modules/**/*.swiftmodule/*.{swiftdoc,swiftsourceinfo,private.swiftinterface}")
         ignore_files.each { |t| PodBuilder::safe_rm_rf(t) }
 
         project_folder = Dir.glob("#{source_path}/**/Modules/**/*.swiftmodule/Project")
