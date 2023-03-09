@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require 'pod_builder/version'
+require "pod_builder/version"
 
 show_version = ARGV.include?("version") && ARGV.count == 1
 if show_version
@@ -14,14 +14,14 @@ if ENV["DEBUGGING"]
   $LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
 end
 
-require 'optparse'
-require 'pod_builder/core'
-require 'pod_builder/command'
+require "optparse"
+require "pod_builder/core"
+require "pod_builder/command"
 
-OPTIONS = {}  
+OPTIONS = {}
 
-def parse_commandline()  
-  subcommands = {  
+def parse_commandline()
+  subcommands = {
     "none" => {
       :opts => OptionParser.new do |opts|
         opts.banner = "
@@ -53,8 +53,8 @@ Options:
         end
       end,
       :call => [
-        PodBuilder::Command::None
-      ]  
+        PodBuilder::Command::None,
+      ],
     },
 
     "build" => {
@@ -67,7 +67,7 @@ Usage:
       Prebuild the specified CocoaPods pods.
         
 Options:
-"        
+"
         opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
           OPTIONS[:update_repos] = false
         end
@@ -85,11 +85,11 @@ Options:
         end
       end,
       :call => [
-        PodBuilder::Command::Build
-      ]
+        PodBuilder::Command::Build,
+      ],
     },
 
-    "build_all" => {            
+    "build_all" => {
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
@@ -99,7 +99,7 @@ Usage:
       Prebuild all pods specified in the PodBuilder-Podfile.
         
 Options:
-"        
+"
         opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
           OPTIONS[:update_repos] = false
         end
@@ -117,11 +117,11 @@ Options:
         end
       end,
       :call => [
-        PodBuilder::Command::BuildAll
-      ]
+        PodBuilder::Command::BuildAll,
+      ],
     },
 
-    "update" => {            
+    "update" => {
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
@@ -131,7 +131,7 @@ Usage:
       Rebuild items that are outdated
         
 Options:
-"        
+"
         opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
           OPTIONS[:update_repos] = false
         end
@@ -146,11 +146,11 @@ Options:
         end
       end,
       :call => [
-        PodBuilder::Command::Update
-      ]
+        PodBuilder::Command::Update,
+      ],
     },
 
-    "restore_all" => {         
+    "restore_all" => {
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
@@ -160,7 +160,7 @@ Usage:
       Rebuilds all pods to the version specified in the Restore-Podfile.
         
 Options:
-"          
+"
         opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
           OPTIONS[:update_repos] = false
         end
@@ -169,11 +169,11 @@ Options:
         end
       end,
       :call => [
-        PodBuilder::Command::RestoreAll
-      ]
+        PodBuilder::Command::RestoreAll,
+      ],
     },
 
-    "init" => {            
+    "init" => {
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
@@ -183,25 +183,25 @@ Usage:
       Initializes PodBuilder.
         
 Options:
-"         
+"
         opts.on("-d", "--destination path", "Prebuilt destination path (default: #{PodBuilder::Configuration.base_path})") do |o|
           OPTIONS[:prebuild_path] = o
         end
       end,
-      :call => [        
-        PodBuilder::Command::Init
-      ]
+      :call => [
+        PodBuilder::Command::Init,
+      ],
     },
 
     "generate_podspec" => {
       :opts => OptionParser.new do |opts|
       end,
-      :call => [        
-        PodBuilder::Command::GeneratePodspec
-      ]
+      :call => [
+        PodBuilder::Command::GeneratePodspec,
+      ],
     },
 
-    "deintegrate" => {           
+    "deintegrate" => {
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
@@ -211,14 +211,14 @@ Usage:
       Remove PodBuilder from your project.
         
 Options:
-"          
+"
       end,
-      :call => [        
-        PodBuilder::Command::Deintegrate
-      ]
+      :call => [
+        PodBuilder::Command::Deintegrate,
+      ],
     },
 
-    "clean" => {      
+    "clean" => {
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
@@ -228,17 +228,17 @@ Usage:
       Remove unused prebuild data, dSYM and source folders.
         
 Options:
-"         
+"
         opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
           OPTIONS[:update_repos] = false
         end
       end,
-      :call => [        
-        PodBuilder::Command::Clean
-      ]
+      :call => [
+        PodBuilder::Command::Clean,
+      ],
     },
 
-    "install_sources" => {         
+    "install_sources" => {
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
@@ -248,7 +248,7 @@ Usage:
       Install source of prebuilt pods to be able to step into and debug prebuilt's code.
 
 Options:
-"       
+"
         opts.on("-a", "--all", "Install all available sources") do |o|
           OPTIONS[:all] = o
         end
@@ -256,12 +256,12 @@ Options:
           OPTIONS[:no_stdin_available] = o
         end
       end,
-      :call => [        
-        PodBuilder::Command::InstallSources
-      ]
+      :call => [
+        PodBuilder::Command::InstallSources,
+      ],
     },
 
-    "generate_lldbinit" => {         
+    "generate_lldbinit" => {
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
@@ -277,12 +277,12 @@ Usage:
       source code dependencies to live in the project repo.
 "
       end,
-      :call => [        
-        PodBuilder::Command::UpdateLldbInit
-      ]
+      :call => [
+        PodBuilder::Command::UpdateLldbInit,
+      ],
     },
 
-    "switch" => {      
+    "switch" => {
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
@@ -292,7 +292,7 @@ Usage:
       Switch integration between prebuilt/development/default pod version. Multiple space separated pods can be passed
         
 Options:
-"        
+"
         opts.on("-p", "--prebuilt", "Use prebuilt") do |o|
           OPTIONS[:switch_mode] = "prebuilt"
         end
@@ -312,12 +312,12 @@ Options:
           OPTIONS[:update_repos] = false
         end
       end,
-      :call => [        
-        PodBuilder::Command::Switch
-      ]
+      :call => [
+        PodBuilder::Command::Switch,
+      ],
     },
 
-    "switch_all" => {      
+    "switch_all" => {
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
@@ -327,7 +327,7 @@ Usage:
       Switch all pods integration between prebuilt/development/default version.
         
 Options:
-"        
+"
         opts.on("-p", "--prebuilt", "Use prebuilt") do |o|
           OPTIONS[:switch_mode] = "prebuilt"
         end
@@ -347,12 +347,12 @@ Options:
           OPTIONS[:update_repos] = false
         end
       end,
-      :call => [        
-        PodBuilder::Command::SwitchAll
-      ]
+      :call => [
+        PodBuilder::Command::SwitchAll,
+      ],
     },
 
-    "sync_podfile" => {      
+    "sync_podfile" => {
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
@@ -364,17 +364,17 @@ Usage:
       and you want to integrate it in the project without rebuilding it.
         
 Options:
-"       
+"
         opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
           OPTIONS[:update_repos] = false
         end
       end,
-      :call => [        
-        PodBuilder::Command::SyncPodfile
-      ]
+      :call => [
+        PodBuilder::Command::SyncPodfile,
+      ],
     },
-    
-    "info" => {      
+
+    "info" => {
       :opts => OptionParser.new do |opts|
         opts.banner = "
 Usage:
@@ -383,20 +383,21 @@ Usage:
 
       Output dependencies and prebuilt informations
         
-"      end,
-      :call => [        
-        PodBuilder::Command::Info
-      ]
-    }      
+"
+      end,
+      :call => [
+        PodBuilder::Command::Info,
+      ],
+    },
   }
-   
+
   argv = ARGV.dup
   if subcommand = subcommands[argv.first]
     ARGV.shift
   else
     subcommand = subcommands["none"]
   end
-   
+
   ret = -1
   show_help = argv.include?("--help") || argv.include?("-h") || argv.count == 0
   if show_help
@@ -406,13 +407,13 @@ Usage:
 
     PodBuilder::add_lockfile
 
-    subcommand[:opts].order!    
+    subcommand[:opts].order!
     subcommand[:call].each do |k|
       if (ret = k.call) && ret == -1
         puts subcommand[:opts].help
       end
     end
-  end    
+  end
 
   return ret
 end

@@ -1,15 +1,15 @@
-require 'pod_builder/core'
+require "pod_builder/core"
 
 module PodBuilder
   module Command
     class Build
-      def self.call 
+      def self.call
         Configuration.check_inited
         PodBuilder::prepare_basepath
 
         argument_pods = ARGV.dup
 
-        unless argument_pods.count > 0 
+        unless argument_pods.count > 0
           return -1
         end
 
@@ -35,16 +35,16 @@ module PodBuilder
           argument_pods.uniq!
         end
 
-        available_argument_pods = argument_pods.select { |x| all_buildable_items.map(&:root_name).include?(x) }     
+        available_argument_pods = argument_pods.select { |x| all_buildable_items.map(&:root_name).include?(x) }
         (argument_pods - available_argument_pods).each { |x|
           puts "'#{x}' not found, skipping".magenta
         }
         argument_pods = available_argument_pods.uniq
-        
+
         Podfile.restore_podfile_clean(all_buildable_items)
 
         restore_file_error = Podfile.restore_file_sanity_check
-  
+
         check_pods_exists(argument_pods, all_buildable_items)
 
         pods_to_build = resolve_pods_to_build(argument_pods, buildable_items)
@@ -62,7 +62,7 @@ module PodBuilder
         check_not_building_development_pods(pods_to_build)
 
         # We need to recursively add dependencies to properly split pods in groups.
-        # Example:        
+        # Example:
         # 1. PodA has a dep to PodB
         # 2. PodB is marked to be built as xcframework
         # 3. We rebuild PodA only (pods_to_build contains only PodA)
@@ -80,9 +80,9 @@ module PodBuilder
 
         check_dependencies_build_configurations(all_buildable_items)
 
-        # When building mixed framwork/xcframeworks pods xcframeworks should be built last 
+        # When building mixed framwork/xcframeworks pods xcframeworks should be built last
         # so that the .xcframework overwrite the .framwork if the same pod needs to be built
-        # in both ways. 
+        # in both ways.
         # For example we might have configured to build onlt PodA as xcframework, another pod
         # PodB has a dependency to PodA. When Building PodB, PodA gets rebuilt as .framework
         # but then PodA gets rebuilt again as .xcframework overwriting the .framework.
@@ -91,15 +91,15 @@ module PodBuilder
         install_using_frameworks = Podfile::install_using_frameworks(analyzer)
         if Configuration.react_native_project
           if install_using_frameworks
-            raise "\n\nOnly static library packaging currently supported for react native projects. Please remove 'use_frameworks!' in #{PodBuilder::basepath("Podfile")}\n".red 
-          end  
+            raise "\n\nOnly static library packaging currently supported for react native projects. Please remove 'use_frameworks!' in #{PodBuilder::basepath("Podfile")}\n".red
+          end
           prepare_defines_modules_override(all_buildable_items)
         else
           unless install_using_frameworks
             raise "\n\nOnly framework packaging currently supported. Please add 'use_frameworks!' at root level (not nested in targets) in #{PodBuilder::basepath("Podfile")}\n".red
-          end  
+          end
         end
-        
+
         build_catalyst = should_build_catalyst(installer)
 
         install_result = InstallResult.new
@@ -112,7 +112,7 @@ module PodBuilder
           # 2. PodB is marked to be built as xcframework -> PodB will be added to pods_to_build_release_xcframework and won't be present in
           # pods_to_build_release and therefore build will fail
           podfile_items = podfile_items.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
-          
+
           podfile_content = Podfile.from_podfile_items(podfile_items, analyzer, build_configuration, install_using_frameworks, build_catalyst, podfile_items.first.build_xcframework)
 
           PodBuilder::safe_rm_rf(Configuration.build_path)
@@ -121,9 +121,9 @@ module PodBuilder
           init_git(Configuration.build_path) # this is needed to be able to call safe_rm_rf
 
           Configuration.pre_actions[:build]&.execute()
-          
-          install_result += Install.podfile(podfile_content, podfile_items, argument_pods, podfile_items.first.build_configuration)          
-          
+
+          install_result += Install.podfile(podfile_content, podfile_items, argument_pods, podfile_items.first.build_configuration)
+
           FileUtils.rm_f(PodBuilder::basepath("Podfile.lock"))
 
           Configuration.post_actions[:build]&.execute()
@@ -138,13 +138,13 @@ module PodBuilder
         Podspec::generate(all_buildable_items, analyzer, install_using_frameworks)
 
         builded_pods = podfiles_items.flatten
-        
+
         builded_pods_and_deps = podfiles_items.flatten.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
         builded_pods_and_deps.select! { |x| !x.is_prebuilt }
-        
+
         prebuilt_pods_to_install = prebuilt_items.select { |x| argument_pods.include?(x.root_name) }
-        Podfile::write_restorable(builded_pods_and_deps + prebuilt_pods_to_install, all_buildable_items, analyzer)     
-        if !OPTIONS.has_key?(:skip_prebuild_update)   
+        Podfile::write_restorable(builded_pods_and_deps + prebuilt_pods_to_install, all_buildable_items, analyzer)
+        if !OPTIONS.has_key?(:skip_prebuild_update)
           Podfile::write_prebuilt(all_buildable_items, analyzer)
         end
 
@@ -152,7 +152,7 @@ module PodBuilder
 
         if (restore_file_error = restore_file_error) && Configuration.restore_enabled
           puts "\n\n⚠️ Podfile.restore was found invalid and was overwritten. Error:\n #{restore_file_error}".red
-        end        
+        end
 
         puts "\n\n🎉 done!\n".green
         return 0
@@ -161,19 +161,19 @@ module PodBuilder
       private
 
       def self.init_git(path)
-        Dir.chdir(path) do 
+        Dir.chdir(path) do
           system("git init")
         end
-      end  
+      end
 
       def self.should_build_catalyst(installer)
         integrate_targets = installer.podfile.installation_options.integrate_targets
 
         # NOTE:
-        # When `integrate_targets` is false, 
-        # `user_project` is nil and Build Settings cannot be collected, 
+        # When `integrate_targets` is false,
+        # `user_project` is nil and Build Settings cannot be collected,
         # so collect Build Settings from xcodeproj and root xcodeproj defined in the Podfile
-        # ref: 
+        # ref:
         # https://github.com/Subito-it/PodBuilder/issues/39
         #
         if integrate_targets
@@ -181,26 +181,26 @@ module PodBuilder
         else
           # Find all `xcodeproj` in Podfile
           user_projects_build_settings = installer.analysis_result.targets.map { |t|
-            user_project_path = PodBuilder.basepath + '/' + t.target_definition.user_project_path
+            user_project_path = PodBuilder.basepath + "/" + t.target_definition.user_project_path
             project = Xcodeproj::Project.open(user_project_path)
             project.root_object.targets.map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } }
           }
-          .flatten
-          .compact
+            .flatten
+            .compact
 
           # Find root `xcodeproj`
           project = Xcodeproj::Project.open(PodBuilder.find_xcodeproj)
           root_project_build_setting = project
-                                        .root_object
-                                        .targets
-                                        .map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } }
-                                        .flatten
+            .root_object
+            .targets
+            .map { |u| u.build_configuration_list.build_configurations.map { |v| v.build_settings } }
+            .flatten
 
           build_settings = user_projects_build_settings | root_project_build_setting
         end
-        
-        build_catalyst = build_settings.detect { |t| t["SUPPORTS_MACCATALYST"] == "YES" } != nil 
-        
+
+        build_catalyst = build_settings.detect { |t| t["SUPPORTS_MACCATALYST"] == "YES" } != nil
+
         puts "\nTo support Catalyst you should enable 'build_xcframeworks' in PodBuilder.json\n".red if build_catalyst && !Configuration.build_xcframeworks_all
 
         return build_catalyst
@@ -237,7 +237,7 @@ module PodBuilder
 
           remaining_pods = pods - [pod]
           pods_with_common_deps = remaining_pods.select { |x| x.dependency_names.any? { |y| pod_dependency_names.include?(y) && !x.has_common_spec(y) } }
-          
+
           pods_with_unaligned_build_configuration = pods_with_common_deps.select { |x| x.build_configuration != pod.build_configuration }
           pods_with_unaligned_build_configuration.map!(&:name)
 
@@ -246,7 +246,7 @@ module PodBuilder
       end
 
       def self.check_not_building_development_pods(pods)
-        if (development_pods = pods.select { |x| x.is_development_pod }) && development_pods.count > 0 && (OPTIONS[:allow_warnings].nil?  && Configuration.allow_building_development_pods == false && Configuration.react_native_project == false)
+        if (development_pods = pods.select { |x| x.is_development_pod }) && development_pods.count > 0 && (OPTIONS[:allow_warnings].nil? && Configuration.allow_building_development_pods == false && Configuration.react_native_project == false)
           pod_names = development_pods.map(&:name).join(", ")
           raise "\n\nThe following pods are in development mode: `#{pod_names}`, won't proceed building.\n\nYou can ignore this error by passing the `--allow-warnings` flag to the build command\n".red
         end
@@ -263,7 +263,7 @@ module PodBuilder
 
       def self.resolve_pods_to_build(argument_pods, buildable_items)
         pods_to_build = []
-        
+
         pods_to_build = buildable_items.select { |x| argument_pods.include?(x.root_name) }
         pods_to_build += other_subspecs(pods_to_build, buildable_items)
 
@@ -280,7 +280,7 @@ module PodBuilder
         pods_to_build += dependencies
 
         return pods_to_build.uniq
-      end      
+      end
     end
   end
 end

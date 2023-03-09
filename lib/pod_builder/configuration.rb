@@ -1,8 +1,8 @@
-require 'json'
-require 'tmpdir'
+require "json"
+require "tmpdir"
 
-module PodBuilder  
-  class Configuration  
+module PodBuilder
+  class Configuration
     # Remember to update README.md accordingly
     DEFAULT_BUILD_SETTINGS = {
       "ENABLE_BITCODE" => "NO",
@@ -12,46 +12,46 @@ module PodBuilder
       "CODE_SIGN_IDENTITY" => "",
       "CODE_SIGNING_REQUIRED" => "NO",
       "CODE_SIGN_ENTITLEMENTS" => "",
-      "CODE_SIGNING_ALLOWED" => "NO"
+      "CODE_SIGNING_ALLOWED" => "NO",
     }.freeze
     DEFAULT_SPEC_OVERRIDE = {
       "Google-Mobile-Ads-SDK" => {
-        "module_name": "GoogleMobileAds"
+        "module_name": "GoogleMobileAds",
       },
       "glog" => {
-        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" }
+        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" },
       },
       "DoubleConversion" => {
-        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" }
+        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" },
       },
       "Folly" => {
-        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" }
+        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" },
       },
       "Flipper-DoubleConversion" => {
-        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" }
+        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" },
       },
       "Flipper-Folly" => {
-        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" }
-      }
+        "pod_target_xcconfig": { "DEFINES_MODULE": "NO" },
+      },
     }.freeze
     DEFAULT_BUILD_SETTINGS_OVERRIDES = {
       "SBTUITestTunnelClient" => {
-        "ENABLE_BITCODE": "NO"
-      }
+        "ENABLE_BITCODE": "NO",
+      },
     }.freeze
-    
+
     private_constant :DEFAULT_BUILD_SETTINGS
     private_constant :DEFAULT_BUILD_SETTINGS_OVERRIDES
     private_constant :DEFAULT_SPEC_OVERRIDE
-    
-    class <<self      
+
+    class << self
       attr_accessor :allow_building_development_pods
       attr_accessor :build_settings
       attr_accessor :build_settings_overrides
       attr_accessor :build_system
       attr_accessor :library_evolution_support
       attr_accessor :base_path
-      attr_accessor :spec_overrides      
+      attr_accessor :spec_overrides
       attr_accessor :skip_licenses
       attr_accessor :skip_pods
       attr_accessor :force_prebuild_pods
@@ -121,22 +121,22 @@ module PodBuilder
 
     @development_team = ""
     @development_language = nil
-    
+
     def self.check_inited
       raise "\n\nNot inited, run `pod_builder init`\n".red if podbuilder_path.nil?
     end
-    
+
     def self.exists
       return !config_path.nil? && File.exist?(config_path)
     end
-    
+
     def self.load
       unless podbuilder_path
         return
       end
-      
+
       Configuration.base_path = podbuilder_path
-      
+
       if exists
         begin
           json = JSON.parse(File.read(config_path))
@@ -263,12 +263,12 @@ module PodBuilder
 
         sanity_check()
       end
-      
+
       dev_pods_configuration_path = File.join(Configuration.base_path, Configuration.dev_pods_configuration_filename)
-      
+
       if File.exist?(dev_pods_configuration_path)
         begin
-          json = JSON.parse(File.read(dev_pods_configuration_path))  
+          json = JSON.parse(File.read(dev_pods_configuration_path))
         rescue => exception
           raise "\n\n#{File.basename(dev_pods_configuration_path)} is an invalid JSON\n".red
         end
@@ -282,10 +282,10 @@ module PodBuilder
         lockfile_path = File.join(PodBuilder::home, lockfile_name)
       end
     end
-    
+
     def self.write
       config = {}
-      
+
       config["project_name"] = Configuration.project_name
       config["spec_overrides"] = Configuration.spec_overrides
       config["skip_licenses"] = Configuration.skip_licenses
@@ -304,11 +304,11 @@ module PodBuilder
       config["react_native_project"] = Configuration.react_native_project
       config["development_team"] = Configuration.development_team
       config["development_language"] = Configuration.development_language || "en"
-      
+
       File.write(config_path, JSON.pretty_generate(config))
     end
-    
-    private 
+
+    private
 
     def self.sanity_check
       Configuration.skip_pods.each do |pod|
@@ -322,12 +322,12 @@ module PodBuilder
         raise "\n\nInvalid PodBuilder.json configuration: 'build_xcframeworks_all' is false and 'build_xcframeworks_exclude' is not empty\n".red if Configuration.build_xcframeworks_exclude.count > 0
       end
     end
-    
+
     def self.config_path
       unless path = podbuilder_path
         return nil
       end
-      
+
       return File.join(path, Configuration.configuration_filename)
     end
 
@@ -346,5 +346,5 @@ module PodBuilder
 
       return path
     end
-  end  
+  end
 end
