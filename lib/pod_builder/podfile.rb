@@ -1,8 +1,9 @@
-require 'json'
+require "json"
+
 module PodBuilder
   class Podfile
-    PODBUILDER_LOCK_ACTION = ["raise \"\\n🚨  Do not launch 'pod install' manually, use `pod_builder` instead!\\n\" if !File.exist?('pod_builder.lock')"].freeze    
-    
+    PODBUILDER_LOCK_ACTION = ["raise \"\\n🚨  Do not launch 'pod install' manually, use `pod_builder` instead!\\n\" if !File.exist?('pod_builder.lock')"].freeze
+
     def self.from_podfile_items(items, analyzer, build_configuration, install_using_frameworks, build_catalyst, build_xcframeworks)
       raise "\n\nno items\n".red unless items.count > 0
 
@@ -19,35 +20,36 @@ module PodBuilder
       end
 
       sources = analyzer.sources
-      
+
       cwd = File.dirname(File.expand_path(__FILE__))
       podfile = File.read("#{cwd}/templates/build_podfile.template")
 
       platform = analyzer.instance_variable_get("@result").targets.first.platform
 
-      podfile.sub!("%%%use_frameworks%%%", install_using_frameworks ? "use_frameworks!" : "use_modular_headers!") 
-      podfile.sub!("%%%uses_frameworks%%%", install_using_frameworks ? "true" : "false") 
-      podfile.sub!("%%%build_xcframeworks%%%", build_xcframeworks ? "true" : "false") 
-      podfile.sub!("%%%build_catalyst%%%", build_catalyst ? "true" : "false") 
-      
+      podfile.sub!("%%%use_frameworks%%%", install_using_frameworks ? "use_frameworks!" : "use_modular_headers!")
+      podfile.sub!("%%%uses_frameworks%%%", install_using_frameworks ? "true" : "false")
+      podfile.sub!("%%%build_xcframeworks%%%", build_xcframeworks ? "true" : "false")
+      podfile.sub!("%%%build_catalyst%%%", build_catalyst ? "true" : "false")
+
       podfile.sub!("%%%platform_name%%%", platform.name.to_s)
       podfile.sub!("%%%deployment_version%%%", platform.deployment_target.version)
 
       podfile.sub!("%%%sources%%%", sources.map { |x| "source '#{x.url}'" }.join("\n"))
 
       podfile.sub!("%%%build_configuration%%%", build_configuration.capitalize)
+      podfile.sub!("%%%keep_swiftmodules%%%", Configuration.keep_swiftmodules ? "true" : "false")
 
       podfile.sub!("%%%development_team%%%", development_team)
 
       podfile_build_settings = ""
-      
+
       pod_dependencies = {}
-      
+
       items.each do |item|
         build_settings = Configuration.build_settings.dup
 
         item_build_settings = Configuration.build_settings_overrides[item.name].dup || {}
-        
+
         # These settings need to be set as is to properly build frameworks
         build_settings["SWIFT_COMPILATION_MODE"] = "wholemodule"
         build_settings["ONLY_ACTIVE_ARCH"] = "NO"
@@ -94,7 +96,7 @@ module PodBuilder
         end
 
         # All the below settings should be merged with global (Configuration.build_settings) or per pod build_settings (Configuration.build_settings_overrides)
-        build_settings["OTHER_SWIFT_FLAGS"] = build_settings.fetch("OTHER_SWIFT_FLAGS", "") + other_swift_flags_override        
+        build_settings["OTHER_SWIFT_FLAGS"] = build_settings.fetch("OTHER_SWIFT_FLAGS", "") + other_swift_flags_override
 
         podfile_build_settings += "set_build_settings(\"#{item.root_name}\", #{build_settings.to_s}, installer)\n  "
 
@@ -106,7 +108,7 @@ module PodBuilder
             next overridded_module_name
           end
         }.compact
-  
+
         if dependency_names.count > 0
           pod_dependencies[item.root_name] = dependency_names
         end
@@ -117,9 +119,9 @@ module PodBuilder
       podfile.sub!("%%%build_system%%%", Configuration.build_system)
 
       podfile.sub!("%%%pods%%%", "\"#{items.map(&:name).join('", "')}\"")
-      
+
       podfile.sub!("%%%pods_dependencies%%%", pod_dependencies.to_s)
-      
+
       podfile.sub!("%%%targets%%%", items.map(&:entry).join("\n  "))
 
       return podfile
@@ -129,7 +131,7 @@ module PodBuilder
       unless Configuration.restore_enabled && (podfile_items.count + updated_pods.count) > 0
         return
       end
-      
+
       puts "Writing Restore Podfile".yellow
 
       podfile_items = podfile_items.dup
@@ -140,7 +142,7 @@ module PodBuilder
         restore_podfile_items = podfile_items_at(podfile_restore_path, include_prebuilt = true)
 
         podfile_items.map! { |podfile_item|
-          if updated_pod = updated_pods.detect { |x| x.name == podfile_item.name } then
+          if updated_pod = updated_pods.detect { |x| x.name == podfile_item.name }
             updated_pod
           elsif updated_pods.any? { |x| podfile_item.root_name == x.root_name } == false && # podfile_item shouldn't be among those being updated (including root specification)
                 restored_pod = restore_podfile_items.detect { |x| x.name == podfile_item.name }
@@ -150,8 +152,8 @@ module PodBuilder
           end
         }
       end
-      
-      result_targets = analyzer.instance_variable_get("@result").targets.map(&:name) 
+
+      result_targets = analyzer.instance_variable_get("@result").targets.map(&:name)
       podfile_content = ["# Autogenerated by PodBuilder (https://github.com/Subito-it/PodBuilder)", "# Please don't modify this file", "\n"]
       podfile_content += analyzer.podfile.sources.map { |x| "source '#{x}'" }
       podfile_content += ["", "use_frameworks!", ""]
@@ -191,7 +193,7 @@ module PodBuilder
       if Configuration.react_native_project
         return write_prebuilt_react_native(all_buildable_items, analyzer)
       end
-  
+
       puts "Updating Application Podfile".yellow
 
       explicit_deps = analyzer.explicit_pods()
@@ -199,7 +201,7 @@ module PodBuilder
       explicit_deps.uniq!
       podbuilder_podfile_path = PodBuilder::basepath("Podfile")
       rel_path = Pathname.new(podbuilder_podfile_path).relative_path_from(Pathname.new(PodBuilder::project_path)).to_s
-        
+
       podfile_content = File.read(podbuilder_podfile_path)
 
       exclude_lines = Podfile::PODBUILDER_LOCK_ACTION.map { |x| strip_line(x) }
@@ -211,32 +213,32 @@ module PodBuilder
           next
         end
 
-        if pod_name = pod_definition_in(line, true)      
+        if pod_name = pod_definition_in(line, true)
           if podfile_item = all_buildable_items.detect { |x| x.name == pod_name }
             marker = podfile_item.prebuilt_marker()
 
             non_explicit_dependencies = podfile_item.recursive_dependencies(all_buildable_items) - explicit_deps
             non_explicit_dependencies_root_names = non_explicit_dependencies.map(&:root_name).uniq.filter { |t| t != podfile_item.root_name }
-            non_explicit_dependencies = non_explicit_dependencies_root_names.map { |x| 
+            non_explicit_dependencies = non_explicit_dependencies_root_names.map { |x|
               if item = all_buildable_items.detect { |t| x == t.name }
-                item                    
+                item
               else
                 item = all_buildable_items.detect { |t| x == t.root_name }
               end
             }.compact
-            
+
             non_explicit_dependencies.each do |dep|
               dep_item = all_buildable_items.detect { |x| x.name == dep.name }
 
-              if File.exist?(dep_item.prebuilt_podspec_path) && !dep_item.is_prebuilt 
+              if File.exist?(dep_item.prebuilt_podspec_path) && !dep_item.is_prebuilt
                 pod_name = dep_item.prebuilt_entry(false, false)
                 prebuilt_lines.push("#{line.detect_indentation}#{pod_name}#{marker}\n")
               end
 
               explicit_deps.push(dep)
-            end       
+            end
 
-            if File.exist?(podfile_item.prebuilt_podspec_path) && !podfile_item.is_prebuilt 
+            if File.exist?(podfile_item.prebuilt_podspec_path) && !podfile_item.is_prebuilt
               prebuilt_lines.push("#{line.detect_indentation}#{podfile_item.prebuilt_entry}\n")
               next
             end
@@ -256,7 +258,7 @@ module PodBuilder
       File.write(project_podfile_path, podfile_content)
     end
 
-    def self.write_prebuilt_react_native(all_buildable_items, analyzer)  
+    def self.write_prebuilt_react_native(all_buildable_items, analyzer)
       puts "Updating Application Podfile".yellow
 
       podbuilder_podfile_path = PodBuilder::basepath("Podfile")
@@ -278,7 +280,7 @@ module PodBuilder
 
       Dir.chdir(PodBuilder::project_path) do
         bundler_prefix = Configuration.use_bundler ? "bundle exec " : ""
-        
+
         if Configuration.react_native_project
           system("#{bundler_prefix}pod deintegrate;")
         end
@@ -295,7 +297,7 @@ module PodBuilder
     def self.pod_definition_in(line, include_commented)
       stripped_line = strip_line(line)
       matches = stripped_line.match(/(^pod')(.*?)(')/)
-      
+
       if matches&.size == 4 && (include_commented || !stripped_line.start_with?("#"))
         return matches[2]
       else
@@ -320,7 +322,7 @@ module PodBuilder
       restore_content.each_line do |line|
         if pod_name = pod_definition_in(line, false)
           if pod_items.map(&:name).include?(pod_name)
-            cleaned_lines.push(line)      
+            cleaned_lines.push(line)
           end
         else
           cleaned_lines.push(line)
@@ -406,7 +408,7 @@ module PodBuilder
       # resolve potentially wrong pod name case
       podfile_path = PodBuilder::basepath("Podfile")
       content = File.read(podfile_path)
-        
+
       current_section = ""
       content.each_line do |line|
         matches = line.gsub("\"", "'").match(/pod '(.*?)'/)
@@ -449,7 +451,7 @@ module PodBuilder
       end
 
       return replace_path
-    end  
+    end
 
     def self.indentation_from_string(content)
       lines = content.split("\n").select { |x| !x.empty? }
@@ -462,7 +464,7 @@ module PodBuilder
 
           if current_doesnt_begin_with_whitespace && [" ", "\t"].include?(next_line_first_char)
             return next_line[/\A\s*/]
-          end          
+          end
         end
       end
 
@@ -491,17 +493,17 @@ module PodBuilder
       buildable_items = []
       begin
         installer, analyzer = Analyze.installer_at(PodBuilder::basepath)
-      
+
         podfile_items = Analyze.podfile_items(installer, analyzer)
-        buildable_items = podfile_items.select { |item| include_prebuilt || !item.is_prebuilt }   
+        buildable_items = podfile_items.select { |item| include_prebuilt || !item.is_prebuilt }
       rescue Exception => e
         raise e
       ensure
         Dir.chdir(current_dir)
-      
+
         if File.basename(podfile_path) != "Podfile"
           File.rename(PodBuilder::basepath("Podfile.tmp"), PodBuilder::basepath("Podfile"))
-        end  
+        end
       end
 
       return buildable_items
@@ -522,7 +524,7 @@ module PodBuilder
     def self.add(entries, marker, podfile_content)
       file_indentation = indentation_from_string(podfile_content)
 
-      entries = entries.map { |x| "#{file_indentation}#{x}\n"}
+      entries = entries.map { |x| "#{file_indentation}#{x}\n" }
 
       marker_found = false
       podfile_lines = []
@@ -547,7 +549,7 @@ module PodBuilder
 
       return podfile_lines.join
     end
-    
+
     def self.update_path_entries(podfile_content, path_transform)
       regex = "(\s*pod\s*['|\"])(.*?)(['|\"])(.*?):(path|podspec)(\s*=>\s*['|\"])(.*?)(['|\"])"
 
@@ -567,7 +569,7 @@ module PodBuilder
           end
 
           replace_path = path_transform.call(path)
-                    
+
           updated_path_line = line.gsub(/#{regex}/, '\1\2\3\4:\5\6' + replace_path.to_s + '\8\9')
           podfile_lines.push(updated_path_line)
         else
@@ -578,7 +580,7 @@ module PodBuilder
       return podfile_lines.join
     end
 
-    def self.update_project_entries(podfile_content, path_transform)      
+    def self.update_project_entries(podfile_content, path_transform)
       regex = "(\s*project\s*['|\"])(.*?)(['|\"])"
 
       podfile_lines = []
@@ -596,7 +598,7 @@ module PodBuilder
           end
 
           replace_path = path_transform.call(path)
-                    
+
           updated_path_line = line.gsub(/#{regex}/, '\1' + replace_path.to_s + '\3\4')
           podfile_lines.push(updated_path_line)
         else
@@ -627,7 +629,7 @@ module PodBuilder
           end
 
           replace_path = path_transform.call(path)
-                    
+
           updated_path_line = line.gsub(/#{regex}/, '\1' + replace_path.to_s + '\3\4')
           podfile_lines.push(updated_path_line)
         else
@@ -648,7 +650,7 @@ module PodBuilder
       config_dest_path = PodBuilder::basepath("rn_config.json")
 
       raise "\n\nFailed generating react native configuration file\n".red unless system("node '#{bin_js}' config > #{config_dest_path}")
-      
+
       content = File.read(config_dest_path)
 
       content.gsub!(PodBuilder::project_path, "..")
@@ -657,11 +659,11 @@ module PodBuilder
       json = JSON.parse(content)
       begin
         json["project"]["ios"]["sourceDir"] = "./"
-        json["project"]["ios"]["podfile"] = "./"  
+        json["project"]["ios"]["podfile"] = "./"
       rescue => exception
         raise "\n\nFailed updating react native configuration json\n".red
       end
-      
+
       File.write(config_dest_path, JSON.pretty_generate(json))
 
       return "rn_config = JSON.load(File.read(\"rn_config.json\")) # pb added\n\n" + podfile_content
@@ -710,7 +712,7 @@ module PodBuilder
           unless matches&.size == 2
             return podfile_content
           end
-    
+
           indentation = matches[1]
           lines.push("#{indentation}use_native_modules!(rn_config) # pb added\n")
           lines.push("#{indentation}# #{line.strip} # pb removed\n")
@@ -744,7 +746,7 @@ module PodBuilder
     end
 
     def self.prepare_react_native_compilation_workarounds(podfile_content)
-      return  podfile_content + """
+      return podfile_content + "" "
 
 def prepare_rn_react_codegen
   # Beginning with version 0.68.0 react native project compilation relies on some autogenerated files
@@ -813,7 +815,7 @@ post_install do |installer|
       end
   end
 end
-      """
+      " ""
     end
   end
 end

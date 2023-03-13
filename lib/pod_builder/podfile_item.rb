@@ -22,7 +22,7 @@ module PodBuilder
     # @return [String] The name of the pod, which might be the subspec name if appicable
     #
     attr_reader :name
-    
+
     # @return [String] The pinned tag of the pod, if any
     #
     attr_reader :tag
@@ -46,15 +46,15 @@ module PodBuilder
     # @return [String] The pinned commit of the pod, if any
     #
     attr_reader :commit
-    
+
     # @return [String] The module name
     #
     attr_reader :module_name
-    
+
     # @return [String] The swift version if applicable
     #
     attr_reader :swift_version
-    
+
     # @return [Array<String>] The pod's dependency names, if any. Use dependencies() to get the [Array<PodfileItem>]
     #
     attr_reader :dependency_names
@@ -62,11 +62,11 @@ module PodBuilder
     # @return [Array<String>] The pod's external dependency names (excluding subspecs), if any
     #
     attr_reader :external_dependency_names
-    
+
     # @return [Bool] True if the pod is shipped as a static binary
     #
     attr_reader :is_static
-    
+
     # @return [Array<Hash>] The pod's xcconfig configuration
     #
     attr_reader :xcconfig
@@ -146,7 +146,7 @@ module PodBuilder
     # @return [Bool] True if warnings should be inhibited for the pod
     #
     attr_accessor :inhibit_warnings
-    
+
     # Initialize a new instance
     #
     # @param [Specification] spec
@@ -166,7 +166,7 @@ module PodBuilder
         @tag = checkout_options[opts_key][:tag]
         @commit = checkout_options[opts_key][:commit]
         @path = checkout_options[opts_key][:path]
-        @podspec_path = checkout_options[opts_key][:podspec]        
+        @podspec_path = checkout_options[opts_key][:podspec]
         @branch = checkout_options[opts_key][:branch]
         @is_external = true
       else
@@ -174,13 +174,13 @@ module PodBuilder
         @tag = spec.root.source[:tag]
         @commit = spec.root.source[:commit]
         @is_external = false
-      end    
+      end
 
       @defines_module = nil # nil is not specified
       if override = spec.attributes_hash.dig("pod_target_xcconfig", "DEFINES_MODULE")
         @defines_module = (override == "YES")
       end
-      
+
       @vendored_frameworks = extract_vendored_frameworks(spec, all_specs)
       @vendored_libraries = extract_vendored_libraries(spec, all_specs)
 
@@ -190,21 +190,21 @@ module PodBuilder
 
       @frameworks += extract_array(spec.attributes_hash, "framework")
       @frameworks += extract_array(spec.attributes_hash, "frameworks")
-      supported_platforms.each do |platform|        
+      supported_platforms.each do |platform|
         @frameworks += extract_array(spec.attributes_hash[platform], "framework")
         @frameworks += extract_array(spec.attributes_hash[platform], "frameworks")
-      end       
-      
+      end
+
       @weak_frameworks += extract_array(spec.attributes_hash, "weak_framework")
-      @weak_frameworks += extract_array(spec.attributes_hash, "weak_frameworks")  
-      supported_platforms.each do |platform|        
+      @weak_frameworks += extract_array(spec.attributes_hash, "weak_frameworks")
+      supported_platforms.each do |platform|
         @weak_frameworks += extract_array(spec.attributes_hash[platform], "weak_framework")
         @weak_frameworks += extract_array(spec.attributes_hash[platform], "weak_frameworks")
       end
 
       @libraries += extract_array(spec.attributes_hash, "library")
-      @libraries += extract_array(spec.attributes_hash, "libraries")  
-      supported_platforms.each do |platform|        
+      @libraries += extract_array(spec.attributes_hash, "libraries")
+      supported_platforms.each do |platform|
         @libraries += extract_array(spec.attributes_hash[platform], "library")
         @libraries += extract_array(spec.attributes_hash[platform], "libraries")
       end
@@ -213,26 +213,26 @@ module PodBuilder
 
       @version = spec.root.version.version
       @available_versions = spec.respond_to?(:spec_source) ? spec.spec_source.versions(@root_name)&.map(&:to_s) : [@version]
-      
+
       @swift_version = spec.root.swift_version&.to_s
       @module_name = spec.root.module_name
 
       @default_subspecs = extract_array(spec.attributes_hash, "default_subspecs")
       if default_subspec = spec.attributes_hash["default_subspec"]
-        @default_subspecs.push(default_subspec)        
+        @default_subspecs.push(default_subspec)
       end
 
       if @name == @root_name && @default_subspecs.empty?
         @default_subspecs += all_specs.select { |t| t.name.include?("/") && t.name.split("/").first == @root_name }.map { |t| t.name.split("/").last }
       end
 
-      @dependency_names = spec.attributes_hash.fetch("dependencies", {}).keys + default_subspecs.map { |t| "#{@root_name}/#{t}" } 
-      supported_platforms.each do |platform|        
+      @dependency_names = spec.attributes_hash.fetch("dependencies", {}).keys + default_subspecs.map { |t| "#{@root_name}/#{t}" }
+      supported_platforms.each do |platform|
         @dependency_names += (spec.attributes_hash.dig(platform, "dependencies") || {}).keys
       end
       @dependency_names.uniq!
 
-      @external_dependency_names = @dependency_names.select { |t| !t.start_with?(root_name)  }
+      @external_dependency_names = @dependency_names.select { |t| !t.start_with?(root_name) }
 
       @is_static = spec.root.attributes_hash["static_framework"] || false
       @xcconfig = spec.root.attributes_hash["xcconfig"] || {}
@@ -244,20 +244,20 @@ module PodBuilder
       end
 
       default_subspecs_specs ||= begin
-        subspecs = all_specs.select { |t| t.name.split("/").first == @root_name }
-        subspecs.select { |t| @default_subspecs.include?(t.name.split("/").last) }
-      end
+          subspecs = all_specs.select { |t| t.name.split("/").first == @root_name }
+          subspecs.select { |t| @default_subspecs.include?(t.name.split("/").last) }
+        end
       root_spec = all_specs.detect { |t| t.name == @root_name } || spec
       @source_files = source_files_from([spec, root_spec] + default_subspecs_specs)
-      
+
       @build_configuration = spec.root.attributes_hash.dig("pod_target_xcconfig", "prebuild_configuration") || "release"
       @build_configuration.downcase!
 
       default_license = "MIT"
-      @license = spec.root.attributes_hash.fetch("license", {"type"=>"#{default_license}"})["type"] || default_license
+      @license = spec.root.attributes_hash.fetch("license", { "type" => "#{default_license}" })["type"] || default_license
       @summary = spec.root.attributes_hash.fetch("summary", "A summary for #{@name}")
-      @source = spec.root.attributes_hash.fetch("source", { "git"=>"https://github.com/Subito-it/PodBuilder.git" })
-      @authors = spec.root.attributes_hash.fetch("authors", {"PodBuilder"=>"pod@podbuilder.com"})
+      @source = spec.root.attributes_hash.fetch("source", { "git" => "https://github.com/Subito-it/PodBuilder.git" })
+      @authors = spec.root.attributes_hash.fetch("authors", { "PodBuilder" => "pod@podbuilder.com" })
       @homepage = spec.root.attributes_hash.fetch("homepage", "https://github.com/Subito-it/PodBuilder")
 
       if Configuration.build_xcframeworks_all
@@ -302,13 +302,13 @@ module PodBuilder
 
       spec_raw["dependencies"] = @dependency_names.map { |x| [x, []] }.to_h
 
-      spec = Pod::Specification.from_hash(spec_raw, parent_spec)   
+      spec = Pod::Specification.from_hash(spec_raw, parent_spec)
       all_subspec_items = all_poditems.select { |x| x.is_subspec && x.root_name == @name }
       spec.subspecs = all_subspec_items.map { |x| x.pod_specification(all_poditems, spec) }
 
       return spec
     end
-    
+
     def inspect
       return "#{@name} repo=#{@repo} pinned=#{@tag || @commit} is_static=#{@is_static} deps=#{@dependencies || "[]"}"
     end
@@ -325,8 +325,8 @@ module PodBuilder
       names = [name]
 
       deps = []
-      last_count = -1 
-      while deps.count != last_count do
+      last_count = -1
+      while deps.count != last_count
         last_count = deps.count
 
         updated_names = []
@@ -336,20 +336,20 @@ module PodBuilder
             updated_names += pod.dependency_names
           end
         end
-        
+
         names = updated_names.uniq
 
-        deps.uniq!  
+        deps.uniq!
       end
 
       root_names = deps.map(&:root_name).uniq
 
       # We need to build all other common subspecs to properly build the item
-      # Ex. 
+      # Ex.
       # PodA depends on DepA/subspec1
       # PodB depends on DepA/subspec2
       #
-      # When building PodA we need to build both DepA subspecs because they might 
+      # When building PodA we need to build both DepA subspecs because they might
       # contain different code
       deps += available_pods.select { |t| root_names.include?(t.root_name) && t.root_name != t.name }
 
@@ -386,25 +386,25 @@ module PodBuilder
 
       if is_external
         if @path
-          e += ", :path => '#{@path}'"  
+          e += ", :path => '#{@path}'"
         elsif @podspec_path
-          e += ", :podspec => '#{@podspec_path}'"  
+          e += ", :podspec => '#{@podspec_path}'"
         else
           if @repo
-            e += ", :git => '#{@repo}'"  
+            e += ", :git => '#{@repo}'"
           end
           if @tag
             e += ", :tag => '#{@tag}'"
           end
           if @commit
-            e += ", :commit => '#{@commit}'"  
+            e += ", :commit => '#{@commit}'"
           end
           if @branch
-            e += ", :branch => '#{@branch}'"  
+            e += ", :branch => '#{@branch}'"
           end
         end
       else
-        e += ", '=#{@version}'"  
+        e += ", '=#{@version}'"
       end
 
       e += e_suffix
@@ -415,7 +415,7 @@ module PodBuilder
           data = JSON.parse(File.read(prebuilt_info_path))
           swift_version = data["swift_version"]
           is_static = data["is_static"] || false
-        
+
           e += "#{prebuilt_marker()} is<#{is_static}>"
           if swift_version
             e += " sv<#{swift_version}>"
@@ -438,7 +438,7 @@ module PodBuilder
 
     def prebuilt_podspec_path(absolute_path = true)
       podspec_path = PodBuilder::prebuiltpath("#{@root_name}/#{@root_name}.podspec")
-      if absolute_path 
+      if absolute_path
         return podspec_path
       else
         pod_path = Pathname.new(podspec_path).relative_path_from(Pathname.new(PodBuilder::basepath)).to_s
@@ -476,7 +476,7 @@ module PodBuilder
     private
 
     # @return [Bool] True if it's a pod that doesn't provide source code (is already shipped as a prebuilt pod)
-    #    
+    #
     def extract_is_prebuilt(spec, all_specs, checkout_options, supported_platforms)
       if Configuration.force_prebuild_pods.include?(@root_name) || Configuration.force_prebuild_pods.include?(@name)
         return false
@@ -502,7 +502,7 @@ module PodBuilder
       # Therefore it can become tricky to understand which pods are already precompiled by boxing a .framework or .a
       embedded_as_vendored = vendored_frameworks.map { |x| File.basename(x) }.include?("#{module_name}.framework")
       embedded_as_static_lib = vendored_libraries.map { |x| File.basename(x) }.include?("lib#{module_name}.a")
-      
+
       only_headers = (source_files.count > 0 && @source_files.all? { |x| x.end_with?(".h") })
       no_sources = (@source_files.count == 0 || only_headers) && (@vendored_frameworks + @vendored_libraries).count > 0
 
@@ -532,10 +532,10 @@ module PodBuilder
       supported_platforms = spec.available_platforms.flatten.map(&:name).map(&:to_s)
 
       items += [spec.attributes_hash["vendored_libraries"]]
-      items += [spec.attributes_hash["vendored_library"]]  
+      items += [spec.attributes_hash["vendored_library"]]
 
       items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_libraries"] }
-      items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_library"] }  
+      items += supported_platforms.map { |x| spec.attributes_hash.fetch(x, {})["vendored_library"] }
 
       return items.flatten.uniq.compact
     end
@@ -554,17 +554,17 @@ module PodBuilder
     end
 
     def source_files_from_string(source)
-      # Transform source file entries 
+      # Transform source file entries
       # "Networking{Response,Request}*.{h,m}" -> ["NetworkingResponse*.h", "NetworkingResponse*.m", "NetworkingRequest*.h", "NetworkingRequest*.m"]
       files = []
-      if source.is_a? String 
+      if source.is_a? String
         matches = source.match(/(.*){(.*)}(.*)/)
         if matches&.size == 4
           res = matches[2].split(",").map { |t| "#{matches[1]}#{t}#{matches[3]}" }
           if res.any? { |t| t.include?("{") }
             return res.map { |t| source_files_from_string(t) }.flatten
           end
-  
+
           return res
         end
 
