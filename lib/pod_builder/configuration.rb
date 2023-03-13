@@ -75,6 +75,7 @@ module PodBuilder
       attr_accessor :build_xcframeworks_all
       attr_accessor :build_xcframeworks_include
       attr_accessor :build_xcframeworks_exclude
+      attr_accessor :keep_swiftmodules
       attr_accessor :pre_actions
       attr_accessor :post_actions
       attr_accessor :development_team
@@ -115,6 +116,8 @@ module PodBuilder
     @build_xcframeworks_all = false
     @build_xcframeworks_include = []
     @build_xcframeworks_exclude = []
+
+    @keep_swiftmodules = false
 
     @pre_actions = {}
     @post_actions = {}
@@ -237,6 +240,11 @@ module PodBuilder
         if value = json["build_xcframeworks_exclude"]
           if value.is_a?(Array)
             Configuration.build_xcframeworks_exclude = value
+          end
+        end
+        if value = json["keep_swiftmodules"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.keep_swiftmodules = value
           end
         end
         if value = json["pre_actions"]

@@ -322,6 +322,7 @@ Pod::HooksManager.register("podbuilder-rome", :post_install) do |installer_conte
   end
   build_catalyst = user_options.fetch("build_catalyst", false)
   build_xcframeworks = user_options.fetch("build_xcframeworks", false)
+  keep_swiftmodules = user_options.fetch("keep_swiftmodules", false)
 
   prebuilt_root_paths = JSON.parse(user_options["prebuilt_root_paths"].gsub("=>", ":"))
 
@@ -406,6 +407,20 @@ Pod::HooksManager.register("podbuilder-rome", :post_install) do |installer_conte
       log_path = "#{PodBuilder::Configuration.build_base_path}/create_framework.log"
       create_framework_cmd = "xcodebuild -create-xcframework #{framework_params} -output '#{xcframework_path}' > #{log_path}"
       raise "\n\nFailed packing xcframework! See #{log_path}\n".red if !system(create_framework_cmd)
+
+      if keep_swiftmodules
+        # At cost of losing ABI stability we restore .swiftmodule files that are removed by xcodebuild to improve build times
+        swiftinterfaces = Dir.glob("#{xcframework_path}/**/*.swiftinterface").reject { |t| t.include?("private.swiftinterface") }
+        swiftmodules = Dir.glob("#{build_dir}/**/#{module_name}.framework/**/*.swiftmodule").select { |t| File.file?(t) }
+
+        swiftinterfaces.each do |path|
+          expected_swiftmodule_name = File.basename(path, ".*")
+          if swiftmodule_path = swiftmodules.detect { |t| File.basename(t, ".*") == expected_swiftmodule_name }
+            destination_path = File.dirname(path)
+            FileUtils.cp(swiftmodule_path, destination_path)
+          end
+        end
+      end
 
       if enable_dsym
         xcodebuild_settings.each do |xcodebuild_setting|
