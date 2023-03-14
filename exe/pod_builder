@@ -136,6 +136,9 @@ Options:
         opts.on("-u", "--skip-repo-update", "Skip CocoaPods repo update") do |o|
           OPTIONS[:update_repos] = false
         end
+        opts.on("-f", "--force", "Rebuild swiftmodules even if they already exists") do |o|
+          OPTIONS[:force_rebuild] = true
+        end
         opts.on("-q", "--quiet", "Reduce verbosity") do |o|
           OPTIONS[:quiet] = o
         end

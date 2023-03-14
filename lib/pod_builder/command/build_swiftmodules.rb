@@ -38,7 +38,7 @@ module PodBuilder
 
           swiftinterfaces_and_arch_for_module(module_name, swiftinterfaces_paths).each do |dep_swiftinterface_path, arch|
             swiftmodule_dest = "#{File.dirname(dep_swiftinterface_path)}/#{arch}.swiftmodule"
-            if File.exist?(swiftmodule_dest)
+            if File.exist?(swiftmodule_dest) && !OPTIONS.has_key?(:force_rebuild)
               puts "Swiftmodule exists, skipping #{dep_swiftinterface_path}".magenta if !quiet
               next
             end
