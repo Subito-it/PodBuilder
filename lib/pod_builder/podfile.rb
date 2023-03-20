@@ -86,7 +86,7 @@ module PodBuilder
 
         # Don't store .pcm info in binary, see https://forums.swift.org/t/swift-behavior-of-gmodules-and-dsyms/23211/3
         build_settings["CLANG_ENABLE_MODULE_DEBUGGING"] = "NO"
-        other_swift_flags_override = " $(inherited) -Xfrontend -no-clang-module-breadcrumbs"
+        other_swift_flags_override = " $(inherited) -Xfrontend -no-clang-module-breadcrumbs -Xfrontend -no-serialize-debugging-options"
 
         item_build_settings.each do |k, v|
           # Do not allow to override above settings which are mandatory for a correct compilation
