@@ -308,6 +308,10 @@ Specify which pods PodBuilder should NOT be built as .xcframeworks when `build_x
 
 Specify which pods PodBuilder should be built as .xcframeworks. Will enable `library_evolution_support`. Default value: []
 
+#### `generate_coverage`
+
+Specify if coverage data for use with profiled execution should be generated. Default value: false
+
 #### `library_evolution_support`
 
 Specify if Swift frameworks should be compiled with library evolution support (BUILD_LIBRARY_FOR_DISTRIBUTION). Default value: false

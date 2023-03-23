@@ -87,6 +87,12 @@ module PodBuilder
         # Don't store .pcm info in binary, see https://forums.swift.org/t/swift-behavior-of-gmodules-and-dsyms/23211/3
         build_settings["CLANG_ENABLE_MODULE_DEBUGGING"] = "NO"
         other_swift_flags_override = " $(inherited) -Xfrontend -no-clang-module-breadcrumbs -Xfrontend -no-serialize-debugging-options"
+        other_c_flags_override = " $(inherited)"
+
+        if Configuration.generate_coverage
+          other_swift_flags_override += " -profile-coverage-mapping -profile-generate"
+          other_c_flags_override += " -fprofile-instr-generate -fcoverage-mapping"
+        end
 
         item_build_settings.each do |k, v|
           # Do not allow to override above settings which are mandatory for a correct compilation
@@ -97,6 +103,7 @@ module PodBuilder
 
         # All the below settings should be merged with global (Configuration.build_settings) or per pod build_settings (Configuration.build_settings_overrides)
         build_settings["OTHER_SWIFT_FLAGS"] = build_settings.fetch("OTHER_SWIFT_FLAGS", "") + other_swift_flags_override
+        build_settings["OTHER_CFLAGS"] = build_settings.fetch("OTHER_CFLAGS", "") + other_c_flags_override
 
         podfile_build_settings += "set_build_settings(\"#{item.root_name}\", #{build_settings.to_s}, installer)\n  "
 
