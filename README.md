@@ -312,6 +312,10 @@ Specify which pods PodBuilder should be built as .xcframeworks. Will enable `lib
 
 Specify if coverage data for use with profiled execution should be generated. Default value: false
 
+#### `remap_coverage_to_project_root`
+
+Specify if code coverage source code references should be remapped with relative paths to the project root folder. Default value: false
+
 #### `library_evolution_support`
 
 Specify if Swift frameworks should be compiled with library evolution support (BUILD_LIBRARY_FOR_DISTRIBUTION). Default value: false

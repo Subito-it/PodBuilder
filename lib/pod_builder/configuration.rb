@@ -76,6 +76,7 @@ module PodBuilder
       attr_accessor :build_xcframeworks_include
       attr_accessor :build_xcframeworks_exclude
       attr_accessor :generate_coverage
+      attr_accessor :remap_coverage_to_project_root
       attr_accessor :keep_swiftmodules
       attr_accessor :pre_actions
       attr_accessor :post_actions
@@ -119,6 +120,8 @@ module PodBuilder
     @build_xcframeworks_exclude = []
 
     @generate_coverage = false
+    @remap_coverage_to_project_root = false
+
     @keep_swiftmodules = false
 
     @pre_actions = {}
@@ -247,6 +250,11 @@ module PodBuilder
         if value = json["generate_coverage"]
           if [TrueClass, FalseClass].include?(value.class)
             Configuration.generate_coverage = value
+          end
+        end
+        if value = json["remap_coverage_to_project_root"]
+          if [TrueClass, FalseClass].include?(value.class)
+            Configuration.remap_coverage_to_project_root = value
           end
         end
         if value = json["keep_swiftmodules"]
