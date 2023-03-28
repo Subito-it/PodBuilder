@@ -43,6 +43,8 @@ module PodBuilder
 
       podfile_build_settings = ""
 
+      git_rootpath = PodBuilder::git_rootpath
+
       pod_dependencies = {}
 
       items.each do |item|
@@ -87,6 +89,36 @@ module PodBuilder
         # Don't store .pcm info in binary, see https://forums.swift.org/t/swift-behavior-of-gmodules-and-dsyms/23211/3
         build_settings["CLANG_ENABLE_MODULE_DEBUGGING"] = "NO"
         other_swift_flags_override = " $(inherited) -Xfrontend -no-clang-module-breadcrumbs -Xfrontend -no-serialize-debugging-options"
+        other_c_flags_override = " $(inherited)"
+
+        if Configuration.generate_coverage
+          other_swift_flags_override += " -profile-coverage-mapping -profile-generate"
+          other_c_flags_override += " -fprofile-instr-generate -fcoverage-mapping"
+        end
+
+        if Configuration.remap_coverage_to_project_root
+          # Remap coverage path from /tmp/pod_builder/Pods/ItemName -> path relative to project git_root
+          replacements = []
+          if path = item.path
+            replacements << ["#{Configuration.build_path}/Pods/#{item.root_name}", PodBuilder::basepath(path)]
+            replacements << ["#{Configuration.build_path}/Pods/#{File.basename(path)}", PodBuilder::basepath(path)]
+          else
+            replacements << ["#{Configuration.build_path}/Pods/#{item.root_name}", PodBuilder::project_path("Pods/#{item.root_name}")]
+          end
+          replacements.uniq!
+
+          replacements.each do |from, to|
+            to = "./" + Pathname.new(to).relative_path_from(Pathname.new(git_rootpath)).to_s
+
+            if from.start_with?("/tmp")
+              other_swift_flags_override += " -coverage-prefix-map \"/private#{from}\"=\"#{to}\""
+              other_c_flags_override += " -fcoverage-prefix-map=\"/private#{from}\"=\"#{to}\""
+            end
+
+            other_swift_flags_override += " -coverage-prefix-map \"#{from}\"=\"#{to}\""
+            other_c_flags_override += " -fcoverage-prefix-map=\"#{from}\"=\"#{to}\""
+          end
+        end
 
         item_build_settings.each do |k, v|
           # Do not allow to override above settings which are mandatory for a correct compilation
@@ -97,6 +129,7 @@ module PodBuilder
 
         # All the below settings should be merged with global (Configuration.build_settings) or per pod build_settings (Configuration.build_settings_overrides)
         build_settings["OTHER_SWIFT_FLAGS"] = build_settings.fetch("OTHER_SWIFT_FLAGS", "") + other_swift_flags_override
+        build_settings["OTHER_CFLAGS"] = build_settings.fetch("OTHER_CFLAGS", "") + other_c_flags_override
 
         podfile_build_settings += "set_build_settings(\"#{item.root_name}\", #{build_settings.to_s}, installer)\n  "
 
