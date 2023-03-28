@@ -115,7 +115,7 @@ module PodBuilder
     @build_using_repo_paths = false
     @react_native_project = false
 
-    @build_xcframeworks_all = false
+    @build_xcframeworks_all = true
     @build_xcframeworks_include = []
     @build_xcframeworks_exclude = []
 
