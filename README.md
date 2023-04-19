@@ -242,6 +242,18 @@ You may want to skip some pods to be prebuilt, you can do that as follows:
 }
 ```
 
+#### `skip_build_configuration_check`
+
+PodBuilder performs validation checks to prevent building pods that are marked to be built with different build configurations. In some edge case scenarious you might want to skip these checks as follows:
+
+```json
+{
+    "skip_build_configuration_check": [
+        "PodA"
+        ]
+}
+```
+
 
 #### `force_prebuild_pods`
 

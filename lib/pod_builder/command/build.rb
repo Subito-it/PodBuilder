@@ -232,6 +232,8 @@ module PodBuilder
       end
 
       def self.check_dependencies_build_configurations(pods)
+        pods = pods.reject { |t| Configuration::skip_build_configuration_check.include?(t.name) }
+
         pods.each do |pod|
           pod_dependency_names = pod.dependency_names.select { |x| !pod.has_common_spec(x) }
 

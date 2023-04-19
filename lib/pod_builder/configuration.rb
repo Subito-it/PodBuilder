@@ -54,6 +54,7 @@ module PodBuilder
       attr_accessor :spec_overrides
       attr_accessor :skip_licenses
       attr_accessor :skip_pods
+      attr_accessor :skip_build_configuration_check
       attr_accessor :force_prebuild_pods
       attr_accessor :license_filename
       attr_accessor :development_pods_paths
@@ -94,6 +95,7 @@ module PodBuilder
     @base_path = "PodBuilder" # Not nice. This value is used only for initial initization. Once config is loaded it will be an absolute path. FIXME
     @skip_licenses = []
     @skip_pods = ["GoogleMaps", "React-RCTFabric", "React-Core", "React-CoreModules", "FBReactNativeSpec", "fmt", "RCT-Folly", "React-jsi"] # Not including React-RCTNetwork might loose some debug warnings
+    @skip_build_configuration_check = []
     @force_prebuild_pods = []
     @license_filename = "Pods-acknowledgements"
     @development_pods_paths = []
@@ -165,6 +167,11 @@ module PodBuilder
         if value = json["skip_pods"]
           if value.is_a?(Array)
             Configuration.skip_pods = value
+          end
+        end
+        if value = json["skip_build_configuration_check"]
+          if value.is_a?(Array)
+            Configuration.skip_build_configuration_check = value
           end
         end
         if value = json["force_prebuild_pods"]
@@ -313,6 +320,7 @@ module PodBuilder
       config["spec_overrides"] = Configuration.spec_overrides
       config["skip_licenses"] = Configuration.skip_licenses
       config["skip_pods"] = Configuration.skip_pods
+      config["skip_build_configuration_check"] = Configuration.skip_build_configuration_check
       config["force_prebuild_pods"] = Configuration.force_prebuild_pods
       config["build_settings"] = Configuration.build_settings
       config["build_settings_overrides"] = Configuration.build_settings_overrides
