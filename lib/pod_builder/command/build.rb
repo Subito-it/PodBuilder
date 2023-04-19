@@ -241,7 +241,9 @@ module PodBuilder
           pods_with_unaligned_build_configuration = pods_with_common_deps.select { |x| x.build_configuration != pod.build_configuration }
           pods_with_unaligned_build_configuration.map!(&:name)
 
-          raise "\n\nDependencies of `#{pod.name}` don't have the same build configuration (#{pod.build_configuration}) of `#{pods_with_unaligned_build_configuration.join(",")}`'s dependencies\n".red if pods_with_unaligned_build_configuration.count > 0
+          if pods_with_unaligned_build_configuration.count > 0
+            raise "\n\nDependencies of `#{pod.name}` don't have the same build configuration (#{pod.build_configuration}) of `#{pods_with_unaligned_build_configuration.join(",")}`'s dependencies\n".red
+          end
         end
       end
 
