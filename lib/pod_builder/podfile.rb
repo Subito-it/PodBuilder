@@ -111,12 +111,12 @@ module PodBuilder
             to = "./" + Pathname.new(to).relative_path_from(Pathname.new(git_rootpath)).to_s
 
             if from.start_with?("/tmp")
-              other_swift_flags_override += " -coverage-prefix-map \"/private#{from}\"=\"#{to}\""
-              other_c_flags_override += " -fcoverage-prefix-map=\"/private#{from}\"=\"#{to}\""
+              other_swift_flags_override += " -coverage-prefix-map \"/private#{from}/\"=\"#{to}/\""
+              other_c_flags_override += " -fcoverage-prefix-map=\"/private#{from}/\"=\"#{to}/\""
+            else
+              other_swift_flags_override += " -coverage-prefix-map \"#{from}/\"=\"#{to}/\""
+              other_c_flags_override += " -fcoverage-prefix-map=\"#{from}/\"=\"#{to}/\""
             end
-
-            other_swift_flags_override += " -coverage-prefix-map \"#{from}\"=\"#{to}\""
-            other_c_flags_override += " -fcoverage-prefix-map=\"#{from}\"=\"#{to}\""
           end
         end
 
