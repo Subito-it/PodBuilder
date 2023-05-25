@@ -82,6 +82,7 @@ module PodBuilder
       result.merge!({ "version": pod_version })
       result.merge!({ "specs": (data["specs"] || []) })
       result.merge!({ "is_static": (data["is_static"] || false) })
+      result.merge!({ "pb_version": (data["pb_version"] || "0.0.0") })
       result.merge!({ "original_compile_path": (data["original_compile_path"] || "") })
 
       return pod_name, result

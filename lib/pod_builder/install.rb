@@ -70,7 +70,7 @@ module PodBuilder
 
         copy_prebuilt_items(podfile_items - prebuilt_entries)
 
-        prebuilt_info = prebuilt_info(podfile_items)
+        prebuilt_info = prebuilt_info(podfile_items, argument_pods)
         licenses = license_specifiers()
 
         if !OPTIONS.has_key?(:debug)
@@ -99,7 +99,7 @@ module PodBuilder
       end
     end
 
-    def self.prebuilt_info(podfile_items)
+    def self.prebuilt_info(podfile_items, argument_pods)
       gitignored_files = PodBuilder::gitignoredfiles
 
       swift_version = PodBuilder::system_swift_version
@@ -137,6 +137,9 @@ module PodBuilder
         data["original_compile_path"] = Pathname.new(Configuration.build_path).realpath.to_s
         if hash = build_folder_hash(podfile_item, gitignored_files)
           data["build_folder_hash"] = hash
+        end
+        if argument_pods.include?(podfile_item.root_name)
+          data["pb_version"] = PodBuilder::VERSION
         end
 
         ret.merge!({ podbuilder_file => data })
