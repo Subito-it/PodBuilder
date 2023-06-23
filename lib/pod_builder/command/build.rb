@@ -54,10 +54,10 @@ module PodBuilder
         argument_pods.uniq!
 
         # We need to split pods to build in 4 groups
-        # 1. pods to build in release
-        # 2. pods to build in debug
-        # 3. pods to build in release as xcframeworks
-        # 4. pods to build in debug as xcframeworks
+        # 1. pods to build in debug
+        # 2. pods to build in release
+        # 3. pods to build in debug as xcframeworks
+        # 4. pods to build in release as xcframeworks
 
         check_not_building_development_pods(pods_to_build)
 
@@ -81,9 +81,9 @@ module PodBuilder
         check_dependencies_build_configurations(all_buildable_items)
 
         # When building mixed framwork/xcframeworks pods xcframeworks should be built last
-        # so that the .xcframework overwrite the .framwork if the same pod needs to be built
+        # so that the .xcframework overwrite the .framework if the same pod needs to be built
         # in both ways.
-        # For example we might have configured to build onlt PodA as xcframework, another pod
+        # For example we might have configured to build only PodA as xcframework, another pod
         # PodB has a dependency to PodA. When Building PodB, PodA gets rebuilt as .framework
         # but then PodA gets rebuilt again as .xcframework overwriting the .framework.
         podfiles_items = [pods_to_build_debug] + [pods_to_build_release] + [pods_to_build_debug_xcframework] + [pods_to_build_release_xcframework]
