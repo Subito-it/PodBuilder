@@ -7,7 +7,7 @@ PodBuilder::Configuration::load
 
 %%%use_frameworks%%%
 
-plugin 'podbuilder-rome', {  dsym: true, configuration: '%%%build_configuration%%%', uses_frameworks: %%%uses_frameworks%%%, keep_swiftmodules: %%%keep_swiftmodules%%%, build_catalyst: %%%build_catalyst%%%, build_xcframeworks: %%%build_xcframeworks%%%, prebuilt_root_paths: '%%%prebuilt_root_paths%%%', pre_compile: Proc.new { |installer|
+plugin 'podbuilder-rome', {  dsym: true, configuration: '%%%build_configuration%%%', uses_frameworks: %%%uses_frameworks%%%, keep_swiftmodules: %%%keep_swiftmodules%%%, build_catalyst: %%%build_catalyst%%%, build_xcframeworks: %%%build_xcframeworks%%%, code_sign_identity: '%%%code_sign_identity%%%', prebuilt_root_paths: '%%%prebuilt_root_paths%%%', pre_compile: Proc.new { |installer|
 
   def set_build_settings(target_name, build_configurations, installer)
     installer.pods_project.targets.each do |target|

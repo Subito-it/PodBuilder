@@ -323,6 +323,7 @@ Pod::HooksManager.register("podbuilder-rome", :post_install) do |installer_conte
   build_catalyst = user_options.fetch("build_catalyst", false)
   build_xcframeworks = user_options.fetch("build_xcframeworks", false)
   keep_swiftmodules = user_options.fetch("keep_swiftmodules", false)
+  code_sign_identity = user_options.fetch("code_sign_identity", "")
 
   prebuilt_root_paths = JSON.parse(user_options["prebuilt_root_paths"].gsub("=>", ":"))
 
@@ -447,6 +448,11 @@ Pod::HooksManager.register("podbuilder-rome", :post_install) do |installer_conte
         end
       else
         raise "\n\nNot implemented\n".red
+      end
+
+      unless code_sign_identity.empty?
+        resigning_cmd = "codesign --timestamp -v --sign '#{code_sign_identity}' #{xcframework_path} &>/dev/null"
+        raise "\n\nFailed signing xcframework!\n".red if !system(resigning_cmd)
       end
     end
 

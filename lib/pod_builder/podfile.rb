@@ -41,6 +41,8 @@ module PodBuilder
 
       podfile.sub!("%%%development_team%%%", development_team)
 
+      podfile.sub!("%%%code_sign_identity%%%", Configuration.build_settings["CODE_SIGN_IDENTITY"] || "")
+
       podfile_build_settings = ""
 
       git_rootpath = PodBuilder::git_rootpath
