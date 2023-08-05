@@ -319,23 +319,6 @@ module PodBuilder
           next
         end
 
-        unless Configuration.keep_swiftmodules
-          if podfile_item = podfile_items.detect { |t| t.root_name == item.root_name }
-            if Dir.glob("#{source_path}/**/Modules/**/*.swiftmodule/*.swiftinterface").count > 0
-              # We can safely remove .swiftmodule if .swiftinterface exists
-              swiftmodule_files = Dir.glob("#{source_path}/**/Modules/**/*.swiftmodule/*.swiftmodule")
-              swiftmodule_files.each { |t| PodBuilder::safe_rm_rf(t) }
-            end
-          end
-        end
-
-        # Cleanup unneeded files (see https://github.com/bazelbuild/rules_apple/pull/1113)
-        ignore_files = Dir.glob("#{source_path}/**/Modules/**/*.swiftmodule/*.{swiftdoc,swiftsourceinfo,private.swiftinterface}")
-        ignore_files.each { |t| PodBuilder::safe_rm_rf(t) }
-
-        project_folder = Dir.glob("#{source_path}/**/Modules/**/*.swiftmodule/Project")
-        project_folder.select { |t| File.directory?(t) && Dir.empty?(t) }.each { |t| PodBuilder::safe_rm_rf(t) }
-
         unless Dir.glob("#{source_path}/**/*").select { |t| File.file?(t) }.empty?
           destination_folder = PodBuilder::prebuiltpath(item.root_name)
           FileUtils.mkdir_p(destination_folder)
