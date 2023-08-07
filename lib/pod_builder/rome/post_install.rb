@@ -323,6 +323,7 @@ Pod::HooksManager.register("podbuilder-rome", :post_install) do |installer_conte
   build_catalyst = user_options.fetch("build_catalyst", false)
   build_xcframeworks = user_options.fetch("build_xcframeworks", false)
   keep_swiftmodules = user_options.fetch("keep_swiftmodules", false)
+  code_sign_identity = user_options.fetch("code_sign_identity", "")
 
   prebuilt_root_paths = JSON.parse(user_options["prebuilt_root_paths"].gsub("=>", ":"))
 
@@ -420,7 +421,20 @@ Pod::HooksManager.register("podbuilder-rome", :post_install) do |installer_conte
             FileUtils.cp(swiftmodule_path, destination_path)
           end
         end
+      else
+        if Dir.glob("#{xcframework_path}/**/Modules/**/*.swiftmodule/*.swiftinterface").count > 0
+          # We can safely remove .swiftmodule if .swiftinterface exists
+          swiftmodule_files = Dir.glob("#{xcframework_path}/**/Modules/**/*.swiftmodule/*.swiftmodule")
+          swiftmodule_files.each { |t| PodBuilder::safe_rm_rf(t) }
+        end
       end
+
+      # Cleanup unneeded files (see https://github.com/bazelbuild/rules_apple/pull/1113)
+      ignore_files = Dir.glob("#{xcframework_path}/**/Modules/**/*.swiftmodule/*.{swiftdoc,swiftsourceinfo,private.swiftinterface}")
+      ignore_files.each { |t| PodBuilder::safe_rm_rf(t) }
+
+      project_folder = Dir.glob("#{xcframework_path}/**/Modules/**/*.swiftmodule/Project")
+      project_folder.select { |t| File.directory?(t) && Dir.empty?(t) }.each { |t| PodBuilder::safe_rm_rf(t) }
 
       if enable_dsym
         xcodebuild_settings.each do |xcodebuild_setting|
@@ -434,6 +448,11 @@ Pod::HooksManager.register("podbuilder-rome", :post_install) do |installer_conte
         end
       else
         raise "\n\nNot implemented\n".red
+      end
+
+      unless code_sign_identity.empty?
+        resigning_cmd = "codesign --timestamp -v --sign '#{code_sign_identity}' #{xcframework_path} &>/dev/null"
+        raise "\n\nFailed signing xcframework!\n".red if !system(resigning_cmd)
       end
     end
 
@@ -469,8 +488,23 @@ Pod::HooksManager.register("podbuilder-rome", :post_install) do |installer_conte
       end
 
       files = Dir.glob("#{path}/*")
-      framework_files = Dir.glob("#{path}/*.framework/**/*").map { |t| File.basename(t) }
 
+      unless keep_swiftmodules
+        if Dir.glob("#{path}/**/Modules/**/*.swiftmodule/*.swiftinterface").count > 0
+          # We can safely remove .swiftmodule if .swiftinterface exists
+          swiftmodule_files = Dir.glob("#{path}/**/Modules/**/*.swiftmodule/*.swiftmodule")
+          swiftmodule_files.each { |t| PodBuilder::safe_rm_rf(t) }
+        end
+      end
+
+      # Cleanup unneeded files (see https://github.com/bazelbuild/rules_apple/pull/1113)
+      ignore_files = Dir.glob("#{path}/**/Modules/**/*.swiftmodule/*.{swiftdoc,swiftsourceinfo,private.swiftinterface}")
+      ignore_files.each { |t| PodBuilder::safe_rm_rf(t) }
+
+      project_folder = Dir.glob("#{path}/**/Modules/**/*.swiftmodule/Project")
+      project_folder.select { |t| File.directory?(t) && Dir.empty?(t) }.each { |t| PodBuilder::safe_rm_rf(t) }
+
+      framework_files = Dir.glob("#{path}/*.framework/**/*").map { |t| File.basename(t) }
       files.each do |file|
         filename = File.basename(file.gsub(/\.xib$/, ".nib"))
         if framework_files.include?(filename)

@@ -154,140 +154,113 @@ module PodBuilder
           raise "\n\n#{File.basename(config_path)} is an invalid JSON\n".red
         end
 
-        if value = json["spec_overrides"]
-          if value.is_a?(Hash) && value.keys.count > 0
-            Configuration.spec_overrides = value
-          end
+        value = json["spec_overrides"]
+        if value.is_a?(Hash) && value.keys.count > 0
+          Configuration.spec_overrides = value
         end
-        if value = json["skip_licenses"]
-          if value.is_a?(Array)
-            Configuration.skip_licenses = value
-          end
+        value = json["skip_licenses"]
+        if value.is_a?(Array)
+          Configuration.skip_licenses = value
         end
-        if value = json["skip_pods"]
-          if value.is_a?(Array)
-            Configuration.skip_pods = value
-          end
+        value = json["skip_pods"]
+        if value.is_a?(Array)
+          Configuration.skip_pods = value
         end
-        if value = json["skip_build_configuration_check"]
-          if value.is_a?(Array)
-            Configuration.skip_build_configuration_check = value
-          end
+        value = json["skip_build_configuration_check"]
+        if value.is_a?(Array)
+          Configuration.skip_build_configuration_check = value
         end
-        if value = json["force_prebuild_pods"]
-          if value.is_a?(Array)
-            Configuration.force_prebuild_pods = value
-          end
+        value = json["force_prebuild_pods"]
+        if value.is_a?(Array)
+          Configuration.force_prebuild_pods = value
         end
-        if value = json["build_settings"]
-          if value.is_a?(Hash) && value.keys.count > 0
-            Configuration.build_settings = value
-          end
+        value = json["build_settings"]
+        if value.is_a?(Hash) && value.keys.count > 0
+          Configuration.build_settings = value
         end
-        if value = json["build_settings_overrides"]
-          if value.is_a?(Hash) && value.keys.count > 0
-            Configuration.build_settings_overrides = value
-          end
+        value = json["build_settings_overrides"]
+        if value.is_a?(Hash) && value.keys.count > 0
+          Configuration.build_settings_overrides = value
         end
-        if value = json["build_system"]
-          if value.is_a?(String) && ["Latest", "Legacy"].include?(value)
-            Configuration.build_system = value
-          end
+        value = json["build_system"]
+        if value.is_a?(String) && ["Latest", "Legacy"].include?(value)
+          Configuration.build_system = value
         end
-        if value = json["library_evolution_support"]
-          if [TrueClass, FalseClass].include?(value.class)
-            Configuration.library_evolution_support = value
-          end
+        value = json["library_evolution_support"]
+        if [TrueClass, FalseClass].include?(value.class)
+          Configuration.library_evolution_support = value
         end
-        if value = json["license_filename"]
-          if value.is_a?(String) && value.length > 0
-            Configuration.license_filename = value
-          end
+        value = json["license_filename"]
+        if value.is_a?(String) && value.length > 0
+          Configuration.license_filename = value
         end
-        if value = json["project_name"]
-          if value.is_a?(String) && value.length > 0
-            Configuration.project_name = value
-          end
+        value = json["project_name"]
+        if value.is_a?(String) && value.length > 0
+          Configuration.project_name = value
         end
-        if value = json["restore_enabled"]
-          if [TrueClass, FalseClass].include?(value.class)
-            Configuration.restore_enabled = value
-          end
+        value = json["restore_enabled"]
+        if [TrueClass, FalseClass].include?(value.class)
+          Configuration.restore_enabled = value
         end
-        if value = json["allow_building_development_pods"]
-          if [TrueClass, FalseClass].include?(value.class)
-            Configuration.allow_building_development_pods = value
-          end
+        value = json["allow_building_development_pods"]
+        if [TrueClass, FalseClass].include?(value.class)
+          Configuration.allow_building_development_pods = value
         end
-        if value = json["use_bundler"]
-          if [TrueClass, FalseClass].include?(value.class)
-            Configuration.use_bundler = value
-          end
+        value = json["use_bundler"]
+        if [TrueClass, FalseClass].include?(value.class)
+          Configuration.use_bundler = value
         end
-        if value = json["deterministic_build"]
-          if [TrueClass, FalseClass].include?(value.class)
-            Configuration.deterministic_build = value
-          end
+        value = json["deterministic_build"]
+        if [TrueClass, FalseClass].include?(value.class)
+          Configuration.deterministic_build = value
         end
-        if value = json["build_using_repo_paths"]
-          if [TrueClass, FalseClass].include?(value.class)
-            Configuration.build_using_repo_paths = value
-          end
+        value = json["build_using_repo_paths"]
+        if [TrueClass, FalseClass].include?(value.class)
+          Configuration.build_using_repo_paths = value
         end
-        if value = json["react_native_project"]
-          if [TrueClass, FalseClass].include?(value.class)
-            Configuration.react_native_project = value
-          end
+        value = json["react_native_project"]
+        if [TrueClass, FalseClass].include?(value.class)
+          Configuration.react_native_project = value
         end
-        if value = json["build_xcframeworks_all"]
-          if [TrueClass, FalseClass].include?(value.class)
-            Configuration.build_xcframeworks_all = value
-          end
+        value = json["build_xcframeworks_all"]
+        if [TrueClass, FalseClass].include?(value.class)
+          Configuration.build_xcframeworks_all = value
         end
-        if value = json["build_xcframeworks_include"]
-          if value.is_a?(Array)
-            Configuration.build_xcframeworks_include = value
-          end
+        value = json["build_xcframeworks_include"]
+        if value.is_a?(Array)
+          Configuration.build_xcframeworks_include = value
         end
-        if value = json["build_xcframeworks_exclude"]
-          if value.is_a?(Array)
-            Configuration.build_xcframeworks_exclude = value
-          end
+        value = json["build_xcframeworks_exclude"]
+        if value.is_a?(Array)
+          Configuration.build_xcframeworks_exclude = value
         end
-        if value = json["generate_coverage"]
-          if [TrueClass, FalseClass].include?(value.class)
-            Configuration.generate_coverage = value
-          end
+        value = json["generate_coverage"]
+        if [TrueClass, FalseClass].include?(value.class)
+          Configuration.generate_coverage = value
         end
-        if value = json["remap_coverage_to_project_root"]
-          if [TrueClass, FalseClass].include?(value.class)
-            Configuration.remap_coverage_to_project_root = value
-          end
+        value = json["remap_coverage_to_project_root"]
+        if [TrueClass, FalseClass].include?(value.class)
+          Configuration.remap_coverage_to_project_root = value
         end
-        if value = json["keep_swiftmodules"]
-          if [TrueClass, FalseClass].include?(value.class)
-            Configuration.keep_swiftmodules = value
-          end
+        value = json["keep_swiftmodules"]
+        if [TrueClass, FalseClass].include?(value.class)
+          Configuration.keep_swiftmodules = value
         end
-        if value = json["pre_actions"]
-          if value.is_a?(Hash)
-            Configuration.pre_actions = PodBuilder::Actions.load(value)
-          end
+        value = json["pre_actions"]
+        if value.is_a?(Hash)
+          Configuration.pre_actions = PodBuilder::Actions.load(value)
         end
-        if value = json["post_actions"]
-          if value.is_a?(Hash)
-            Configuration.post_actions = PodBuilder::Actions.load(value)
-          end
+        value = json["post_actions"]
+        if value.is_a?(Hash)
+          Configuration.post_actions = PodBuilder::Actions.load(value)
         end
-        if value = json["development_team"]
-          if value.is_a?(String) && value.length > 0
-            Configuration.development_team = value
-          end
+        value = json["development_team"]
+        if value.is_a?(String) && value.length > 0
+          Configuration.development_team = value
         end
-        if value = json["development_language"]
-          if value.is_a?(String) && value.length > 0
-            Configuration.development_language = value
-          end
+        value = json["development_language"]
+        if value.is_a?(String) && value.length > 0
+          Configuration.development_language = value
         end
         Configuration.build_settings.freeze
 
