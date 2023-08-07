@@ -18,6 +18,17 @@ module PodBuilder
         end
         development_team = development_team_match[1]
       end
+      # Xcode 15 requires xcframeworks to be signed
+      code_sign_identity = Configuration.build_settings["CODE_SIGN_IDENTITY"] || ""
+      if code_sign_identity.empty?
+        project_path = "#{PodBuilder.project_path}/#{Configuration::project_name}.xcodeproj"
+        code_sign_identity = `grep -rh 'CODE_SIGN_IDENTITY' '#{project_path}' | grep "Apple Distribution:" | sort | uniq`.strip
+        code_sign_identity_match = code_sign_identity.match(/CODE_SIGN_IDENTITY = \"(.+)\";/)
+        if code_sign_identity.split("\n").count != 1 || code_sign_identity_match&.size != 2
+          raise "\n\nFailed getting 'CODE_SIGN_IDENTITY' build setting, please add your code sign identity to #{PodBuilder::basepath(Configuration.configuration_filename)} as per documentation".red
+        end
+        code_sign_identity = code_sign_identity_match[1]
+      end
 
       sources = analyzer.sources
 
@@ -41,7 +52,7 @@ module PodBuilder
 
       podfile.sub!("%%%development_team%%%", development_team)
 
-      podfile.sub!("%%%code_sign_identity%%%", Configuration.build_settings["CODE_SIGN_IDENTITY"] || "")
+      podfile.sub!("%%%code_sign_identity%%%", code_sign_identity)
 
       podfile_build_settings = ""
 
