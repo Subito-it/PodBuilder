@@ -207,6 +207,8 @@ _PodBuilder.json_ allows some advanced customizations.
 
 Starting with Xcode 14 it is mandatory to sign both frameworks and framework bundles. PodBuilder will try to automatically extract the developer team from the application, however there are cases where this will fail and the development_team needs to be added explicitly in the configuration file.
 
+With Xcode 15 onwards, signing xcframeworks has become an additional mandatory step. PodBuilder will try to automatically extract your code signing identity from the project, however if it fails you'll need to explicitly add the `CODE_SIGN_IDENTITY` key to the [build settings](#build_settings).
+
 
 #### `development_language`
 
