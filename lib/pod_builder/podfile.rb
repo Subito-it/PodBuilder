@@ -11,7 +11,7 @@ module PodBuilder
       development_team = Configuration::development_team
       if development_team.empty?
         project_path = "#{PodBuilder.project_path}/#{Configuration::project_name}.xcodeproj"
-        development_team = `grep -rh 'DEVELOPMENT_TEAM' '#{project_path}' | uniq`.strip
+        development_team = `grep -rh 'DEVELOPMENT_TEAM' '#{project_path}' | sort | uniq`.strip
         development_team_match = development_team.match(/DEVELOPMENT_TEAM = (.+);/)
         if development_team.split("\n").count != 1 || development_team_match&.size != 2
           raise "\n\nFailed getting 'DEVELOPMENT_TEAM' build setting, please add your development team to #{PodBuilder::basepath(Configuration.configuration_filename)} as per documentation".red
