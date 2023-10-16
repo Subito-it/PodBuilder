@@ -166,7 +166,7 @@ class Pod::Generator::CopyResourcesScript
           # check that files are identical.
           # For files with paths that are resolved (e.g containing ${PODS_ROOT}) we use the file hash
           # we fallback to the filename for the others
-          hashes = resources.map { |t| File.exists?(t) ? Digest::MD5.hexdigest(File.read(t)) : File.basename(t) }
+          hashes = resources.map { |t| (File.exists?(t) && File.file?(t)) ? Digest::MD5.hexdigest(File.read(t)) : File.basename(t) }
           if hashes.uniq.count > 1
             message += resources.join("\n") + "\n"
           end
