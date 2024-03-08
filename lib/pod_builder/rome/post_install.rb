@@ -391,7 +391,7 @@ Pod::HooksManager.register("podbuilder-rome", :post_install) do |installer_conte
       next if built_item_paths.count == 0
 
       module_name = File.basename(built_item_paths.first, ".*")
-      spec = specs.detect { |t| t.module_name == module_name }
+      spec = specs.detect { |t| t.module_name == module_name && t.parent.nil? }
 
       # There seems to be a potential bug in CocoaPods-Core (https://github.com/CocoaPods/Core/issues/730)
       if spec.nil?
