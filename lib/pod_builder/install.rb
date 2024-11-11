@@ -138,9 +138,7 @@ module PodBuilder
         if hash = build_folder_hash(podfile_item, gitignored_files)
           data["build_folder_hash"] = hash
         end
-        if argument_pods.include?(podfile_item.root_name)
-          data["pb_version"] = PodBuilder::VERSION
-        end
+        data["pb_version"] = PodBuilder::VERSION
 
         ret.merge!({ podbuilder_file => data })
       end
