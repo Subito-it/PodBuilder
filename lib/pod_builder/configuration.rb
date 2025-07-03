@@ -248,11 +248,11 @@ module PodBuilder
         end
         value = json["pre_actions"]
         if value.is_a?(Hash)
-          Configuration.pre_actions = PodBuilder::Actions.load(value)
+          Configuration.pre_actions = PodBuilder::Actions.load(value, "pre")
         end
         value = json["post_actions"]
         if value.is_a?(Hash)
-          Configuration.post_actions = PodBuilder::Actions.load(value)
+          Configuration.post_actions = PodBuilder::Actions.load(value, "post")
         end
         value = json["development_team"]
         if value.is_a?(String) && value.length > 0
