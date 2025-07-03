@@ -8,6 +8,9 @@ module PodBuilder
       if json = hash["switch"]
         actions[:switch] = Item.new("switch", json)
       end
+      if json = hash["install"]
+        actions[:install] = Item.new("install", json)
+      end
       if json = hash["build"]
         actions[:build] = Item.new("build", json)
       end
