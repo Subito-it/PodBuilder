@@ -370,6 +370,7 @@ You need to specify a `path` to the executable script which is relative to the _
 {
     "pre_actions": { 
                         "switch" : { "path": "pre_switch_action.rb", "quiet": true },
+                        "install" : { "path": "pre_install_action.rb", "quiet": false },
                         "build" : { "path": "pre_build_action.rb", "quiet": false }
                     }
 }

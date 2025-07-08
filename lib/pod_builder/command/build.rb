@@ -120,7 +120,7 @@ module PodBuilder
 
           init_git(Configuration.build_path) # this is needed to be able to call safe_rm_rf
 
-          Configuration.pre_actions[:build]&.execute()
+          Configuration.pre_actions[:install]&.execute()
 
           install_result += Install.podfile(podfile_content, podfile_items, argument_pods, podfile_items.first.build_configuration)
 
