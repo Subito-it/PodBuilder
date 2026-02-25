@@ -320,7 +320,7 @@ module PodBuilder
         unless Dir.glob("#{source_path}/**/*").select { |t| File.file?(t) }.empty?
           destination_folder = PodBuilder::prebuiltpath(item.root_name)
           FileUtils.mkdir_p(destination_folder)
-          FileUtils.cp_r("#{source_path}/.", destination_folder)
+          FileUtils.cp_r("#{source_path}/.", destination_folder, remove_destination: true)
         end
       end
 
