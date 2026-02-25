@@ -27,6 +27,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", ">= 12.3.3"
   spec.add_development_dependency "debug", "~>1.8"
   spec.add_development_dependency "rufo", "~>0.16"
+  spec.add_development_dependency "ruby-lsp"
   spec.add_development_dependency "solargraph", "~>0.41"
   spec.add_development_dependency "robocop", "~>0.1.0"
 
