@@ -55,7 +55,7 @@ module PodBuilder
               destination = PodBuilder::prebuiltpath(pod_name)
 
               info_path = "#{pod_path}/#{Configuration.prebuilt_info_filename}"
-              next unless File.exists?(info_path)
+              next unless File.exist?(info_path)
               data = JSON.parse(File.read(info_path))
 
               build_source_path_matches = data["entry"].match(/:path => '(.*?)'/)
