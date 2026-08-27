@@ -32,7 +32,7 @@ module PodBuilder
         raise "\n\nEmpty or missing #{step} #{name} action path\n".red if @path.empty?()
       end
 
-      def execute()
+      def execute(env = {})
         cmd = PodBuilder::basepath(path)
         unless File.exist?(cmd)
           raise "\n\n#{@step.capitalize} #{@name} action path '#{cmd}' does not exists!\n".red
@@ -43,7 +43,22 @@ module PodBuilder
         end
 
         puts "Executing #{@step} #{@name} action".yellow
+
+        previous_env = {}
+        env.each do |key, value|
+          previous_env[key] = ENV[key]
+          ENV[key] = value.to_s
+        end
+
         `#{cmd}`
+      ensure
+        previous_env&.each do |key, value|
+          if value.nil?
+            ENV.delete(key)
+          else
+            ENV[key] = value
+          end
+        end
       end
     end
   end

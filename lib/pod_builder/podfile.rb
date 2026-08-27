@@ -4,7 +4,7 @@ module PodBuilder
   class Podfile
     PODBUILDER_LOCK_ACTION = ["raise \"\\n🚨  Do not launch 'pod install' manually, use `pod_builder` instead!\\n\" if !File.exist?('pod_builder.lock')"].freeze
 
-    def self.from_podfile_items(items, analyzer, build_configuration, install_using_frameworks, build_catalyst, build_xcframeworks)
+    def self.from_podfile_items(items, analyzer, build_configuration, install_using_frameworks, build_catalyst, build_xcframeworks, pods: [], parent_deps: [], child_deps: [])
       raise "\n\nno items\n".red unless items.count > 0
 
       # Xcode 14 requires a development team to be specified for the compilation to succeed
@@ -53,6 +53,10 @@ module PodBuilder
       podfile.sub!("%%%development_team%%%", development_team)
 
       podfile.sub!("%%%code_sign_identity%%%", code_sign_identity)
+
+      podfile.sub!("%%%pods%%%", pods.join(","))
+      podfile.sub!("%%%parent_deps%%%", parent_deps.join(","))
+      podfile.sub!("%%%child_deps%%%", child_deps.join(","))
 
       podfile_build_settings = ""
 

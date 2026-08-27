@@ -342,7 +342,14 @@ Pod::HooksManager.register("podbuilder-rome", :post_install) do |installer_conte
   raise "\n\nUnsupported target count\n".red unless targets.count == 1
   target = targets.first
 
-  PodBuilder::Configuration.pre_actions[:build]&.execute()
+  PodBuilder::Configuration.pre_actions[:build]&.execute({
+    "PB_PODS" => user_options.fetch("pods", ""),
+    "PB_PARENT_DEPS" => user_options.fetch("parent_deps", ""),
+    "PB_CHILD_DEPS" => user_options.fetch("child_deps", ""),
+    "PB_UPDATE_REPOS" => (OPTIONS[:update_repos] != false).to_s,
+    "PB_CONFIGURATION" => configuration.to_s.downcase,
+    "PB_XCFRAMEWORK" => build_xcframeworks.to_s,
+  })
 
   if build_xcframeworks
     project_path = sandbox_root.parent + "Pods/Pods.xcodeproj"

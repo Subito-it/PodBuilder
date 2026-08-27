@@ -25,11 +25,11 @@ module PodBuilder
           end
         end
 
-        unless argument_pods.count > 0 
+        unless argument_pods.count > 0
           return -1
         end
 
-        Configuration.pre_actions[:switch]&.execute()
+        Configuration.pre_actions[:switch]&.execute(switch_env(argument_pods))
 
         pods_not_found = []
         pod_names_to_switch = []
@@ -40,11 +40,13 @@ module PodBuilder
           if pod_name_to_switch.nil?
             raise "\n\n'#{pod}' not found in PodBuilder's Podfile.\n\nYou might need to explictly add:\n\n    pod '#{pod}'\n\nto #{PodBuilder::basepath("Podfile")}\n".red
           else
-            check_not_building_subspec(pod_name_to_switch)  
+            check_not_building_subspec(pod_name_to_switch)
 
-            pod_names_to_switch.push(pod_name_to_switch)  
-          end          
+            pod_names_to_switch.push(pod_name_to_switch)
+          end
         end
+
+        explicit_pod_names = pod_names_to_switch.dup
 
         if OPTIONS[:resolve_parent_dependencies] == true
           install_update_repo = OPTIONS.fetch(:update_repos, false)
@@ -66,6 +68,8 @@ module PodBuilder
 
           pod_names_to_switch.uniq!
         end
+
+        parent_dep_names = pod_names_to_switch - explicit_pod_names
 
         dep_pod_names_to_switch = []
         if OPTIONS[:resolve_child_dependencies] == true
@@ -207,7 +211,7 @@ module PodBuilder
           system("#{bundler_prefix}pod install;")  
         end
 
-        Configuration.post_actions[:switch]&.execute()
+        Configuration.post_actions[:switch]&.execute(switch_env(explicit_pod_names, parent_deps: parent_dep_names, child_deps: dep_pod_names_to_switch))
 
         puts "\n\n🎉 done!\n".green
 
@@ -283,6 +287,16 @@ module PodBuilder
         if pod_to_switch.include?("/")
           raise "\n\nCan't switch subspec #{pod_to_switch} refer to podspec name.\n\nUse `pod_builder switch #{pod_to_switch.split("/").first}` instead\n".red
         end
+      end
+
+      def self.switch_env(pods, parent_deps: [], child_deps: [])
+        {
+          "PB_PODS" => pods.join(","),
+          "PB_SWITCH_MODE" => OPTIONS[:switch_mode].to_s,
+          "PB_PARENT_DEPS" => parent_deps.join(","),
+          "PB_CHILD_DEPS" => child_deps.join(","),
+          "PB_UPDATE_REPOS" => (OPTIONS[:update_repos] != false).to_s,
+        }
       end
     end
   end    

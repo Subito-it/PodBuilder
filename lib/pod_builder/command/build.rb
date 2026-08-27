@@ -41,6 +41,8 @@ module PodBuilder
         }
         argument_pods = available_argument_pods.uniq
 
+        explicit_pod_names = argument_pods.dup
+
         Podfile.restore_podfile_clean(all_buildable_items)
 
         restore_file_error = Podfile.restore_file_sanity_check
@@ -49,6 +51,8 @@ module PodBuilder
 
         pods_to_build = resolve_pods_to_build(argument_pods, buildable_items)
         buildable_items -= pods_to_build
+
+        parent_dep_names = pods_to_build.map(&:root_name).uniq - explicit_pod_names
 
         argument_pods += pods_to_build.map(&:root_name)
         argument_pods.uniq!
@@ -67,7 +71,9 @@ module PodBuilder
         # 2. PodB is marked to be built as xcframework
         # 3. We rebuild PodA only (pods_to_build contains only PodA)
         # 4. We need to add dependencies recursively so that PodB is is added to pods_to_build_release_xcframework
+        pre_recursive_dep_names = pods_to_build.map(&:root_name).uniq
         pods_to_build = pods_to_build.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
+        child_dep_names = pods_to_build.map(&:root_name).uniq - pre_recursive_dep_names
 
         pods_to_build_debug = pods_to_build.select { |x| x.build_configuration == "debug" }
         pods_to_build_release = pods_to_build - pods_to_build_debug
@@ -113,20 +119,24 @@ module PodBuilder
           # pods_to_build_release and therefore build will fail
           podfile_items = podfile_items.map { |t| t.recursive_dependencies(all_buildable_items) }.flatten.uniq
 
-          podfile_content = Podfile.from_podfile_items(podfile_items, analyzer, build_configuration, install_using_frameworks, build_catalyst, podfile_items.first.build_xcframework)
+          podfile_content = Podfile.from_podfile_items(podfile_items, analyzer, build_configuration, install_using_frameworks, build_catalyst, podfile_items.first.build_xcframework,
+                                                        pods: explicit_pod_names, parent_deps: parent_dep_names, child_deps: child_dep_names)
 
           PodBuilder::safe_rm_rf(Configuration.build_path)
           FileUtils.mkdir_p(Configuration.build_path)
 
           init_git(Configuration.build_path) # this is needed to be able to call safe_rm_rf
 
-          Configuration.pre_actions[:install]&.execute()
+          env = build_env(explicit_pod_names, parent_deps: parent_dep_names, child_deps: child_dep_names,
+                           configuration: build_configuration, xcframework: podfile_items.first.build_xcframework)
+
+          Configuration.pre_actions[:install]&.execute(env)
 
           install_result += Install.podfile(podfile_content, podfile_items, argument_pods, podfile_items.first.build_configuration)
 
           FileUtils.rm_f(PodBuilder::basepath("Podfile.lock"))
 
-          Configuration.post_actions[:build]&.execute()
+          Configuration.post_actions[:build]&.execute(env)
         end
 
         install_result.write_prebuilt_info_files
@@ -263,6 +273,17 @@ module PodBuilder
         buildable_subspecs.select! { |x| pods_to_build_subspecs.include?(x.root_name) }
 
         return buildable_subspecs - pods_to_build
+      end
+
+      def self.build_env(pods, parent_deps: [], child_deps: [], configuration: nil, xcframework: false)
+        {
+          "PB_PODS" => pods.join(","),
+          "PB_PARENT_DEPS" => parent_deps.join(","),
+          "PB_CHILD_DEPS" => child_deps.join(","),
+          "PB_UPDATE_REPOS" => (OPTIONS[:update_repos] != false).to_s,
+          "PB_CONFIGURATION" => configuration.to_s,
+          "PB_XCFRAMEWORK" => xcframework.to_s,
+        }
       end
 
       def self.resolve_pods_to_build(argument_pods, buildable_items)

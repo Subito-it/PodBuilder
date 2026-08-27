@@ -396,6 +396,24 @@ You need to specify a `path` to the executable script which is relative to the _
 
 **Note:** The build action might be invoked more than once depending on the build strategy that PodBuilder needs to perform.
 
+#### Environment variables available to `pre_actions`/`post_actions` scripts
+
+`switch` and `build`/`install` actions are invoked with a set of environment variables describing the pods involved, so scripts don't need to re-parse the Podfile or `ARGV` themselves.
+
+| Variable | Description | `switch` | `install`/`build` |
+|---|---|---|---|
+| `PB_PODS` | Comma-separated pod names explicitly passed on the command line | ✅ | ✅ |
+| `PB_SWITCH_MODE` | `prebuilt`, `development` or `default` | ✅ | |
+| `PB_PARENT_DEPS` | Comma-separated pods added because they depend on `PB_PODS` (via `switch`'s `-r`; always resolved for `build`) | ✅ | ✅ |
+| `PB_CHILD_DEPS` | Comma-separated pods added because `PB_PODS` depends on them (via `switch`'s `-c`; always resolved for `build`) | ✅ | ✅ |
+| `PB_UPDATE_REPOS` | `true`/`false`, whether the CocoaPods repo was updated (`-u` sets this to `false`) | ✅ | ✅ |
+| `PB_CONFIGURATION` | `debug` or `release` | | ✅ |
+| `PB_XCFRAMEWORK` | `true`/`false`, whether this pod is being built as an xcframework | | ✅ |
+
+Note: For `pre_actions[:switch]`, dependency resolution (`-r`/`-c`) hasn't run yet, so `PB_PARENT_DEPS`/`PB_CHILD_DEPS` are always empty there; `PB_PODS` is also the raw, unresolved argument list. Check `post_actions[:switch]` if you need the fully resolved set.
+
+`pre_actions[:build]` is invoked from a different context than `pre_actions[:install]`/`post_actions[:build]` — a CocoaPods `post_install` hook nested inside the build's own `pod install`, rather than directly from the `build` command loop. All the same variables are set there too, threaded through via the internal `podbuilder-rome` plugin options.
+
 
 # Behind the scenes
 
