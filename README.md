@@ -322,6 +322,10 @@ Specify which pods PodBuilder should NOT be built as .xcframeworks when `build_x
 
 Specify which pods PodBuilder should be built as .xcframeworks. Will enable `library_evolution_support`. Default value: []
 
+#### `default_build_configuration`
+
+Specify the build configuration used to prebuild pods, either `debug` or `release`. Pods that specify a `prebuild_configuration` in the `pod_target_xcconfig` of their podspec (or via `spec_overrides`) are unaffected. Default value: `release`
+
 #### `generate_coverage`
 
 Specify if coverage data for use with profiled execution should be generated. Default value: false

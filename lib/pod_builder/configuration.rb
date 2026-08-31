@@ -49,6 +49,7 @@ module PodBuilder
       attr_accessor :build_settings
       attr_accessor :build_settings_overrides
       attr_accessor :build_system
+      attr_accessor :default_build_configuration
       attr_accessor :library_evolution_support
       attr_accessor :base_path
       attr_accessor :spec_overrides
@@ -91,6 +92,7 @@ module PodBuilder
 
     @allow_building_development_pods = false
     @build_system = "Latest".freeze # either Latest (New build system) or Legacy (Standard build system)
+    @default_build_configuration = "release" # either debug or release, overridable per pod via podspec's `prebuild_configuration`
     @library_evolution_support = false
     @base_path = "PodBuilder" # Not nice. This value is used only for initial initization. Once config is loaded it will be an absolute path. FIXME
     @skip_licenses = []
@@ -185,6 +187,10 @@ module PodBuilder
         value = json["build_system"]
         if value.is_a?(String) && ["Latest", "Legacy"].include?(value)
           Configuration.build_system = value
+        end
+        value = json["default_build_configuration"]
+        if value.is_a?(String) && ["debug", "release"].include?(value.downcase)
+          Configuration.default_build_configuration = value.downcase
         end
         value = json["library_evolution_support"]
         if [TrueClass, FalseClass].include?(value.class)

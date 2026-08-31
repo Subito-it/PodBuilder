@@ -250,7 +250,7 @@ module PodBuilder
       root_spec = all_specs.detect { |t| t.name == @root_name } || spec
       @source_files = source_files_from([spec, root_spec] + default_subspecs_specs)
 
-      @build_configuration = spec.root.attributes_hash.dig("pod_target_xcconfig", "prebuild_configuration") || "release"
+      @build_configuration = spec.root.attributes_hash.dig("pod_target_xcconfig", "prebuild_configuration") || Configuration.default_build_configuration
       @build_configuration.downcase!
 
       default_license = "MIT"
